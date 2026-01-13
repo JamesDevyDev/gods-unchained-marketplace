@@ -298,8 +298,28 @@ const CardsPage = () => {
     (priceRange.min || priceRange.max ? 1 : 0)
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex pt-20">
+    <div className="min-h-screen bg-background relative">
+
+      {/* Pakana ko */}
+
+      <div className="relative h-[500px] overflow-hidden">
+        {/* Background Image */}
+        <img
+          src="https://wallpapercave.com/wp/wp12467251.jpg"
+          className="absolute inset-0 w-full h-full object-cover scale-110"
+          alt=""
+        />
+
+        {/* Dark cinematic gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+        {/* Subtle noise / contrast layer */}
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
+
+
+      <div className="flex ">
         {/* Sidebar Filters */}
         <div className="w-80 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
           <div className="flex items-center justify-between mb-6">
@@ -463,10 +483,10 @@ const CardsPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-8 flex">
           <div className="max-w-[1920px] mx-auto">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 z-10 bg-background mb-16 border-lines border-b sticky top-16">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
