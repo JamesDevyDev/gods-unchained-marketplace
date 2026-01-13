@@ -4,6 +4,8 @@ import CardItem from '@/components/reusable/CardItem'
 import CardModal from '@/components/reusable/CardModal'
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
+import { Menu } from 'lucide-react';
+
 
 interface CardAttributes {
   [key: string]: string | number
@@ -65,6 +67,9 @@ const CardsPage = () => {
   const [selectedCard, setSelectedCard] = useState<Stack | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Mobile filter drawer state
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   // Filter states
   const [selectedRarities, setSelectedRarities] = useState<string[]>([])
@@ -297,11 +302,151 @@ const CardsPage = () => {
     Object.values(selectedAttributes).reduce((acc, arr) => acc + arr.length, 0) +
     (priceRange.min || priceRange.max ? 1 : 0)
 
+  // Filter content component to avoid duplication
+  const FilterContent = () => (
+    <>
+      {/* Status Filter */}
+      <div className="mb-6">
+        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
+          <span>Status</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div className="space-y-2">
+          <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
+            <input type="checkbox" className="mr-2 rounded" />
+            All
+          </label>
+          <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
+            <input type="checkbox" className="mr-2 rounded" />
+            Listed
+          </label>
+        </div>
+      </div>
+
+      {/* Rarity Filter */}
+      <div className="mb-6">
+        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
+          <span>Rarity</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div className="space-y-2">
+          {filterOptions.rarities.map(rarity => (
+            <label key={rarity} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedRarities.includes(rarity)}
+                  onChange={() => toggleFilter('rarity', rarity)}
+                  className="mr-2 rounded"
+                />
+                <span className="capitalize">{rarity}</span>
+              </div>
+              <span className="text-gray-500 text-xs">
+                {cards.filter(c => c.rarity === rarity).length}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Filter */}
+      <div className="mb-6">
+        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
+          <span>Price</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            placeholder="Min"
+            value={priceRange.min}
+            onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+            className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            value={priceRange.max}
+            onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+            className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Type Filter */}
+      {filterOptions.types.length > 0 && (
+        <div className="mb-6">
+          <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
+            <span>Type</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {filterOptions.types.map(type => (
+              <label key={type} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(type)}
+                    onChange={() => toggleFilter('type', type)}
+                    className="mr-2 rounded"
+                  />
+                  <span>{type}</span>
+                </div>
+                <span className="text-gray-500 text-xs">
+                  {cards.filter(c => c.item_type === type).length}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Attribute Filters */}
+      {Object.entries(filterOptions.attributes).map(([key, values]) => (
+        values.length > 0 && (
+          <div key={key} className="mb-6">
+            <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
+              <span className="capitalize">{key}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {values.slice(0, 10).map(value => (
+                <label key={value} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={(selectedAttributes[key] || []).includes(value)}
+                      onChange={() => toggleAttributeFilter(key, value)}
+                      className="mr-2 rounded"
+                    />
+                    <span className="truncate">{value}</span>
+                  </div>
+                  <span className="text-gray-500 text-xs">
+                    {cards.filter(c => String(c.attributes[key]) === value).length}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-background relative">
 
-      {/* Pakana ko */}
-
+      {/* Hero Section */}
       <div className="relative h-[500px] overflow-hidden">
         {/* Background Image */}
         <img
@@ -317,11 +462,9 @@ const CardsPage = () => {
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-
-
       <div className="flex ">
-        {/* Sidebar Filters */}
-        <div className="w-80 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
+        {/* Desktop Sidebar Filters */}
+        <div className="hidden lg:block w-80 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
@@ -334,168 +477,81 @@ const CardsPage = () => {
             )}
           </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="mb-6">
-            <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-              <span>Status</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="space-y-2">
-              <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
-                <input type="checkbox" className="mr-2 rounded" />
-                All
-              </label>
-              <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
-                <input type="checkbox" className="mr-2 rounded" />
-                Listed
-              </label>
-            </div>
-          </div>
-
-          {/* Rarity Filter */}
-          <div className="mb-6">
-            <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-              <span>Rarity</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="space-y-2">
-              {filterOptions.rarities.map(rarity => (
-                <label key={rarity} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedRarities.includes(rarity)}
-                      onChange={() => toggleFilter('rarity', rarity)}
-                      className="mr-2 rounded"
-                    />
-                    <span className="capitalize">{rarity}</span>
-                  </div>
-                  <span className="text-gray-500 text-xs">
-                    {cards.filter(c => c.rarity === rarity).length}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Filter */}
-          <div className="mb-6">
-            <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-              <span>Price</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={priceRange.min}
-                onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={priceRange.max}
-                onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Type Filter */}
-          {filterOptions.types.length > 0 && (
-            <div className="mb-6">
-              <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-                <span>Type</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {filterOptions.types.map(type => (
-                  <label key={type} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedTypes.includes(type)}
-                        onChange={() => toggleFilter('type', type)}
-                        className="mr-2 rounded"
-                      />
-                      <span>{type}</span>
-                    </div>
-                    <span className="text-gray-500 text-xs">
-                      {cards.filter(c => c.item_type === type).length}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Attribute Filters */}
-          {Object.entries(filterOptions.attributes).map(([key, values]) => (
-            values.length > 0 && (
-              <div key={key} className="mb-6">
-                <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-                  <span className="capitalize">{key}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {values.slice(0, 10).map(value => (
-                    <label key={value} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={(selectedAttributes[key] || []).includes(value)}
-                          onChange={() => toggleAttributeFilter(key, value)}
-                          className="mr-2 rounded"
-                        />
-                        <span className="truncate">{value}</span>
-                      </div>
-                      <span className="text-gray-500 text-xs">
-                        {cards.filter(c => String(c.attributes[key]) === value).length}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )
-          ))}
+          <FilterContent />
         </div>
 
+        {/* Mobile Filter Drawer */}
+        {isMobileFilterOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              onClick={() => setIsMobileFilterOpen(false)}
+            />
+
+            {/* Drawer */}
+            <div className="fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-lines p-6 overflow-y-auto z-50 lg:hidden animate-slide-in">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Filters</h2>
+                <div className="flex items-center gap-2">
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-sm text-[#2081E2] hover:text-[#1868B7] transition"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsMobileFilterOpen(false)}
+                    className="text-gray-400 hover:text-white transition"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <FilterContent />
+            </div>
+          </>
+        )}
+
         {/* Main Content */}
-        <div className="flex-1 p-8 flex">
-          <div className="max-w-[1920px] mx-auto">
+        <div className="flex-1 px-8 flex">
+          <div className="w-full max-w-[1920px] pb-16 mx-auto">
             {/* Header */}
-            <div className="mb-8 z-10 bg-background mb-16 border-lines border-b sticky top-16">
+            <div className="z-10 bg-background  border-lines border-b sticky top-16">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+                  <h1 className="text-3xl font-bold text-white my-4">
                     {contractData?.name}
                   </h1>
                   <p className="text-gray-400">
                     {displayedCards.length} of {filteredCards.length} items
                     {searchQuery && ` (filtered from ${cards.length} total)`}
                   </p>
+                </div>
+              </div>
+              <div>
+                {/* Search */}
+                <div className="mb-6 flex items-center justify-center relative gap-4">
+                  {/* Mobile Filter Toggle Button */}
+                  <button
+                    onClick={() => setIsMobileFilterOpen(true)}
+                    className="lg:hidden h-full w-[50px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
+                  >
+                    <Menu />
+                  </button>
+
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                  />
                 </div>
               </div>
             </div>

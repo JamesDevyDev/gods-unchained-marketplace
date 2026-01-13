@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/assets/icon1.png" sizes="any" type="image/png" />
+        <link rel="icon" href="/assets/iconBg.png" sizes="any" type="image/png" />
       </head>
       <body>
         <div
