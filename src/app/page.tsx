@@ -1,318 +1,228 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import Autoplay from 'embla-carousel-autoplay'
+import useEmblaCarousel from 'embla-carousel-react'
+import { useRouter } from 'next/navigation'
 
-interface Card {
-  stack: {
-    name: string
-    image: string
-    stack_id: string
-    description: string | null
-    attributes: Array<{
-      trait_type: string
-      value: string | number
-      display_type: string | null
-    }>
-  }
-}
+const Page = () => {
 
-interface ApiResponse {
-  result: Card[]
-  page: {
-    next_cursor: string | null
-  }
-}
+    const router = useRouter()
+    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4000 })])
+    const [selectedIndex, setSelectedIndex] = useState(0)
 
-interface Quote {
-  buy_token_amount: string
-  fees: Array<{
-    amount: string
-    recipient_address: string
-    type: string
-  }>
-  sell_token_address?: string
-  sell_token_amount: string
-  sell_token_symbol?: string
-}
-
-interface QuoteResponse {
-  result: Quote[]
-}
-
-const CardsPage = () => {
-  const [cards, setCards] = useState<Card[]>([])
-  const [loading, setLoading] = useState(false)
-  const [nextCursor, setNextCursor] = useState<string | null>(null)
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [quotes, setQuotes] = useState<Quote[]>([])
-  const [loadingQuote, setLoadingQuote] = useState(false)
-  const observerTarget = useRef<HTMLDivElement>(null)
-
-  // Fetch cards from API
-  const fetchCards = async (cursor?: string) => {
-    setLoading(true)
-    try {
-      const url = cursor
-        ? `https://api.immutable.com/v1/chains/imtbl-zkevm-mainnet/search/stacks?contract_address=0x06d92b637dfcdf95a2faba04ef22b2a096029b69&page_size=200&cursor=${cursor}`
-        : `https://api.immutable.com/v1/chains/imtbl-zkevm-mainnet/search/stacks?contract_address=0x06d92b637dfcdf95a2faba04ef22b2a096029b69&page_size=200`
-
-      const response = await fetch(url)
-      const data: ApiResponse = await response.json()
-
-      setCards(prev => [...prev, ...data.result])
-      setNextCursor(data.page.next_cursor)
-    } catch (error) {
-      console.error('Error fetching cards:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Fetch quote data for a specific stack_id
-  const fetchQuote = async (stackId: string) => {
-    console.log("Inside")
-    setLoadingQuote(true)
-    setQuotes([])
-    try {
-      console.log('Fetching quote for stack_id:', stackId)
-      const url = `https://api.immutable.com/v1/chains/imtbl-zkevm-mainnet/quotes/0x06d92b637dfcdf95a2faba04ef22b2a096029b69/stacks?stack_id=${stackId}`
-      console.log('Fetching URL:', url)
-
-      const response = await fetch(url)
-      const data: QuoteResponse = await response.json()
-
-      console.log(data)
-      setQuotes(data.result || [])
-    } catch (error) {
-      console.error('Error fetching quote:', error)
-      setQuotes([])
-    } finally {
-      setLoadingQuote(false)
-    }
-  }
-
-  // Initial fetch
-  useEffect(() => {
-    fetchCards()
-  }, [])
-
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && !loading && nextCursor) {
-          fetchCards(nextCursor)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current)
+    // Sample data based on your example
+    const data = {
+        "projects": [
+            {
+                "collections": [
+                    {
+                        "background_image": "https://wallpapercave.com/wp/wp12467247.jpg",
+                        "cards_with_listings": 10158,
+                        "contract_address": "0x06d92b637dfcdf95a2faba04ef22b2a096029b69",
+                        "floor_currency": "USDC",
+                        "floor_price": 9.174e-15,
+                        "floor_price_usd": null,
+                        "image": "https://images.godsunchained.com/misc/gu-sigel.png",
+                        "min_price": "9174",
+                        "name": "Gods Unchained Cards",
+                        "symbol": "GUCA"
+                    },
+                    {
+                        "background_image": "https://wallpapercave.com/wp/wp12467251.jpg",
+                        "cards_with_listings": 211,
+                        "contract_address": "0xafb4ba96c44297250bec01e3185ca5154ba6c471",
+                        "floor_currency": "USDC",
+                        "floor_price": 1.834862e-12,
+                        "floor_price_usd": null,
+                        "image": "https://images.godsunchained.com/misc/gu-sigel.png",
+                        "min_price": "1834862",
+                        "name": "Gods Unchained Cosmetics",
+                        "symbol": "GUCO"
+                    }
+                ],
+                "name": "Gods Unchained"
+            },
+            {
+                "collections": [
+                    {
+                        "background_image": "https://www.blockchaingamer.biz/wp-content/uploads/2023/03/hunters16.9.jpg",
+                        "cards_with_listings": 1082,
+                        "contract_address": "0xae45ba8d0806e23323ff6bcea8520683cee8d74f",
+                        "floor_currency": "USDC",
+                        "floor_price": 8.96861e-13,
+                        "floor_price_usd": null,
+                        "image": "https://hunt-nft.cdn.boombit.cloud/External/GENESIS_Hunters.png",
+                        "min_price": "896861",
+                        "name": "Hunters On Chain - Genesis Hunters",
+                        "symbol": "Genesis Hunters"
+                    }
+                ],
+                "name": "Other Collections"
+            }
+        ]
     }
 
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current)
-      }
-    }
-  }, [loading, nextCursor])
+    // Flatten all collections for carousel
+    const allCollections = data.projects.flatMap(project => project.collections)
 
-  // Fetch quote when card is selected
-  useEffect(() => {
-    if (selectedCard && isModalOpen) {
-      console.log('Modal opened, fetching quote for:', selectedCard.stack.stack_id)
-      fetchQuote(selectedCard.stack.stack_id)
-    }
-  }, [selectedCard, isModalOpen])
+    const scrollPrev = useCallback(() => {
+        if (emblaApi) emblaApi.scrollPrev()
+    }, [emblaApi])
 
-  // Format token amount for display
-  const formatTokenAmount = (amount: string, decimals: number = 18) => {
-    const value = parseFloat(amount) / Math.pow(10, decimals)
-    return value.toFixed(6)
-  }
+    const scrollNext = useCallback(() => {
+        if (emblaApi) emblaApi.scrollNext()
+    }, [emblaApi])
 
-  return (
-    <div className="min-h-screen bg-gray-900 p-8">
-      <h1 className="text-4xl font-bold text-white mb-8 text-center">
-        Gods Unchained Cards
-      </h1>
+    const onSelect = useCallback(() => {
+        if (!emblaApi) return
+        setSelectedIndex(emblaApi.selectedScrollSnap())
+    }, [emblaApi])
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-6">
-        {cards.map((card, index) => (
-          <div
-            key={`${card.stack.stack_id}-${index}`}
-            className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 hover:scale-105 transform cursor-pointer"
-            onClick={() => {
-              setSelectedCard(card)
-              setIsModalOpen(true)
-            }}
-          >
-            <div className="aspect-[2/3] relative">
-              <img
-                src={card.stack.image}
-                alt={card.stack.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="text-white font-semibold text-center truncate">
-                {card.stack.name}
-              </h3>
-            </div>
-          </div>
-        ))}
-      </div>
+    useEffect(() => {
+        if (!emblaApi) return
+        onSelect()
+        emblaApi.on('select', onSelect)
+        emblaApi.on('reInit', onSelect)
+    }, [emblaApi, onSelect])
 
-      {/* Loading indicator */}
-      {loading && (
-        <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-        </div>
-      )}
+    const scrollTo = useCallback((index: number) => {
+        if (emblaApi) emblaApi.scrollTo(index)
+    }, [emblaApi])
 
-      {/* Intersection observer target */}
-      <div ref={observerTarget} className="h-10" />
+    return (
+        <div className="pt-20">
+            {/* Featured Collection Carousel - Full width on mobile */}
+            <div className="relative group">
+                <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-6 mb-2" ref={emblaRef}>
+                    <div className="flex">
+                        {allCollections.map((collection, index) => (
+                            <div key={index} className="flex-[0_0_100%] min-w-0" onClick={() => {
+                                console.log("Hello world")
+                                console.log(collection)
+                                router.push(`/collection/${collection?.contract_address}`)
+                            }}>
 
-      {/* End message */}
-      {!nextCursor && !loading && cards.length > 0 && (
-        <p className="text-gray-400 text-center py-8">
-          All cards loaded ({cards.length} total)
-        </p>
-      )}
-
-      {/* Modal */}
-      {isModalOpen && selectedCard && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              {/* Close button */}
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="float-right text-gray-400 hover:text-white text-2xl font-bold"
-              >
-                ×
-              </button>
-
-              {/* Card content */}
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Card image */}
-                <div className="md:w-1/2">
-                  <img
-                    src={selectedCard.stack.image}
-                    alt={selectedCard.stack.name}
-                    className="w-full rounded-lg"
-                  />
-                </div>
-
-                {/* Card details */}
-                <div className="md:w-1/2">
-                  <h2 className="text-3xl font-bold text-white mb-4">
-                    {selectedCard.stack.name}
-                  </h2>
-
-                  {selectedCard.stack.description && (
-                    <p className="text-gray-300 mb-4">
-                      {selectedCard.stack.description}
-                    </p>
-                  )}
-
-                  <p className="text-gray-400 text-sm mb-4">
-                    Stack ID: {selectedCard.stack.stack_id}
-                  </p>
-
-                  {/* Quotes Section */}
-                  <div className="mb-6">
-                    <h3 className="text-xl font-semibold text-white mb-3">
-                      Market Quotes
-                    </h3>
-
-                    {loadingQuote ? (
-                      <div className="flex justify-center items-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                      </div>
-                    ) : quotes.length > 0 ? (
-                      <div className="space-y-3">
-                        {quotes.map((quote, index) => (
-                          <div key={index} className="bg-gray-700 rounded-lg p-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Buy Amount:</span>
-                                <span className="text-white font-semibold">
-                                  {formatTokenAmount(quote.buy_token_amount)} tokens
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Sell Amount:</span>
-                                <span className="text-white font-semibold">
-                                  {formatTokenAmount(quote.sell_token_amount)} {quote.sell_token_symbol || 'tokens'}
-                                </span>
-                              </div>
-                              {quote.sell_token_address && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-gray-400">Sell Token:</span>
-                                  <span className="text-white font-mono text-xs">
-                                    {quote.sell_token_address.slice(0, 6)}...{quote.sell_token_address.slice(-4)}
-                                  </span>
-                                </div>
-                              )}
-                              {quote.fees && quote.fees.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-gray-600">
-                                  <span className="text-gray-400 text-sm">Fees:</span>
-                                  {quote.fees.map((fee, feeIndex) => (
-                                    <div key={feeIndex} className="flex justify-between items-center mt-1 text-sm">
-                                      <span className="text-gray-500">{fee.type}:</span>
-                                      <span className="text-gray-300">{formatTokenAmount(fee.amount)}</span>
+                                <div className="relative h-96 overflow-hidden cursor-pointer">
+                                    {/* Background Image */}
+                                    <div className="absolute inset-0">
+                                        <img
+                                            src={collection.background_image}
+                                            alt={collection.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40"></div>
                                     </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-400 text-center py-4">
-                        No quotes available
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Attributes */}
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      Attributes
-                    </h3>
-                    {selectedCard.stack.attributes.map((attr, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-700 rounded-lg p-3 flex justify-between items-center"
-                      >
-                        <span className="text-gray-400 font-medium">
-                          {attr.trait_type}
-                        </span>
-                        <span className="text-white font-semibold">
-                          {attr.value}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                                    {/* Content */}
+                                    <div className="absolute bottom-0 left-0 p-4 md:p-8 z-10">
+                                        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">{collection.name}</h2>
+                                        <p className="text-xs md:text-sm text-gray-300 mb-4">Symbol: {collection.symbol}</p>
+
+                                        <div className="flex gap-4 md:gap-8 bg-[#0a0e1a]/90 rounded-lg p-3 md:p-4 backdrop-blur">
+                                            <div>
+                                                <div className="text-xs text-gray-400 uppercase mb-1">Floor Price</div>
+                                                <div className="text-sm md:text-lg font-bold">{collection.floor_price?.toFixed(6)} {collection.floor_currency}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-400 uppercase mb-1">Listings</div>
+                                                <div className="text-sm md:text-lg font-bold">{collection.cards_with_listings.toLocaleString()}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-400 uppercase mb-1">Min Price</div>
+                                                <div className="text-sm md:text-lg font-bold">{collection.min_price}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Collection Icon */}
+                                    <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-10">
+                                        <div className="w-16 h-16 md:w-24 md:h-24 bg-[#151b2e] rounded-lg overflow-hidden border-2 border-white/20">
+                                            <img
+                                                src={collection.image}
+                                                alt={collection.symbol}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        ))}
+                    </div>
                 </div>
-              </div>
+
+                {/* Previous Button */}
+                <button
+                    className="cursor-pointer absolute left-2 md:left-10 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                    onClick={scrollPrev}
+                    aria-label="Previous slide"
+                >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                {/* Next Button */}
+                <button
+                    className="cursor-pointer absolute right-2 md:right-10 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                    onClick={scrollNext}
+                    aria-label="Next slide"
+                >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                {/* Pagination Dots */}
+                <div className="flex justify-center gap-2 mb-8 md:mx-6">
+                    {allCollections.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => scrollTo(index)}
+                            className={`h-1 rounded-full transition-all ${index === selectedIndex
+                                ? 'w-8 bg-white'
+                                : 'w-1 bg-white/40 hover:bg-white/60'
+                                }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                        />
+                    ))}
+                </div>
             </div>
-          </div>
+
+            {/* Trending Tokens Section */}
+            <div className="mb-8 px-6">
+                <h2 className="text-2xl font-bold mb-2">Trending Collections</h2>
+                <p className="text-gray-400 text-sm mb-6">Most active collections</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {allCollections.map((collection, i) => (
+                        <div key={i} className="bg-[#151b2e] rounded-xl p-4 hover:bg-[#1f2937] transition cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-[#1f2937] overflow-hidden flex-shrink-0">
+                                    <img
+                                        src={collection.image}
+                                        alt={collection.symbol}
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-semibold truncate">{collection.symbol}</div>
+                                    <div className="text-sm text-gray-400">
+                                        {collection.floor_price?.toFixed(6)} {collection.floor_currency}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <div className="text-xs text-gray-400">Listings</div>
+                                    <div className="text-sm font-semibold text-green-400">{collection.cards_with_listings}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
-      )}
-    </div>
-  )
+    )
 }
 
-export default CardsPage
+export default Page
