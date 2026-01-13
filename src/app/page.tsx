@@ -85,17 +85,17 @@ const Page = () => {
     }, [emblaApi])
 
     return (
-        <div className="pt-20">
+        <div className="pt-20 bg-background">
             {/* Featured Collection Carousel - Full width on mobile */}
             <div className="relative group">
                 <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-6 mb-2" ref={emblaRef}>
                     <div className="flex">
                         {allCollections.map((collection, index) => (
-                            <div key={index} className="flex-[0_0_100%] min-w-0" onClick={() => {
+                            <div key={index} className="flex-[0_0_100%] min-w-0 border-1 border-lines" onClick={() => {
                                 router.push(`/collection/${collection?.contract_address}`)
                             }}>
 
-                                <div className="relative h-140 overflow-hidden cursor-pointer">
+                                <div className="relative h-120 overflow-hidden cursor-pointer">
                                     {/* Background Image */}
                                     <div className="absolute inset-0">
                                         <img
@@ -107,11 +107,17 @@ const Page = () => {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="absolute bottom-0 left-0 md:left-10  p-4 md:p-8 z-10">
-                                        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">{collection.name}</h2>
-                                        <p className="text-xs md:text-sm text-gray-300 mb-4">Symbol: {collection.symbol}</p>
+                                    <div className="absolute bottom-0 left-0 md:left-10 p-4 md:p-8 z-10">
+                                        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">
+                                            {collection.name}
+                                        </h2>
+                                        <p className="text-xs md:text-sm text-gray-300 mb-4">
+                                            Symbol: {collection.symbol}
+                                        </p>
 
-                                        <div className="flex gap-4 md:gap-8 bg-[#0a0e1a]/90 rounded-lg p-3 md:p-4 backdrop-blur">
+                                        <div className="flex gap-4 md:gap-8 rounded-lg p-3
+                bg-black/20 border border-lines
+                backdrop-blur-md">
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Floor Price</div>
                                                 <div className="text-sm md:text-lg font-bold">
@@ -120,10 +126,14 @@ const Page = () => {
                                                         : 'N/A'}
                                                 </div>
                                             </div>
+
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Listings</div>
-                                                <div className="text-sm md:text-lg font-bold">{collection.cards_with_listings.toLocaleString()}</div>
+                                                <div className="text-sm md:text-lg font-bold">
+                                                    {collection.cards_with_listings.toLocaleString()}
+                                                </div>
                                             </div>
+
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Min Price</div>
                                                 <div className="text-sm md:text-lg font-bold">
@@ -134,6 +144,7 @@ const Page = () => {
                                             </div>
                                         </div>
                                     </div>
+
 
                                     {/* Collection Icon */}
                                     <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-10">
@@ -191,7 +202,7 @@ const Page = () => {
             </div>
 
             {/* Trending Tokens Section */}
-            <div className="mb-8 px-6">
+            <div className="pb-20 px-6">
                 <h2 className="text-2xl font-bold mb-2">Trending Collections</h2>
                 <p className="text-gray-400 text-sm mb-6">Most active collections</p>
 

@@ -5,3 +5,7 @@
     --color-background: #101011;
     --color-lines: rgba(128, 128, 128, 0.5);
 }
+
+body {
+    background-color: #101011;
+}
