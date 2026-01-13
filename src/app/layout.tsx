@@ -28,12 +28,12 @@ export default function RootLayout({
             className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 z-50 border-b border-lines bg-background">
             <div className="flex items-center gap-4 flex-1">
               {/* Logo */}
-              <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative">
+              <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative bg-red-500">
                 <Image
                   src="/assets/iconBg.png"
                   alt="Chained Icon"
                   fill
-                  className="object-contain scale-250"
+                  className="object-contain scale-150"
                 />
               </Link>
             </div>

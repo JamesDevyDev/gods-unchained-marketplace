@@ -450,7 +450,7 @@ const CardsPage = () => {
       <div className="relative h-[500px] overflow-hidden">
         {/* Background Image */}
         <img
-          src="https://wallpapercave.com/wp/wp12467251.jpg"
+          src="/assets/bg.png"
           className="absolute inset-0 w-full h-full object-cover scale-110"
           alt=""
         />
