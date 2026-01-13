@@ -464,7 +464,7 @@ const CardsPage = () => {
 
       <div className="flex ">
         {/* Desktop Sidebar Filters */}
-        <div className="hidden lg:block w-80 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
+        <div className="hidden lg:block w-70 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
@@ -490,7 +490,7 @@ const CardsPage = () => {
             />
 
             {/* Drawer */}
-            <div className="fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-lines p-6 overflow-y-auto z-50 lg:hidden animate-slide-in">
+            <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-6 overflow-y-auto z-50 lg:hidden animate-slide-in">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
                 <div className="flex items-center gap-2">
