@@ -5,66 +5,60 @@ import Autoplay from 'embla-carousel-autoplay'
 import useEmblaCarousel from 'embla-carousel-react'
 import { useRouter } from 'next/navigation'
 
+type Collection = {
+    name: string
+    symbol: string
+    contract_address: string
+    background_image: string
+    image: string
+    floor_price: number | null
+    floor_currency: string | null
+    floor_price_usd: number | null
+    cards_with_listings: number
+    min_price: string | null
+}
+
+type Project = {
+    id?: string
+    name: string
+    collections: Collection[]
+}
+
+type LandingData = {
+    projects: Project[]
+}
+
+
 const Page = () => {
+
 
     const router = useRouter()
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4000 })])
     const [selectedIndex, setSelectedIndex] = useState(0)
+    const [data, setData] = useState<LandingData>({ projects: [] })
 
-    // Sample data based on your example
-    const data = {
-        "projects": [
-            {
-                "collections": [
-                    {
-                        "background_image": "https://wallpapercave.com/wp/wp12467247.jpg",
-                        "cards_with_listings": 10158,
-                        "contract_address": "0x06d92b637dfcdf95a2faba04ef22b2a096029b69",
-                        "floor_currency": "USDC",
-                        "floor_price": 9.174e-15,
-                        "floor_price_usd": null,
-                        "image": "https://images.godsunchained.com/misc/gu-sigel.png",
-                        "min_price": "9174",
-                        "name": "Gods Unchained Cards",
-                        "symbol": "GUCA"
-                    },
-                    {
-                        "background_image": "https://wallpapercave.com/wp/wp12467251.jpg",
-                        "cards_with_listings": 211,
-                        "contract_address": "0xafb4ba96c44297250bec01e3185ca5154ba6c471",
-                        "floor_currency": "USDC",
-                        "floor_price": 1.834862e-12,
-                        "floor_price_usd": null,
-                        "image": "https://images.godsunchained.com/misc/gu-sigel.png",
-                        "min_price": "1834862",
-                        "name": "Gods Unchained Cosmetics",
-                        "symbol": "GUCO"
-                    }
-                ],
-                "name": "Gods Unchained"
-            },
-            {
-                "collections": [
-                    {
-                        "background_image": "https://www.blockchaingamer.biz/wp-content/uploads/2023/03/hunters16.9.jpg",
-                        "cards_with_listings": 1082,
-                        "contract_address": "0xae45ba8d0806e23323ff6bcea8520683cee8d74f",
-                        "floor_currency": "USDC",
-                        "floor_price": 8.96861e-13,
-                        "floor_price_usd": null,
-                        "image": "https://hunt-nft.cdn.boombit.cloud/External/GENESIS_Hunters.png",
-                        "min_price": "896861",
-                        "name": "Hunters On Chain - Genesis Hunters",
-                        "symbol": "Genesis Hunters"
-                    }
-                ],
-                "name": "Other Collections"
+    useEffect(() => {
+        const fetchLanding = async () => {
+            try {
+                const response = await fetch("https://immutable-marketplace.onrender.com/api/projects");
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const fetchData = await response.json();
+                setData(fetchData); // store the projects data
+            } catch (err) {
+                console.error("Failed to fetch projects:", err);
             }
-        ]
-    }
+        };
 
-    // Flatten all collections for carousel
-    const allCollections = data.projects.flatMap(project => project.collections)
+        fetchLanding();
+    }, []);
+
+
+    // Flatten all collections for carousel and filter out those with no listings
+    const allCollections = data.projects
+        .flatMap(project => project.collections)
+        .filter(collection => collection.cards_with_listings > 0)
 
     const scrollPrev = useCallback(() => {
         if (emblaApi) emblaApi.scrollPrev()
@@ -98,12 +92,10 @@ const Page = () => {
                     <div className="flex">
                         {allCollections.map((collection, index) => (
                             <div key={index} className="flex-[0_0_100%] min-w-0" onClick={() => {
-                                console.log("Hello world")
-                                console.log(collection)
                                 router.push(`/collection/${collection?.contract_address}`)
                             }}>
 
-                                <div className="relative h-96 overflow-hidden cursor-pointer">
+                                <div className="relative h-140 overflow-hidden cursor-pointer">
                                     {/* Background Image */}
                                     <div className="absolute inset-0">
                                         <img
@@ -115,14 +107,18 @@ const Page = () => {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="absolute bottom-0 left-0 p-4 md:p-8 z-10">
+                                    <div className="absolute bottom-0 left-0 md:left-10  p-4 md:p-8 z-10">
                                         <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">{collection.name}</h2>
                                         <p className="text-xs md:text-sm text-gray-300 mb-4">Symbol: {collection.symbol}</p>
 
                                         <div className="flex gap-4 md:gap-8 bg-[#0a0e1a]/90 rounded-lg p-3 md:p-4 backdrop-blur">
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Floor Price</div>
-                                                <div className="text-sm md:text-lg font-bold">{collection.floor_price?.toFixed(6)} {collection.floor_currency}</div>
+                                                <div className="text-sm md:text-lg font-bold">
+                                                    {collection.floor_price !== null && collection.floor_currency
+                                                        ? `${collection.floor_price.toFixed(6)} ${collection.floor_currency}`
+                                                        : 'N/A'}
+                                                </div>
                                             </div>
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Listings</div>
@@ -130,7 +126,11 @@ const Page = () => {
                                             </div>
                                             <div>
                                                 <div className="text-xs text-gray-400 uppercase mb-1">Min Price</div>
-                                                <div className="text-sm md:text-lg font-bold">{collection.min_price}</div>
+                                                <div className="text-sm md:text-lg font-bold">
+                                                    {collection.min_price && collection.floor_currency
+                                                        ? `${(parseFloat(collection.min_price) / 1e6).toFixed(2)} ${collection.floor_currency}`
+                                                        : 'N/A'}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -197,7 +197,11 @@ const Page = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {allCollections.map((collection, i) => (
-                        <div key={i} className="bg-[#151b2e] rounded-xl p-4 hover:bg-[#1f2937] transition cursor-pointer">
+                        <div
+                            key={i}
+                            className="bg-background border-1 border-lines rounded-xl p-4 hover:bg-[#1f2937] transition cursor-pointer"
+                            onClick={() => router.push(`/collection/${collection.contract_address}`)}
+                        >
                             <div className="flex items-center gap-3">
                                 <div className="w-12 h-12 rounded-full bg-[#1f2937] overflow-hidden flex-shrink-0">
                                     <img
@@ -209,7 +213,9 @@ const Page = () => {
                                 <div className="flex-1 min-w-0">
                                     <div className="font-semibold truncate">{collection.symbol}</div>
                                     <div className="text-sm text-gray-400">
-                                        {collection.floor_price?.toFixed(6)} {collection.floor_currency}
+                                        {collection.floor_price !== null && collection.floor_currency
+                                            ? `${collection.floor_price.toFixed(6)} ${collection.floor_currency}`
+                                            : 'No floor price'}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end">
