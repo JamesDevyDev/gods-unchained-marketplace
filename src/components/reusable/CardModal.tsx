@@ -81,15 +81,15 @@ const CardModal = ({
             onClick={onClose}
         >
             <div
-                className="bg-[#1a1d29] rounded-lg max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col"
+                className="bg-background rounded-lg max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="bg-[#0f1117] px-6 py-4 flex items-center justify-between border-b border-gray-700">
+                <div className="bg-background border-lines border-b px-6 py-4 flex items-center justify-between border-b border-gray-700">
                     <h2 className="text-2xl font-bold text-white">{card.name}</h2>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                           
+
                             <button onClick={onClose} className="p-2 hover:bg-gray-700 rounded transition-colors">
                                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -103,7 +103,7 @@ const CardModal = ({
                 <div className="flex flex-1 overflow-y-auto">
                     <div className="flex w-full">
                         {/* Left: Card Image & Chart */}
-                        <div className="w-[40%] bg-[#13151f] p-6 sticky top-0 h-fit">
+                        <div className="w-[40%] bg-background borderlines p-6 sticky top-0 h-fit">
                             <img
                                 src={card.image}
                                 alt={card.name}
@@ -111,7 +111,7 @@ const CardModal = ({
                             />
 
                             {/* Price Chart */}
-                            <div className="bg-[#0f1117] rounded-lg p-4">
+                            <div className="bg-background border-1 border-lines rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-4">
                                     <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                                     <span className="text-gray-400 text-sm">Avg. Daily Price</span>
@@ -123,14 +123,14 @@ const CardModal = ({
                         </div>
 
                         {/* Right: Trading Interface */}
-                        <div className="flex-1 bg-[#1a1d29] p-6">
+                        <div className="flex-1 bg-background p-6">
                             <div className="flex items-center justify-between mb-6">
                                 {/* Buy/Sell Tabs */}
                                 <div className="flex gap-2">
                                     <button
                                         className={`px-6 py-2 rounded font-semibold transition-colors ${activeTab === 'buy'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                             }`}
                                         onClick={() => setActiveTab('buy')}
                                     >
@@ -138,8 +138,8 @@ const CardModal = ({
                                     </button>
                                     <button
                                         className={`px-6 py-2 rounded font-semibold transition-colors ${activeTab === 'sell'
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                             }`}
                                         onClick={() => setActiveTab('sell')}
                                     >
@@ -153,7 +153,7 @@ const CardModal = ({
                             </div>
 
                             {/* Total Price & Actions */}
-                            <div className="bg-[#13151f] rounded-lg p-4 mb-6">
+                            <div className="bg-background border-lines border-1 rounded-lg p-4 mb-6">
                                 <div className="mb-4">
                                     <span className="text-gray-400 text-sm">Total Price:</span>
                                     <div className="flex items-baseline gap-2 mt-1">
@@ -231,7 +231,7 @@ const CardModal = ({
                                 </div>
 
                                 {/* Orders Table */}
-                                <div className="bg-[#13151f] rounded-lg overflow-hidden">
+                                <div className="bg-background border border-lines rounded-lg overflow-hidden">
                                     <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-[#0f1117] border-b border-gray-700 text-gray-400 text-sm font-semibold">
                                         <div>Price</div>
                                         <div>Amount</div>
@@ -273,7 +273,7 @@ const CardModal = ({
                                     </svg>
                                 </div>
 
-                                <div className="bg-[#13151f] rounded-lg overflow-hidden">
+                                <div className="bg-background border border-lines rounded-lg overflow-hidden">
                                     <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-[#0f1117] border-b border-gray-700 text-gray-400 text-sm font-semibold">
                                         <div>Price</div>
                                         <div>Amount</div>

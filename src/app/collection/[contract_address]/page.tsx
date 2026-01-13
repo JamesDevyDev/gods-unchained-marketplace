@@ -34,6 +34,20 @@ interface Stack {
   last_sold_price: number | null
 }
 
+interface Contract {
+
+  cards_with_listings: number | null
+  contract_address: string | null
+  description: string | null
+  floor_currency: string | null
+  floor_price: number | null
+  image: string | null,
+  name: string | null
+  symbol: string | null
+  total_listings: number | null
+
+}
+
 interface ApiResponse {
   stacks: Stack[]
   total: number
@@ -43,6 +57,8 @@ interface ApiResponse {
 const CardsPage = () => {
   const params = useParams()
   const contract_address = params.contract_address as string
+
+  const [contractData, setContractData] = useState<Contract>()
 
   const [cards, setCards] = useState<Stack[]>([])
   const [loading, setLoading] = useState(false)
@@ -61,9 +77,6 @@ const CardsPage = () => {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  // API Configuration
-  const API_BASE_URL = 'https://immutable-marketplace.onrender.com'
-
   // Fetch all stacks from your API
   const fetchCards = async () => {
     if (!contract_address) return
@@ -71,19 +84,25 @@ const CardsPage = () => {
     setLoading(true)
     setError(null)
     try {
-      const url = `${API_BASE_URL}/api/collections/${contract_address}/all-stacks`
-      console.log('Fetching from:', url)
+      const url = `${process.env.NEXT_PUBLIC_API_BASE_URL!}/api/collections/${contract_address}/all-stacks`
+      const url2 = `${process.env.NEXT_PUBLIC_API_BASE_URL!}/api/collections/${contract_address}`
 
       const response = await fetch(url)
+      const response2 = await fetch(url2)
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+      if (!response2.ok) {
+        throw new Error(`HTTP error! status: ${response2.status}`)
+      }
 
       const data: ApiResponse = await response.json()
-      console.log('Fetched data:', data)
+      const data2 = await response2.json()
 
       setCards(data.stacks || [])
+      setContractData(data2)
+
 
       // Log cache status
       if (data.cached) {
@@ -279,10 +298,10 @@ const CardsPage = () => {
     (priceRange.min || priceRange.max ? 1 : 0)
 
   return (
-    <div className="min-h-screen bg-[#151b2e]">
+    <div className="min-h-screen bg-background">
       <div className="flex pt-20">
         {/* Sidebar Filters */}
-        <div className="w-80 bg-[#151b2e] border-r border-[#36393f] p-6 overflow-y-auto h-screen sticky top-16">
+        <div className="w-80 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
@@ -451,7 +470,7 @@ const CardsPage = () => {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
-                    Gods Unchained Cards
+                    {contractData?.name}
                   </h1>
                   <p className="text-gray-400">
                     {displayedCards.length} of {filteredCards.length} items
