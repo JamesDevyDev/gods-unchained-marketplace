@@ -48,11 +48,11 @@ const CardItem = ({
             onClick={onClick}
         >
             {/* Image */}
-            <div className="aspect-[2/3] relative overflow-hidden">
+            <div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center">
                 <img
                     src={card.image}
                     alt={card.name}
-                    className="w-full h-full object-cover"
+                    className="w-[90%] h-[90%] "
                     loading="lazy"
                 />
 
@@ -68,13 +68,13 @@ const CardItem = ({
 
             {/* Info */}
             <div className="p-3">
-                <h3 className="text-white font-semibold text-center truncate mb-2">
+                <h3 className="text-white font-semibold truncate mb-2">
                     {card.name}
                 </h3>
 
                 {card.best_usd_price && (
-                    <div className="text-center">
-                        <p className="text-green-400 font-bold text-sm">
+                    <div className="">
+                        <p className="font-bold text-sm">
                             ${formatPrice(card.best_usd_price)}
                         </p>
                         <p className="text-gray-500 text-xs">
@@ -83,7 +83,7 @@ const CardItem = ({
                     </div>
                 )}
 
-                <p className="text-gray-400 text-xs text-center mt-1">
+                <p className="text-gray-400 text-xs mt-1">
                     {card.total_listings} listing
                     {card.total_listings !== 1 ? 's' : ''}
                 </p>
