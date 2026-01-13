@@ -3,8 +3,6 @@ import "./globals.css";
 import Image from "next/image";
 import Link from "next/link";
 
-import { COLORS } from "../../constants";
-
 export const metadata: Metadata = {
   title: "ChainedX | NFT Marketplace",
   description: "ChainedX | NFT Marketplace",

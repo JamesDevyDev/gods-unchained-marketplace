@@ -91,7 +91,7 @@ const Page = () => {
                 <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-6 mb-2" ref={emblaRef}>
                     <div className="flex">
                         {allCollections.map((collection, index) => (
-                            <div key={index} className="flex-[0_0_100%] min-w-0 border-1 border-lines" onClick={() => {
+                            <div key={index} className="flex-[0_0_100%] min-w-0 md:border border-lines" onClick={() => {
                                 router.push(`/collection/${collection?.contract_address}`)
                             }}>
 
