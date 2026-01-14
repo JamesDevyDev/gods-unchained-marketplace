@@ -231,7 +231,9 @@ const CardsPage = () => {
           }
         }
       },
-      { threshold: 0.1 }
+      {
+        threshold: 0.5, rootMargin: '1000px'
+      }
     )
 
     if (loadMoreRef.current) {
@@ -464,7 +466,7 @@ const CardsPage = () => {
 
       <div className="flex ">
         {/* Desktop Sidebar Filters */}
-        <div className="hidden lg:block w-70 bg-background border-r border-lines p-6 overflow-y-auto h-screen sticky top-16">
+        <div className="hidden lg:block w-70 bg-background border-r border-lines p-4 overflow-y-auto h-screen sticky top-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
@@ -490,7 +492,7 @@ const CardsPage = () => {
             />
 
             {/* Drawer */}
-            <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-6 overflow-y-auto z-50 lg:hidden animate-slide-in">
+            <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-4 overflow-y-auto z-50 lg:hidden animate-slide-in">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
                 <div className="flex items-center gap-2">
@@ -502,9 +504,10 @@ const CardsPage = () => {
                       Clear all
                     </button>
                   )}
+                  {/* X Button */}
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
-                    className="text-gray-400 hover:text-white transition"
+                    className="text-gray-400 hover:text-white transition cursor-pointer"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
