@@ -35,6 +35,7 @@ type Props = {
     getRarityColor: (rarity: string) => string
     formatPrice: (price: number | null) => string
     onClose: () => void
+    selectedCurrency: string
 }
 
 const CardModal = ({
@@ -42,11 +43,18 @@ const CardModal = ({
     getRarityColor,
     formatPrice,
     onClose,
+    selectedCurrency,
 }: Props) => {
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [quantity, setQuantity] = useState(1)
     const [showGroupOrders, setShowGroupOrders] = useState(true)
     const [showMyOrders, setShowMyOrders] = useState(false)
+
+    // Get currency icon path
+    const getCurrencyIcon = (currency: string): string => {
+        const currencyLower = currency.toLowerCase()
+        return `/assets/currency/${currencyLower}.png`
+    }
 
     // Prevent body scroll when modal is open
     useEffect(() => {
@@ -73,6 +81,32 @@ const CardModal = ({
 
     if (!card) return null
 
+    // Get price to display based on selectedCurrency
+    const getPriceToDisplay = () => {
+        if (!card.all_prices || Object.keys(card.all_prices).length === 0) {
+            return null
+        }
+
+        // If a specific currency is selected, show only that currency's price
+        if (selectedCurrency && card.all_prices[selectedCurrency]) {
+            return {
+                currency: selectedCurrency,
+                priceInfo: card.all_prices[selectedCurrency]
+            }
+        }
+
+        // If no currency filter, show the best (cheapest) price
+        if (card.best_currency && card.all_prices[card.best_currency]) {
+            return {
+                currency: card.best_currency,
+                priceInfo: card.all_prices[card.best_currency]
+            }
+        }
+
+        return null
+    }
+
+    const displayPrice = getPriceToDisplay()
     const youOwn = 5
 
     return (
@@ -155,12 +189,32 @@ const CardModal = ({
                             <div className="bg-background border-lines border rounded-lg p-3 sm:p-4 mb-6">
                                 <div className="mb-4">
                                     <span className="text-gray-400 text-xs sm:text-sm">Total Price:</span>
-                                    <div className="flex items-baseline gap-2 mt-1">
-                                        <span className="text-yellow-500 text-xl sm:text-2xl font-bold">
-                                            ⟁ {card.best_usd_price ? formatPrice(card.best_usd_price) : '0.000001'}
-                                        </span>
-                                        <span className="text-gray-500 text-xs sm:text-sm">($0.00)</span>
-                                    </div>
+                                    {displayPrice ? (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <img
+                                                src={getCurrencyIcon(displayPrice.currency)}
+                                                alt={displayPrice.currency}
+                                                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none'
+                                                }}
+                                            />
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-yellow-500 text-xl sm:text-2xl font-bold">
+                                                    {formatPrice(displayPrice.priceInfo.price)} {displayPrice.currency}
+                                                </span>
+                                                <span className="text-gray-500 text-xs sm:text-sm">
+                                                    (${formatPrice(displayPrice.priceInfo.usd)})
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-baseline gap-2 mt-1">
+                                            <span className="text-gray-500 text-xl sm:text-2xl font-bold italic">
+                                                No listings
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Quantity Selector */}
@@ -241,57 +295,48 @@ const CardModal = ({
                                     </div>
 
                                     <div>
-                                        {Object.entries(card.all_prices).map(([currency, priceInfo], index) => (
-                                            <div
-                                                key={priceInfo.listing_id}
-                                                className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
-                                            >
-                                                <div>
-                                                    <div className="text-yellow-500 font-bold">${formatPrice(priceInfo.usd)}</div>
-                                                    <div className="text-gray-500 text-xs">⟁ {formatPrice(priceInfo.price)}</div>
-                                                </div>
-                                                <div className="text-white">1</div>
-                                                <div className="text-gray-400 text-sm">
-                                                    {Math.floor(Math.random() * 24)} months
-                                                </div>
-                                                <div>
-                                                    <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors">
-                                                        Buy
-                                                    </button>
-                                                </div>
+
+                                        {/* Dito yung data */}
+                                        <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                                            <div>
+                                                <div className="text-yellow-500 font-bold">$</div>
                                             </div>
-                                        ))}
+                                            <div className="text-white">1</div>
+                                            <div className="text-gray-400 text-sm">
+                                                {Math.floor(Math.random() * 24)} months
+                                            </div>
+                                            <div>
+                                                <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors">
+                                                    Buy
+                                                </button>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
 
                                 {/* Orders Cards - Mobile */}
                                 <div className="sm:hidden space-y-3">
-                                    {Object.entries(card.all_prices).map(([currency, priceInfo], index) => (
-                                        <div
-                                            key={priceInfo.listing_id}
-                                            className="bg-background border border-lines rounded-lg p-3"
-                                        >
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <div className="text-yellow-500 font-bold text-sm">${formatPrice(priceInfo.usd)}</div>
-                                                    <div className="text-gray-500 text-xs">⟁ {formatPrice(priceInfo.price)}</div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-gray-400 text-xs">Amount</div>
-                                                    <div className="text-white text-sm font-semibold">1</div>
-                                                </div>
+                                    <div className="bg-background border border-lines rounded-lg p-3">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <div className="text-yellow-500 font-bold text-sm">$</div>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <div>
-                                                    <div className="text-gray-400 text-xs">Expires In</div>
-                                                    <div className="text-gray-300 text-sm">{Math.floor(Math.random() * 24)} months</div>
-                                                </div>
-                                                <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors">
-                                                    Buy
-                                                </button>
+                                            <div className="text-right">
+                                                <div className="text-gray-400 text-xs">Amount</div>
+                                                <div className="text-white text-sm font-semibold">1</div>
                                             </div>
                                         </div>
-                                    ))}
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <div className="text-gray-400 text-xs">Expires In</div>
+                                                <div className="text-gray-300 text-sm">3 months</div>
+                                            </div>
+                                            <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors">
+                                                Buy
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

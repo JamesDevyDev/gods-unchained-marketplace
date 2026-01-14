@@ -37,7 +37,6 @@ interface Stack {
 }
 
 interface Contract {
-
   cards_with_listings: number | null
   contract_address: string | null
   description: string | null
@@ -47,7 +46,6 @@ interface Contract {
   name: string | null
   symbol: string | null
   total_listings: number | null
-
 }
 
 interface ApiResponse {
@@ -71,11 +69,12 @@ const CardsPage = () => {
   // Mobile filter drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
-  // Filter states
-  const [selectedRarities, setSelectedRarities] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  // Filter states - All single selections
+  const [selectedRarity, setSelectedRarity] = useState<string>('')
+  const [selectedType, setSelectedType] = useState<string>('')
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' })
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string[]>>({})
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('')
 
   // Infinite scroll state
   const [displayedCount, setDisplayedCount] = useState(50)
@@ -108,8 +107,6 @@ const CardsPage = () => {
       setCards(data.stacks || [])
       setContractData(data2)
 
-
-      // Log cache status
       if (data.cached) {
         console.log('Data served from cache')
       } else {
@@ -130,27 +127,41 @@ const CardsPage = () => {
     }
   }, [contract_address])
 
+  // Specific attributes to show as filters
+  const ALLOWED_ATTRIBUTES = ['Attack', 'God', 'Health', 'Mana', 'Quality', 'Set', 'Tribe']
+
   // Get unique values for filters
   const filterOptions = useMemo(() => {
     const rarities = new Set<string>()
     const types = new Set<string>()
+    const currencies = new Set<string>()
     const attributes: Record<string, Set<string>> = {}
 
     cards.forEach(card => {
       rarities.add(card.rarity)
       types.add(card.item_type)
 
+      if (card.all_prices) {
+        Object.keys(card.all_prices).forEach(currency => {
+          currencies.add(currency)
+        })
+      }
+
+      // Only include allowed attributes
       Object.entries(card.attributes).forEach(([key, value]) => {
-        if (!attributes[key]) {
-          attributes[key] = new Set()
+        if (ALLOWED_ATTRIBUTES.includes(key)) {
+          if (!attributes[key]) {
+            attributes[key] = new Set()
+          }
+          attributes[key].add(String(value))
         }
-        attributes[key].add(String(value))
       })
     })
 
     return {
       rarities: Array.from(rarities).sort(),
       types: Array.from(types).sort(),
+      currencies: Array.from(currencies).sort(),
       attributes: Object.fromEntries(
         Object.entries(attributes).map(([key, values]) => [key, Array.from(values).sort()])
       )
@@ -175,13 +186,21 @@ const CardsPage = () => {
     }
 
     // Rarity filter
-    if (selectedRarities.length > 0) {
-      filtered = filtered.filter(card => selectedRarities.includes(card.rarity))
+    if (selectedRarity) {
+      filtered = filtered.filter(card => card.rarity === selectedRarity)
     }
 
     // Type filter
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter(card => selectedTypes.includes(card.item_type))
+    if (selectedType) {
+      filtered = filtered.filter(card => card.item_type === selectedType)
+    }
+
+    // Currency filter
+    if (selectedCurrency) {
+      filtered = filtered.filter(card => {
+        if (!card.all_prices) return false
+        return selectedCurrency in card.all_prices
+      })
     }
 
     // Price range filter
@@ -198,16 +217,16 @@ const CardsPage = () => {
     }
 
     // Attribute filters
-    Object.entries(selectedAttributes).forEach(([key, values]) => {
-      if (values.length > 0) {
+    Object.entries(selectedAttributes).forEach(([key, value]) => {
+      if (value) {
         filtered = filtered.filter(card =>
-          values.includes(String(card.attributes[key]))
+          String(card.attributes[key]) === value
         )
       }
     })
 
     return filtered
-  }, [cards, searchQuery, selectedRarities, selectedTypes, priceRange, selectedAttributes])
+  }, [cards, searchQuery, selectedRarity, selectedType, selectedCurrency, priceRange, selectedAttributes])
 
   // Reset displayed count when filters change
   useEffect(() => {
@@ -247,37 +266,14 @@ const CardsPage = () => {
     }
   }, [loading, displayedCount, filteredCards.length])
 
-  // Toggle filter selection
-  const toggleFilter = (type: 'rarity' | 'type', value: string) => {
-    if (type === 'rarity') {
-      setSelectedRarities(prev =>
-        prev.includes(value) ? prev.filter(r => r !== value) : [...prev, value]
-      )
-    } else {
-      setSelectedTypes(prev =>
-        prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
-      )
-    }
-  }
-
-  const toggleAttributeFilter = (attributeKey: string, value: string) => {
-    setSelectedAttributes(prev => {
-      const current = prev[attributeKey] || []
-      const updated = current.includes(value)
-        ? current.filter(v => v !== value)
-        : [...current, value]
-
-      return { ...prev, [attributeKey]: updated }
-    })
-  }
-
   // Clear all filters
   const clearAllFilters = () => {
-    setSelectedRarities([])
-    setSelectedTypes([])
+    setSelectedRarity('')
+    setSelectedType('')
     setPriceRange({ min: '', max: '' })
     setSelectedAttributes({})
     setSearchQuery('')
+    setSelectedCurrency('')
   }
 
   // Format price for display
@@ -300,69 +296,52 @@ const CardsPage = () => {
     return rarityColors[rarity.toLowerCase()] || 'text-gray-400'
   }
 
-  const activeFiltersCount = selectedRarities.length + selectedTypes.length +
-    Object.values(selectedAttributes).reduce((acc, arr) => acc + arr.length, 0) +
+  const activeFiltersCount = (selectedRarity ? 1 : 0) + (selectedType ? 1 : 0) + (selectedCurrency ? 1 : 0) +
+    Object.values(selectedAttributes).filter(v => v).length +
     (priceRange.min || priceRange.max ? 1 : 0)
 
   // Filter content component to avoid duplication
   const FilterContent = () => (
-    <>
-      {/* Status Filter */}
-      <div className="mb-6">
-        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-          <span>Status</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div className="space-y-2">
-          <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
-            <input type="checkbox" className="mr-2 rounded" />
-            All
-          </label>
-          <label className="flex items-center text-sm text-gray-300 hover:text-white cursor-pointer">
-            <input type="checkbox" className="mr-2 rounded" />
-            Listed
-          </label>
+    <div className="space-y-4 mb-16">
+      {/* Currency Filter */}
+      {filterOptions.currencies.length > 0 && (
+        <div>
+          <label className="block text-white font-semibold mb-2 text-sm">Currency</label>
+          <select
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value)}
+            className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+          >
+            <option value="">All Currencies</option>
+            {filterOptions.currencies.map(currency => (
+              <option key={currency} value={currency}>
+                {currency} ({cards.filter(c => c.all_prices && currency in c.all_prices).length})
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
+      )}
 
       {/* Rarity Filter */}
-      <div className="mb-6">
-        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-          <span>Rarity</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div className="space-y-2">
+      <div>
+        <label className="block text-white font-semibold mb-2 text-sm">Rarity</label>
+        <select
+          value={selectedRarity}
+          onChange={(e) => setSelectedRarity(e.target.value)}
+          className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm capitalize"
+        >
+          <option value="">All Rarities</option>
           {filterOptions.rarities.map(rarity => (
-            <label key={rarity} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedRarities.includes(rarity)}
-                  onChange={() => toggleFilter('rarity', rarity)}
-                  className="mr-2 rounded"
-                />
-                <span className="capitalize">{rarity}</span>
-              </div>
-              <span className="text-gray-500 text-xs">
-                {cards.filter(c => c.rarity === rarity).length}
-              </span>
-            </label>
+            <option key={rarity} value={rarity} className="capitalize">
+              {rarity} ({cards.filter(c => c.rarity === rarity).length})
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       {/* Price Filter */}
-      <div className="mb-6">
-        <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-          <span>Price</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+      <div>
+        <label className="block text-white font-semibold mb-2 text-sm">Price</label>
         <div className="flex gap-2">
           <input
             type="number"
@@ -383,66 +362,50 @@ const CardsPage = () => {
 
       {/* Type Filter */}
       {filterOptions.types.length > 0 && (
-        <div className="mb-6">
-          <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-            <span>Type</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+        <div>
+          <label className="block text-white font-semibold mb-2 text-sm">Type</label>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+          >
+            <option value="">All Types</option>
             {filterOptions.types.map(type => (
-              <label key={type} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => toggleFilter('type', type)}
-                    className="mr-2 rounded"
-                  />
-                  <span>{type}</span>
-                </div>
-                <span className="text-gray-500 text-xs">
-                  {cards.filter(c => c.item_type === type).length}
-                </span>
-              </label>
+              <option key={type} value={type}>
+                {type} ({cards.filter(c => c.item_type === type).length})
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       )}
 
       {/* Attribute Filters */}
-      {Object.entries(filterOptions.attributes).map(([key, values]) => (
-        values.length > 0 && (
-          <div key={key} className="mb-6">
-            <button className="w-full flex items-center justify-between text-white font-semibold mb-3">
-              <span className="capitalize">{key}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {values.slice(0, 10).map(value => (
-                <label key={value} className="flex items-center justify-between text-sm text-gray-300 hover:text-white cursor-pointer">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={(selectedAttributes[key] || []).includes(value)}
-                      onChange={() => toggleAttributeFilter(key, value)}
-                      className="mr-2 rounded"
-                    />
-                    <span className="truncate">{value}</span>
-                  </div>
-                  <span className="text-gray-500 text-xs">
-                    {cards.filter(c => String(c.attributes[key]) === value).length}
-                  </span>
-                </label>
+      {ALLOWED_ATTRIBUTES.map(attributeKey => {
+        const values = filterOptions.attributes[attributeKey]
+        if (!values || values.length === 0) return null
+
+        return (
+          <div key={attributeKey}>
+            <label className="block text-white font-semibold mb-2 text-sm">{attributeKey}</label>
+            <select
+              value={selectedAttributes[attributeKey] || ''}
+              onChange={(e) => setSelectedAttributes(prev => ({
+                ...prev,
+                [attributeKey]: e.target.value
+              }))}
+              className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+            >
+              <option value="">All {attributeKey}</option>
+              {values.map(value => (
+                <option key={value} value={value}>
+                  {value} ({cards.filter(c => String(c.attributes[attributeKey]) === value).length})
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )
-      ))}
-    </>
+      })}
+    </div>
   )
 
   return (
@@ -450,17 +413,12 @@ const CardsPage = () => {
 
       {/* Hero Section */}
       <div className="relative h-[500px] overflow-hidden">
-        {/* Background Image */}
         <img
           src="/assets/bg.png"
           className="absolute inset-0 w-full h-full object-cover scale-110"
           alt=""
         />
-
-        {/* Dark cinematic gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-        {/* Subtle noise / contrast layer */}
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
@@ -485,13 +443,11 @@ const CardsPage = () => {
         {/* Mobile Filter Drawer */}
         {isMobileFilterOpen && (
           <>
-            {/* Backdrop */}
             <div
               className="fixed inset-0 bg-black/60 z-40 lg:hidden"
               onClick={() => setIsMobileFilterOpen(false)}
             />
 
-            {/* Drawer */}
             <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-4 overflow-y-auto z-50 lg:hidden animate-slide-in">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
@@ -504,7 +460,6 @@ const CardsPage = () => {
                       Clear all
                     </button>
                   )}
-                  {/* X Button */}
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
                     className="text-gray-400 hover:text-white transition cursor-pointer"
@@ -540,7 +495,6 @@ const CardsPage = () => {
               <div>
                 {/* Search */}
                 <div className="mb-6 flex items-center justify-center relative gap-4">
-                  {/* Mobile Filter Toggle Button */}
                   <button
                     onClick={() => setIsMobileFilterOpen(true)}
                     className="lg:hidden h-full w-[50px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
@@ -586,6 +540,7 @@ const CardsPage = () => {
                       getRarityColor={getRarityColor}
                       formatPrice={formatPrice}
                       onClick={() => setSelectedCard(card)}
+                      selectedCurrency={selectedCurrency}
                     />
                   ))}
                 </div>
@@ -640,6 +595,7 @@ const CardsPage = () => {
         getRarityColor={getRarityColor}
         formatPrice={formatPrice}
         onClose={() => setSelectedCard(null)}
+        selectedCurrency={selectedCurrency}
       />
     </div>
   )

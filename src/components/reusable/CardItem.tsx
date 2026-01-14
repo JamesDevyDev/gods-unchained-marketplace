@@ -34,6 +34,7 @@ type Props = {
     getRarityColor: (rarity: string) => string
     formatPrice: (price: number | null) => string
     onClick: () => void
+    selectedCurrency: string
 }
 
 const CardItem = ({
@@ -41,7 +42,41 @@ const CardItem = ({
     getRarityColor,
     formatPrice,
     onClick,
+    selectedCurrency,
 }: Props) => {
+    // Get currency icon path
+    const getCurrencyIcon = (currency: string): string => {
+        const currencyLower = currency.toLowerCase()
+        return `/assets/currency/${currencyLower}.png`
+    }
+
+    // Determine which price to show based on selectedCurrency
+    const getPriceToDisplay = () => {
+        if (!card.all_prices || Object.keys(card.all_prices).length === 0) {
+            return null
+        }
+
+        // If a specific currency is selected, show only that currency's price
+        if (selectedCurrency && card.all_prices[selectedCurrency]) {
+            return {
+                currency: selectedCurrency,
+                priceInfo: card.all_prices[selectedCurrency]
+            }
+        }
+
+        // If no currency filter, show the best (cheapest) price
+        if (card.best_currency && card.all_prices[card.best_currency]) {
+            return {
+                currency: card.best_currency,
+                priceInfo: card.all_prices[card.best_currency]
+            }
+        }
+
+        return null
+    }
+
+    const displayPrice = getPriceToDisplay()
+
     return (
         <div
             className="bg-background border-lines border-1 rounded-md overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-101 transform cursor-pointer group"
@@ -52,7 +87,7 @@ const CardItem = ({
                 <img
                     src={card.image}
                     alt={card.name}
-                    className="w-[90%] h-[90%] "
+                    className="w-[90%] h-[90%]"
                     loading="lazy"
                 />
 
@@ -72,13 +107,33 @@ const CardItem = ({
                     {card.name}
                 </h3>
 
-                {card.best_usd_price && (
+                {displayPrice ? (
                     <div className="">
-                        <p className="font-bold text-sm">
-                            ${formatPrice(card.best_usd_price)}
+                        {/* USD Price - Main Highlight */}
+                        <p className="font-bold text-sm mb-1">
+                            ${formatPrice(displayPrice.priceInfo.usd)} USD
                         </p>
-                        <p className="text-gray-500 text-xs">
-                            {card.best_currency}
+
+                        {/* Currency Price - Bottom */}
+                        <div className="flex items-center gap-1.5">
+                            <img
+                                src={getCurrencyIcon(displayPrice.currency)}
+                                alt={displayPrice.currency}
+                                className="w-3.5 h-3.5 rounded-full"
+                                onError={(e) => {
+                                    // Fallback if image doesn't load
+                                    e.currentTarget.style.display = 'none'
+                                }}
+                            />
+                            <p className="text-gray-500 text-xs">
+                                {formatPrice(displayPrice.priceInfo.price)} {displayPrice.currency}
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="">
+                        <p className="text-gray-500 text-sm italic">
+                            No listings
                         </p>
                     </div>
                 )}
