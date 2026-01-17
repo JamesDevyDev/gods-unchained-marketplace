@@ -1,617 +1,10 @@
-// 'use client'
-
-// import CardItem from '@/components/reusable/CardItem'
-// import CardModal from '@/components/reusable/CardModal'
-// import React, { useState, useEffect, useRef, useMemo } from 'react'
-// import { useParams } from 'next/navigation'
-// import { Menu } from 'lucide-react';
-
-
-// interface CardAttributes {
-//   [key: string]: string | number
-// }
-
-// interface PriceInfo {
-//   listing_id: string
-//   price: number
-//   usd: number
-// }
-
-// interface AllPrices {
-//   [currency: string]: PriceInfo
-// }
-
-// interface Stack {
-//   metadata_id: string
-//   name: string
-//   description: string | null
-//   image: string
-//   attributes: CardAttributes
-//   rarity: string
-//   item_type: string
-//   total_listings: number
-//   all_prices: AllPrices
-//   best_usd_price: number | null
-//   best_currency: string | null
-//   last_sold_price: number | null
-// }
-
-// interface Contract {
-//   cards_with_listings: number | null
-//   contract_address: string | null
-//   description: string | null
-//   floor_currency: string | null
-//   floor_price: number | null
-//   image: string | null,
-//   name: string | null
-//   symbol: string | null
-//   total_listings: number | null
-// }
-
-// interface ApiResponse {
-//   stacks: Stack[]
-//   total: number
-//   cached: boolean
-// }
-
-// const CardsPage = () => {
-//   const params = useParams()
-//   const contract_address = params.contract_address as string
-
-//   const [contractData, setContractData] = useState<Contract>()
-
-//   const [cards, setCards] = useState<Stack[]>([])
-//   const [loading, setLoading] = useState(false)
-//   const [selectedCard, setSelectedCard] = useState<Stack | null>(null)
-//   const [error, setError] = useState<string | null>(null)
-//   const [searchQuery, setSearchQuery] = useState('')
-
-//   // Mobile filter drawer state
-//   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
-
-//   // Filter states - All single selections
-//   const [selectedRarity, setSelectedRarity] = useState<string>('')
-//   const [selectedType, setSelectedType] = useState<string>('')
-//   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' })
-//   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
-//   const [selectedCurrency, setSelectedCurrency] = useState<string>('')
-
-//   // Infinite scroll state
-//   const [displayedCount, setDisplayedCount] = useState(50)
-//   const observerRef = useRef<IntersectionObserver | null>(null)
-//   const loadMoreRef = useRef<HTMLDivElement>(null)
-
-//   // Fetch all stacks from your API
-//   const fetchCards = async () => {
-//     if (!contract_address) return
-
-//     setLoading(true)
-//     setError(null)
-//     try {
-//       const url = `${process.env.NEXT_PUBLIC_API_BASE_URL!}/api/collections/${contract_address}/all-stacks`
-//       const url2 = `${process.env.NEXT_PUBLIC_API_BASE_URL!}/api/collections/${contract_address}`
-
-//       const response = await fetch(url)
-//       const response2 = await fetch(url2)
-
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${response.status}`)
-//       }
-//       if (!response2.ok) {
-//         throw new Error(`HTTP error! status: ${response2.status}`)
-//       }
-
-//       const data: ApiResponse = await response.json()
-//       const data2 = await response2.json()
-
-//       setCards(data.stacks || [])
-//       setContractData(data2)
-
-//       if (data.cached) {
-//         console.log('Data served from cache')
-//       } else {
-//         console.log('Fresh data from database')
-//       }
-//     } catch (error) {
-//       console.error('Error fetching cards:', error)
-//       setError(error instanceof Error ? error.message : 'Failed to fetch cards')
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   // Initial fetch
-//   useEffect(() => {
-//     if (contract_address) {
-//       fetchCards()
-//     }
-//   }, [contract_address])
-
-//   // Specific attributes to show as filters
-//   const ALLOWED_ATTRIBUTES = ['Attack', 'God', 'Health', 'Mana', 'Quality', 'Set', 'Tribe']
-
-//   // Get unique values for filters
-//   const filterOptions = useMemo(() => {
-//     const rarities = new Set<string>()
-//     const types = new Set<string>()
-//     const currencies = new Set<string>()
-//     const attributes: Record<string, Set<string>> = {}
-
-//     cards.forEach(card => {
-//       rarities.add(card.rarity)
-//       types.add(card.item_type)
-
-//       if (card.all_prices) {
-//         Object.keys(card.all_prices).forEach(currency => {
-//           currencies.add(currency)
-//         })
-//       }
-
-//       // Only include allowed attributes
-//       Object.entries(card.attributes).forEach(([key, value]) => {
-//         if (ALLOWED_ATTRIBUTES.includes(key)) {
-//           if (!attributes[key]) {
-//             attributes[key] = new Set()
-//           }
-//           attributes[key].add(String(value))
-//         }
-//       })
-//     })
-
-//     return {
-//       rarities: Array.from(rarities).sort(),
-//       types: Array.from(types).sort(),
-//       currencies: Array.from(currencies).sort(),
-//       attributes: Object.fromEntries(
-//         Object.entries(attributes).map(([key, values]) => [key, Array.from(values).sort()])
-//       )
-//     }
-//   }, [cards])
-
-//   // Filter cards based on all filters
-//   const filteredCards = useMemo(() => {
-//     let filtered = cards
-
-//     // Search query filter
-//     if (searchQuery.trim()) {
-//       const query = searchQuery.toLowerCase()
-//       filtered = filtered.filter(card =>
-//         card.name.toLowerCase().includes(query) ||
-//         card.rarity.toLowerCase().includes(query) ||
-//         card.item_type.toLowerCase().includes(query) ||
-//         Object.values(card.attributes).some(attr =>
-//           String(attr).toLowerCase().includes(query)
-//         )
-//       )
-//     }
-
-//     // Rarity filter
-//     if (selectedRarity) {
-//       filtered = filtered.filter(card => card.rarity === selectedRarity)
-//     }
-
-//     // Type filter
-//     if (selectedType) {
-//       filtered = filtered.filter(card => card.item_type === selectedType)
-//     }
-
-//     // Currency filter
-//     if (selectedCurrency) {
-//       filtered = filtered.filter(card => {
-//         if (!card.all_prices) return false
-//         return selectedCurrency in card.all_prices
-//       })
-//     }
-
-//     // Price range filter
-//     if (priceRange.min || priceRange.max) {
-//       filtered = filtered.filter(card => {
-//         const price = card.best_usd_price
-//         if (price === null) return false
-
-//         const min = priceRange.min ? parseFloat(priceRange.min) : 0
-//         const max = priceRange.max ? parseFloat(priceRange.max) : Infinity
-
-//         return price >= min && price <= max
-//       })
-//     }
-
-//     // Attribute filters
-//     Object.entries(selectedAttributes).forEach(([key, value]) => {
-//       if (value) {
-//         filtered = filtered.filter(card =>
-//           String(card.attributes[key]) === value
-//         )
-//       }
-//     })
-
-//     return filtered
-//   }, [cards, searchQuery, selectedRarity, selectedType, selectedCurrency, priceRange, selectedAttributes])
-
-//   // Reset displayed count when filters change
-//   useEffect(() => {
-//     setDisplayedCount(50)
-//   }, [filteredCards])
-
-//   // Cards to display (filtered + limited by displayedCount)
-//   const displayedCards = useMemo(() => {
-//     return filteredCards.slice(0, displayedCount)
-//   }, [filteredCards, displayedCount])
-
-//   // Intersection Observer for infinite scroll
-//   useEffect(() => {
-//     if (observerRef.current) observerRef.current.disconnect()
-
-//     observerRef.current = new IntersectionObserver(
-//       (entries) => {
-//         if (entries[0].isIntersecting && !loading) {
-//           if (displayedCount < filteredCards.length) {
-//             setDisplayedCount(prev => Math.min(prev + 50, filteredCards.length))
-//           }
-//         }
-//       },
-//       {
-//         threshold: 0.5, rootMargin: '1000px'
-//       }
-//     )
-
-//     if (loadMoreRef.current) {
-//       observerRef.current.observe(loadMoreRef.current)
-//     }
-
-//     return () => {
-//       if (observerRef.current) {
-//         observerRef.current.disconnect()
-//       }
-//     }
-//   }, [loading, displayedCount, filteredCards.length])
-
-//   // Clear all filters
-//   const clearAllFilters = () => {
-//     setSelectedRarity('')
-//     setSelectedType('')
-//     setPriceRange({ min: '', max: '' })
-//     setSelectedAttributes({})
-//     setSearchQuery('')
-//     setSelectedCurrency('')
-//   }
-
-//   // Format price for display
-//   const formatPrice = (price: number | null): string => {
-//     if (price === null || price === undefined) return 'N/A'
-//     if (price < 0.01) return price.toFixed(6)
-//     if (price < 1) return price.toFixed(4)
-//     return price.toFixed(2)
-//   }
-
-//   // Get rarity color
-//   const getRarityColor = (rarity: string): string => {
-//     const rarityColors: { [key: string]: string } = {
-//       common: 'text-gray-400',
-//       rare: 'text-blue-400',
-//       epic: 'text-purple-400',
-//       legendary: 'text-orange-400',
-//       mythic: 'text-red-400'
-//     }
-//     return rarityColors[rarity.toLowerCase()] || 'text-gray-400'
-//   }
-
-//   const activeFiltersCount = (selectedRarity ? 1 : 0) + (selectedType ? 1 : 0) + (selectedCurrency ? 1 : 0) +
-//     Object.values(selectedAttributes).filter(v => v).length +
-//     (priceRange.min || priceRange.max ? 1 : 0)
-
-//   // Filter content component to avoid duplication
-//   const FilterContent = () => (
-//     <div className="space-y-4 mb-16">
-//       {/* Currency Filter */}
-//       {filterOptions.currencies.length > 0 && (
-//         <div>
-//           <label className="block text-white font-semibold mb-2 text-sm">Currency</label>
-//           <select
-//             value={selectedCurrency}
-//             onChange={(e) => setSelectedCurrency(e.target.value)}
-//             className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//           >
-//             <option value="">All Currencies</option>
-//             {filterOptions.currencies.map(currency => (
-//               <option key={currency} value={currency}>
-//                 {currency} ({cards.filter(c => c.all_prices && currency in c.all_prices).length})
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-//       )}
-
-//       {/* Rarity Filter */}
-//       <div>
-//         <label className="block text-white font-semibold mb-2 text-sm">Rarity</label>
-//         <select
-//           value={selectedRarity}
-//           onChange={(e) => setSelectedRarity(e.target.value)}
-//           className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm capitalize"
-//         >
-//           <option value="">All Rarities</option>
-//           {filterOptions.rarities.map(rarity => (
-//             <option key={rarity} value={rarity} className="capitalize">
-//               {rarity} ({cards.filter(c => c.rarity === rarity).length})
-//             </option>
-//           ))}
-//         </select>
-//       </div>
-
-//       {/* Price Filter */}
-//       <div>
-//         <label className="block text-white font-semibold mb-2 text-sm">Price</label>
-//         <div className="flex gap-2">
-//           <input
-//             type="number"
-//             placeholder="Min"
-//             value={priceRange.min}
-//             onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
-//             className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//           />
-//           <input
-//             type="number"
-//             placeholder="Max"
-//             value={priceRange.max}
-//             onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
-//             className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//           />
-//         </div>
-//       </div>
-
-//       {/* Type Filter */}
-//       {filterOptions.types.length > 0 && (
-//         <div>
-//           <label className="block text-white font-semibold mb-2 text-sm">Type</label>
-//           <select
-//             value={selectedType}
-//             onChange={(e) => setSelectedType(e.target.value)}
-//             className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//           >
-//             <option value="">All Types</option>
-//             {filterOptions.types.map(type => (
-//               <option key={type} value={type}>
-//                 {type} ({cards.filter(c => c.item_type === type).length})
-//               </option>
-//             ))}
-//           </select>
-//         </div>
-//       )}
-
-//       {/* Attribute Filters */}
-//       {ALLOWED_ATTRIBUTES.map(attributeKey => {
-//         const values = filterOptions.attributes[attributeKey]
-//         if (!values || values.length === 0) return null
-
-//         return (
-//           <div key={attributeKey}>
-//             <label className="block text-white font-semibold mb-2 text-sm">{attributeKey}</label>
-//             <select
-//               value={selectedAttributes[attributeKey] || ''}
-//               onChange={(e) => setSelectedAttributes(prev => ({
-//                 ...prev,
-//                 [attributeKey]: e.target.value
-//               }))}
-//               className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//             >
-//               <option value="">All {attributeKey}</option>
-//               {values.map(value => (
-//                 <option key={value} value={value}>
-//                   {value} ({cards.filter(c => String(c.attributes[attributeKey]) === value).length})
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//         )
-//       })}
-//     </div>
-//   )
-
-//   return (
-//     <div className="min-h-screen bg-background relative">
-
-//       {/* Hero Section */}
-//       <div className="relative h-[500px] overflow-hidden">
-//         <img
-//           src="/assets/bg.png"
-//           className="absolute inset-0 w-full h-full object-cover scale-110"
-//           alt=""
-//         />
-//         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-//         <div className="absolute inset-0 bg-black/60" />
-//       </div>
-
-//       <div className="flex ">
-//         {/* Desktop Sidebar Filters */}
-//         <div className="hidden lg:block w-70 bg-background border-r border-lines p-4 overflow-y-auto h-screen sticky top-16">
-//           <div className="flex items-center justify-between mb-6">
-//             <h2 className="text-xl font-bold text-white">Filters</h2>
-//             {activeFiltersCount > 0 && (
-//               <button
-//                 onClick={clearAllFilters}
-//                 className="text-sm text-[#2081E2] hover:text-[#1868B7] transition"
-//               >
-//                 Clear all
-//               </button>
-//             )}
-//           </div>
-
-//           <FilterContent />
-//         </div>
-
-//         {/* Mobile Filter Drawer */}
-//         {isMobileFilterOpen && (
-//           <>
-//             <div
-//               className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-//               onClick={() => setIsMobileFilterOpen(false)}
-//             />
-
-//             <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-4 overflow-y-auto z-50 lg:hidden animate-slide-in">
-//               <div className="flex items-center justify-between mb-6">
-//                 <h2 className="text-xl font-bold text-white">Filters</h2>
-//                 <div className="flex items-center gap-2">
-//                   {activeFiltersCount > 0 && (
-//                     <button
-//                       onClick={clearAllFilters}
-//                       className="text-sm text-[#2081E2] hover:text-[#1868B7] transition"
-//                     >
-//                       Clear all
-//                     </button>
-//                   )}
-//                   <button
-//                     onClick={() => setIsMobileFilterOpen(false)}
-//                     className="text-gray-400 hover:text-white transition cursor-pointer"
-//                   >
-//                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-//                     </svg>
-//                   </button>
-//                 </div>
-//               </div>
-
-//               <FilterContent />
-//             </div>
-//           </>
-//         )}
-
-//         {/* Main Content */}
-//         <div className="flex-1 px-8 flex">
-//           <div className="w-full max-w-[1920px] pb-16 mx-auto">
-//             {/* Header */}
-//             <div className="z-10 bg-background  border-lines border-b sticky top-16">
-//               <div className="flex justify-between items-center mb-4">
-//                 <div>
-//                   <h1 className="text-3xl font-bold text-white my-4">
-//                     {contractData?.name}
-//                   </h1>
-//                   <p className="text-gray-400">
-//                     {displayedCards.length} of {filteredCards.length} items
-//                     {searchQuery && ` (filtered from ${cards.length} total)`}
-//                   </p>
-//                 </div>
-//               </div>
-//               <div>
-//                 {/* Search */}
-//                 <div className="mb-6 flex items-center justify-center relative gap-4">
-//                   <button
-//                     onClick={() => setIsMobileFilterOpen(true)}
-//                     className="lg:hidden h-full w-[50px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
-//                   >
-//                     <Menu />
-//                   </button>
-
-//                   <input
-//                     type="text"
-//                     placeholder="Search..."
-//                     value={searchQuery}
-//                     onChange={(e) => setSearchQuery(e.target.value)}
-//                     className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Error message */}
-//             {error && (
-//               <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
-//                 <p className="font-semibold">Error loading cards:</p>
-//                 <p>{error}</p>
-//               </div>
-//             )}
-
-//             {/* Loading indicator */}
-//             {loading && cards.length === 0 && (
-//               <div className="flex flex-col justify-center items-center py-20">
-//                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mb-4"></div>
-//                 <p className="text-gray-400 text-lg">Loading cards...</p>
-//               </div>
-//             )}
-
-//             {/* Cards grid */}
-//             {!loading && displayedCards.length > 0 && (
-//               <>
-//                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-//                   {displayedCards.map((card) => (
-//                     <CardItem
-//                       key={card.metadata_id}
-//                       card={card}
-//                       getRarityColor={getRarityColor}
-//                       formatPrice={formatPrice}
-//                       onClick={() => setSelectedCard(card)}
-//                       selectedCurrency={selectedCurrency}
-//                     />
-//                   ))}
-//                 </div>
-
-//                 {/* Load more trigger */}
-//                 {displayedCount < filteredCards.length && (
-//                   <div
-//                     ref={loadMoreRef}
-//                     className="flex justify-center items-center py-8"
-//                   >
-//                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-//                     <span className="ml-3 text-gray-400">Loading more cards...</span>
-//                   </div>
-//                 )}
-
-//                 {/* End of results */}
-//                 {displayedCount >= filteredCards.length && filteredCards.length > 50 && (
-//                   <div className="text-center py-8">
-//                     <p className="text-gray-400">All cards loaded</p>
-//                   </div>
-//                 )}
-//               </>
-//             )}
-
-//             {/* No results state */}
-//             {!loading && filteredCards.length === 0 && (
-//               <div className="text-center py-20">
-//                 <p className="text-gray-400 text-xl mb-4">
-//                   No cards found matching your filters
-//                 </p>
-//                 <button
-//                   onClick={clearAllFilters}
-//                   className="px-6 py-2 bg-[#2081E2] hover:bg-[#1868B7] text-white rounded-lg transition-colors"
-//                 >
-//                   Clear All Filters
-//                 </button>
-//               </div>
-//             )}
-
-//             {/* Empty state */}
-//             {!loading && cards.length === 0 && !error && (
-//               <div className="text-center py-20">
-//                 <p className="text-gray-400 text-xl">No cards found</p>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-//       <CardModal
-//         card={selectedCard}
-//         getRarityColor={getRarityColor}
-//         formatPrice={formatPrice}
-//         onClose={() => setSelectedCard(null)}
-//         selectedCurrency={selectedCurrency}
-//       />
-//     </div>
-//   )
-// }
-
-// export default CardsPage
-
-
-
 'use client'
 
 import CardItem from '@/components/reusable/CardItem'
 import CardModal from '@/components/reusable/CardModal'
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import { Menu } from 'lucide-react';
+import { Menu, ChevronDown, ChevronUp, Search } from 'lucide-react';
 
 interface CardAttributes {
   [key: string]: string | number
@@ -663,42 +56,141 @@ interface ApiResponse {
 // Skeleton Components
 const CardSkeleton = () => (
   <div className="bg-background border-lines border-1 rounded-md overflow-hidden shadow-lg">
-    {/* Image Skeleton */}
     <div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center bg-gray-800 animate-pulse">
       <div className="w-[90%] h-[90%] bg-gray-700 rounded"></div>
-      {/* Rarity Badge Skeleton */}
       <div className="absolute top-2 right-2 w-16 h-5 bg-gray-700 rounded animate-pulse"></div>
     </div>
-
-    {/* Info Skeleton */}
     <div className="p-3 space-y-2">
-      {/* Title */}
       <div className="h-5 bg-gray-700 rounded w-3/4 animate-pulse"></div>
-
-      {/* Price */}
       <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse"></div>
-
-      {/* Currency */}
       <div className="flex items-center gap-1.5">
         <div className="w-3.5 h-3.5 bg-gray-700 rounded-full animate-pulse"></div>
         <div className="h-3 bg-gray-700 rounded w-20 animate-pulse"></div>
       </div>
-
-      {/* Listings */}
       <div className="h-3 bg-gray-700 rounded w-16 animate-pulse"></div>
     </div>
   </div>
 )
 
 const FilterSkeleton = () => (
-  <div className="space-y-4">
+  <div className="space-y-1">
     {[...Array(6)].map((_, i) => (
-      <div key={i}>
-        <div className="h-4 w-20 bg-gray-700 rounded mb-2 animate-pulse"></div>
-        <div className="h-10 w-full bg-gray-700 rounded animate-pulse"></div>
+      <div key={i} className="border-b border-[#353840] py-4">
+        <div className="h-5 w-24 bg-gray-700 rounded animate-pulse"></div>
       </div>
     ))}
   </div>
+)
+
+// OpenSea-style Dropdown Filter Component
+interface DropdownFilterProps {
+  label: string
+  count?: number
+  isOpen: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}
+
+const DropdownFilter: React.FC<DropdownFilterProps> = ({ label, count, isOpen, onToggle, children }) => (
+  <div className=" border-b border-[#353840]">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between py-4 px-0 hover:opacity-80 transition-opacity"
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-white font-semibold text-base">{label}</span>
+        {count !== undefined && count > 0 && (
+          <span className="text-xs text-white bg-[#2081E2] px-2 py-0.5 rounded-full font-medium">
+            {count}
+          </span>
+        )}
+      </div>
+      {isOpen ? (
+        <ChevronUp className="w-5 h-5 text-gray-400" />
+      ) : (
+        <ChevronDown className="w-5 h-5 text-gray-400" />
+      )}
+    </button>
+
+    {isOpen && (
+      <div className="pb-4">
+        {children}
+      </div>
+    )}
+  </div>
+)
+
+// Checkbox Option Component
+interface CheckboxOptionProps {
+  label: string
+  count: number
+  checked: boolean
+  onChange: () => void
+}
+
+const CheckboxOption: React.FC<CheckboxOptionProps> = ({ label, count, checked, onChange }) => (
+  <label className="flex items-center justify-between py-2 px-1 hover:bg-[#353840] rounded cursor-pointer group transition-colors">
+    <div className="flex items-center gap-3 flex-1">
+      <div className="relative flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="w-4 h-4 appearance-none border-2 border-gray-500 rounded cursor-pointer
+                     checked:bg-[#2081E2] checked:border-[#2081E2] transition-all
+                     hover:border-gray-400"
+        />
+        {checked && (
+          <svg
+            className="w-3 h-3 text-white absolute pointer-events-none"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="3"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path d="M5 13l4 4L19 7"></path>
+          </svg>
+        )}
+      </div>
+      <span className="text-gray-300 text-sm group-hover:text-white capitalize">
+        {label}
+      </span>
+    </div>
+    <span className="text-gray-400 text-sm">{count}</span>
+  </label>
+)
+
+// Radio Option Component for single selection
+interface RadioOptionProps {
+  label: string
+  count: number
+  checked: boolean
+  onChange: () => void
+}
+
+const RadioOption: React.FC<RadioOptionProps> = ({ label, count, checked, onChange }) => (
+  <label className="flex items-center justify-between py-2 px-1 hover:bg-[#353840] rounded cursor-pointer group transition-colors">
+    <div className="flex items-center gap-3 flex-1">
+      <div className="relative flex items-center justify-center">
+        <input
+          type="radio"
+          checked={checked}
+          onChange={onChange}
+          className="w-4 h-4 appearance-none border-2 border-gray-500 rounded-full cursor-pointer
+                     checked:border-[#2081E2] transition-all hover:border-gray-400"
+        />
+        {checked && (
+          <div className="w-2 h-2 bg-[#2081E2] rounded-full absolute pointer-events-none"></div>
+        )}
+      </div>
+      <span className="text-gray-300 text-sm group-hover:text-white capitalize">
+        {label}
+      </span>
+    </div>
+    <span className="text-gray-400 text-sm">{count}</span>
+  </label>
 )
 
 const CardsPage = () => {
@@ -715,17 +207,47 @@ const CardsPage = () => {
   // Mobile filter drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
-  // Filter states - All single selections
-  const [selectedRarity, setSelectedRarity] = useState<string>('')
-  const [selectedType, setSelectedType] = useState<string>('')
+  // Dropdown open states
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({
+    currency: true,
+    rarity: false,
+    price: false,
+    type: false,
+  })
+
+  // Filter states
+  const [selectedRarities, setSelectedRarities] = useState<Set<string>>(new Set())
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' })
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('')
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, Set<string>>>({})
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('') // Changed to single string
+
+  // Search states for filters
+  const [raritySearch, setRaritySearch] = useState('')
+  const [typeSearch, setTypeSearch] = useState('')
+  const [currencySearch, setCurrencySearch] = useState('')
+  const [attributeSearches, setAttributeSearches] = useState<Record<string, string>>({})
 
   // Infinite scroll state
   const [displayedCount, setDisplayedCount] = useState(50)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  // Toggle dropdown
+  const toggleDropdown = (key: string) => {
+    setOpenDropdowns(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Toggle selection helpers
+  const toggleSetItem = <T,>(set: Set<T>, item: T): Set<T> => {
+    const newSet = new Set(set)
+    if (newSet.has(item)) {
+      newSet.delete(item)
+    } else {
+      newSet.add(item)
+    }
+    return newSet
+  }
 
   // Fetch all stacks from your API
   const fetchCards = async () => {
@@ -832,17 +354,17 @@ const CardsPage = () => {
       )
     }
 
-    // Rarity filter
-    if (selectedRarity) {
-      filtered = filtered.filter(card => card.rarity === selectedRarity)
+    // Rarity filter (multiple)
+    if (selectedRarities.size > 0) {
+      filtered = filtered.filter(card => selectedRarities.has(card.rarity))
     }
 
-    // Type filter
-    if (selectedType) {
-      filtered = filtered.filter(card => card.item_type === selectedType)
+    // Type filter (multiple)
+    if (selectedTypes.size > 0) {
+      filtered = filtered.filter(card => selectedTypes.has(card.item_type))
     }
 
-    // Currency filter
+    // Currency filter (single selection)
     if (selectedCurrency) {
       filtered = filtered.filter(card => {
         if (!card.all_prices) return false
@@ -863,17 +385,17 @@ const CardsPage = () => {
       })
     }
 
-    // Attribute filters
-    Object.entries(selectedAttributes).forEach(([key, value]) => {
-      if (value) {
+    // Attribute filters (multiple per attribute)
+    Object.entries(selectedAttributes).forEach(([key, valueSet]) => {
+      if (valueSet.size > 0) {
         filtered = filtered.filter(card =>
-          String(card.attributes[key]) === value
+          valueSet.has(String(card.attributes[key]))
         )
       }
     })
 
     return filtered
-  }, [cards, searchQuery, selectedRarity, selectedType, selectedCurrency, priceRange, selectedAttributes])
+  }, [cards, searchQuery, selectedRarities, selectedTypes, selectedCurrency, priceRange, selectedAttributes])
 
   // Reset displayed count when filters change
   useEffect(() => {
@@ -913,12 +435,16 @@ const CardsPage = () => {
 
   // Clear all filters
   const clearAllFilters = () => {
-    setSelectedRarity('')
-    setSelectedType('')
+    setSelectedRarities(new Set())
+    setSelectedTypes(new Set())
     setPriceRange({ min: '', max: '' })
     setSelectedAttributes({})
     setSearchQuery('')
-    setSelectedCurrency('')
+    setSelectedCurrency('') // Changed
+    setRaritySearch('')
+    setTypeSearch('')
+    setCurrencySearch('')
+    setAttributeSearches({})
   }
 
   // Format price for display
@@ -942,93 +468,162 @@ const CardsPage = () => {
   }
 
   const activeFiltersCount =
-    (selectedRarity ? 1 : 0) +
-    (selectedType ? 1 : 0) +
-    (selectedCurrency ? 1 : 0) +
-    Object.values(selectedAttributes).filter(v => v).length +
+    selectedRarities.size +
+    selectedTypes.size +
+    (selectedCurrency ? 1 : 0) + // Changed
+    Object.values(selectedAttributes).reduce((sum, set) => sum + set.size, 0) +
     (priceRange.min || priceRange.max ? 1 : 0)
 
   // Filter content component to avoid duplication
   const FilterContent = () => (
-    <div className="space-y-4 mb-16">
+    <div className="space-y-0">
       {loading ? (
         <FilterSkeleton />
       ) : (
         <>
-          {/* Currency Filter */}
+          {/* Currency Filter - Single Selection */}
           {filterOptions.currencies.length > 0 && (
-            <div>
-              <label className="block text-white font-semibold mb-2 text-sm">Currency</label>
-              <select
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value)}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-              >
-                <option value="">All Currencies</option>
-                {filterOptions.currencies.map(currency => (
-                  <option key={currency} value={currency}>
-                    {currency} ({cards.filter(c => c.all_prices && currency in c.all_prices).length})
-                  </option>
-                ))}
-              </select>
-            </div>
+            <DropdownFilter
+              label="Currency"
+              count={selectedCurrency ? 1 : 0}
+              isOpen={openDropdowns.currency}
+              onToggle={() => toggleDropdown('currency')}
+            >
+              <div className="space-y-1">
+                {/* Search */}
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search currencies"
+                    value={currencySearch}
+                    onChange={(e) => setCurrencySearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
+                  />
+                </div>
+
+                <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                  {/* All option */}
+                  <RadioOption
+                    label="All Currencies"
+                    count={cards.length}
+                    checked={!selectedCurrency}
+                    onChange={() => setSelectedCurrency('')}
+                  />
+
+                  {filterOptions.currencies
+                    .filter(currency => currency.toLowerCase().includes(currencySearch.toLowerCase()))
+                    .map(currency => (
+                      <RadioOption
+                        key={currency}
+                        label={currency}
+                        count={cards.filter(c => c.all_prices && currency in c.all_prices).length}
+                        checked={selectedCurrency === currency}
+                        onChange={() => setSelectedCurrency(currency)}
+                      />
+                    ))}
+                </div>
+              </div>
+            </DropdownFilter>
           )}
 
           {/* Rarity Filter */}
-          <div>
-            <label className="block text-white font-semibold mb-2 text-sm">Rarity</label>
-            <select
-              value={selectedRarity}
-              onChange={(e) => setSelectedRarity(e.target.value)}
-              className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm capitalize"
-            >
-              <option value="">All Rarities</option>
-              {filterOptions.rarities.map(rarity => (
-                <option key={rarity} value={rarity} className="capitalize">
-                  {rarity} ({cards.filter(c => c.rarity === rarity).length})
-                </option>
-              ))}
-            </select>
-          </div>
+          <DropdownFilter
+            label="Rarity"
+            count={selectedRarities.size}
+            isOpen={openDropdowns.rarity}
+            onToggle={() => toggleDropdown('rarity')}
+          >
+            <div className="space-y-1">
+              {/* Search */}
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search rarities"
+                  value={raritySearch}
+                  onChange={(e) => setRaritySearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
+                />
+              </div>
+
+              <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                {filterOptions.rarities
+                  .filter(rarity => rarity.toLowerCase().includes(raritySearch.toLowerCase()))
+                  .map(rarity => (
+                    <CheckboxOption
+                      key={rarity}
+                      label={rarity}
+                      count={cards.filter(c => c.rarity === rarity).length}
+                      checked={selectedRarities.has(rarity)}
+                      onChange={() => setSelectedRarities(prev => toggleSetItem(prev, rarity))}
+                    />
+                  ))}
+              </div>
+            </div>
+          </DropdownFilter>
 
           {/* Price Filter */}
-          <div>
-            <label className="block text-white font-semibold mb-2 text-sm">Price</label>
+          <DropdownFilter
+            label="Price"
+            count={priceRange.min || priceRange.max ? 1 : 0}
+            isOpen={openDropdowns.price}
+            onToggle={() => toggleDropdown('price')}
+          >
             <div className="flex gap-2">
               <input
                 type="number"
                 placeholder="Min"
                 value={priceRange.min}
                 onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                className="w-full px-3 py-2 bg-[#202225] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
               />
               <input
                 type="number"
                 placeholder="Max"
                 value={priceRange.max}
                 onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                className="w-full px-3 py-2 bg-[#202225] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
               />
             </div>
-          </div>
+          </DropdownFilter>
 
           {/* Type Filter */}
           {filterOptions.types.length > 0 && (
-            <div>
-              <label className="block text-white font-semibold mb-2 text-sm">Type</label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-              >
-                <option value="">All Types</option>
-                {filterOptions.types.map(type => (
-                  <option key={type} value={type}>
-                    {type} ({cards.filter(c => c.item_type === type).length})
-                  </option>
-                ))}
-              </select>
-            </div>
+            <DropdownFilter
+              label="Type"
+              count={selectedTypes.size}
+              isOpen={openDropdowns.type}
+              onToggle={() => toggleDropdown('type')}
+            >
+              <div className="space-y-1">
+                {/* Search */}
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search types"
+                    value={typeSearch}
+                    onChange={(e) => setTypeSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
+                  />
+                </div>
+
+                <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                  {filterOptions.types
+                    .filter(type => type.toLowerCase().includes(typeSearch.toLowerCase()))
+                    .map(type => (
+                      <CheckboxOption
+                        key={type}
+                        label={type}
+                        count={cards.filter(c => c.item_type === type).length}
+                        checked={selectedTypes.has(type)}
+                        onChange={() => setSelectedTypes(prev => toggleSetItem(prev, type))}
+                      />
+                    ))}
+                </div>
+              </div>
+            </DropdownFilter>
           )}
 
           {/* Attribute Filters */}
@@ -1036,25 +631,51 @@ const CardsPage = () => {
             const values = filterOptions.attributes[attributeKey]
             if (!values || values.length === 0) return null
 
+            const dropdownKey = `attr_${attributeKey}`
+            const selectedSet = selectedAttributes[attributeKey] || new Set()
+            const searchValue = attributeSearches[attributeKey] || ''
+
             return (
-              <div key={attributeKey}>
-                <label className="block text-white font-semibold mb-2 text-sm">{attributeKey}</label>
-                <select
-                  value={selectedAttributes[attributeKey] || ''}
-                  onChange={(e) => setSelectedAttributes(prev => ({
-                    ...prev,
-                    [attributeKey]: e.target.value
-                  }))}
-                  className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-                >
-                  <option value="">All {attributeKey}</option>
-                  {values.map(value => (
-                    <option key={value} value={value}>
-                      {value} ({cards.filter(c => String(c.attributes[attributeKey]) === value).length})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <DropdownFilter
+                key={attributeKey}
+                label={attributeKey}
+                count={selectedSet.size}
+                isOpen={openDropdowns[dropdownKey]}
+                onToggle={() => toggleDropdown(dropdownKey)}
+              >
+                <div className="space-y-1">
+                  {/* Search */}
+                  <div className="relative mb-2">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${attributeKey.toLowerCase()}`}
+                      value={searchValue}
+                      onChange={(e) => setAttributeSearches(prev => ({ ...prev, [attributeKey]: e.target.value }))}
+                      className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                    {values
+                      .filter(value => value.toLowerCase().includes(searchValue.toLowerCase()))
+                      .map(value => (
+                        <CheckboxOption
+                          key={value}
+                          label={value}
+                          count={cards.filter(c => String(c.attributes[attributeKey]) === value).length}
+                          checked={selectedSet.has(value)}
+                          onChange={() => {
+                            setSelectedAttributes(prev => ({
+                              ...prev,
+                              [attributeKey]: toggleSetItem(prev[attributeKey] || new Set(), value)
+                            }))
+                          }}
+                        />
+                      ))}
+                  </div>
+                </div>
+              </DropdownFilter>
             )
           })}
         </>
@@ -1064,6 +685,23 @@ const CardsPage = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #202225;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #4a4a4a;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #5a5a5a;
+        }
+      `}</style>
+
       {/* Hero Section */}
       <div className="relative h-[500px] overflow-hidden">
         <img
@@ -1077,13 +715,13 @@ const CardsPage = () => {
 
       <div className="flex ">
         {/* Desktop Sidebar Filters */}
-        <div className="hidden lg:block w-70 bg-background border-r border-lines p-4 overflow-y-auto h-screen sticky top-16">
+        <div className="hidden lg:block w-80 bg-background border-r border-lines px-5 py-6 overflow-y-auto h-screen sticky top-16 custom-scrollbar">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
               <button
                 onClick={clearAllFilters}
-                className="text-sm text-[#2081E2] hover:text-[#1868B7] transition"
+                className="cursor-pointer text-sm text-[#2081E2] hover:text-[#1868B7] transition font-semibold"
               >
                 Clear all
               </button>
@@ -1099,21 +737,21 @@ const CardsPage = () => {
               className="fixed inset-0 bg-black/60 z-40 lg:hidden"
               onClick={() => setIsMobileFilterOpen(false)}
             />
-            <div className="fixed left-0 top-0 bottom-0 w-70 bg-background border-r border-lines p-4 overflow-y-auto z-50 lg:hidden animate-slide-in">
+            <div className="fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-lines px-5 py-6 overflow-y-auto z-50 lg:hidden animate-slide-in custom-scrollbar">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
                 <div className="flex items-center gap-2">
                   {activeFiltersCount > 0 && (
                     <button
                       onClick={clearAllFilters}
-                      className="text-sm text-[#2081E2] hover:text-[#1868B7] transition"
+                      className="text-sm text-[#2081E2] hover:text-[#1868B7] transition font-semibold"
                     >
                       Clear all
                     </button>
                   )}
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
-                    className="text-gray-400 hover:text-white transition cursor-pointer"
+                    className=" text-gray-400 hover:text-white transition cursor-pointer"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1232,7 +870,7 @@ const CardsPage = () => {
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="px-6 py-2 bg-[#2081E2] hover:bg-[#1868B7] text-white rounded-lg transition-colors"
+                  className="px-6 py-2 bg-[#2081E2] hover:text-[#1868B7] text-white rounded-lg transition-colors"
                 >
                   Clear All Filters
                 </button>
