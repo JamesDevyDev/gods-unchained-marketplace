@@ -26,7 +26,7 @@ export default function Navbar() {
     const TOKEN_CONTRACTS = {
         IMX: 'native', // IMX is the native token
         ETH: '0x52a6c53869ce09a731cd772f245b97a4401d3348', // WETH on Immutable
-        GODS: '0xccC8cb5229B0ac8069C51fd58367Fd1e622aFD97', // Gods Unchained token
+        GODS: '0xe0e0981d19ef2e0a57cc48ca60d9454ed2d53feb', // Gods Unchained token
         USDC: '0x6de8acc0d406837030ce4dd28e7c08c5a96a30d2', // USDC on Immutable zkEVM
     };
 
@@ -102,8 +102,8 @@ export default function Navbar() {
             if (!ethereum) return;
 
             const chainId = await ethereum.request({ method: 'eth_chainId' });
-
-            if (chainId === IMMUTABLE_ZKEVM_MAINNET.chainId) {
+            
+            if (chainId.toLocaleLowerCase() === IMMUTABLE_ZKEVM_MAINNET.chainId.toLocaleLowerCase()) {
                 setNetwork('Immutable zkEVM');
             } else {
                 setNetwork('Wrong Network');
@@ -200,7 +200,9 @@ export default function Navbar() {
                 }, 'latest']
             });
 
-            if (!balance || balance === '0x' || balance === '0x0') return '0.0000';
+            if (!balance || balance === '0x' || balance === '0x0') {
+                return '0.0000';
+            }
 
             const tokenBalance = parseInt(balance, 16) / Math.pow(10, decimals);
             return tokenBalance.toFixed(4);
@@ -346,6 +348,11 @@ export default function Navbar() {
         return `https://api.dicebear.com/7.x/identicon/svg?seed=${address}`;
     };
 
+    // Get token icon - works in production
+    const getTokenIcon = (symbol: string) => {
+        return `/assets/currency/${symbol}.png`;
+    };
+
     return (
         <nav className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 z-50 border-b border-lines bg-background">
             <div className="flex items-center gap-4 flex-1">
@@ -408,8 +415,6 @@ export default function Navbar() {
                                         </div>
                                     </div>
                                 </div>
-
-
 
                                 {showNetworkGuide && (
                                     <div className="p-4 bg-gray-800/50 border-b border-gray-700 text-xs space-y-3">
@@ -479,7 +484,7 @@ export default function Navbar() {
                                         <div className="text-sm font-medium">Balances</div>
                                         <button
                                             onClick={() => fetchAllBalances(account)}
-                                            className="text-gray-400 hover:text-white transition"
+                                            className="cursor-pointer text-gray-400 hover:text-white transition"
                                             disabled={isLoadingBalances}
                                         >
                                             <svg className={`w-4 h-4 ${isLoadingBalances ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,11 +501,15 @@ export default function Navbar() {
                                                 <div key={index} className="flex items-center justify-between py-2">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 relative">
-                                                            <Image
-                                                                src={`/assets/currency/${token.symbol}.png`}
+                                                            {/* Use regular img tag instead of Next Image for dynamic paths in production */}
+                                                            <img
+                                                                src={getTokenIcon(token.symbol)}
                                                                 alt={token.symbol}
-                                                                fill
-                                                                className="object-contain"
+                                                                className="w-full h-full object-contain"
+                                                                onError={(e) => {
+                                                                    // Fallback to a placeholder if image fails to load
+                                                                    (e.target as HTMLImageElement).src = `https://via.placeholder.com/24/444/fff?text=${token.symbol}`;
+                                                                }}
                                                             />
                                                         </div>
                                                         <span className="font-medium">{token.symbol}</span>
