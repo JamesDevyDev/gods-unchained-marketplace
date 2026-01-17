@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 
@@ -102,7 +101,7 @@ export default function Navbar() {
             if (!ethereum) return;
 
             const chainId = await ethereum.request({ method: 'eth_chainId' });
-            
+
             if (chainId.toLocaleLowerCase() === IMMUTABLE_ZKEVM_MAINNET.chainId.toLocaleLowerCase()) {
                 setNetwork('Immutable zkEVM');
             } else {
@@ -357,11 +356,10 @@ export default function Navbar() {
         <nav className="fixed top-0 left-0 right-0 h-16 flex items-center px-6 z-50 border-b border-lines bg-background">
             <div className="flex items-center gap-4 flex-1">
                 <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative">
-                    <Image
+                    <img
                         src="/assets/icon2.png"
                         alt="Chained Icon"
-                        fill
-                        className="object-contain scale-150"
+                        className="w-full h-full object-contain scale-150"
                     />
                 </Link>
             </div>
@@ -501,7 +499,6 @@ export default function Navbar() {
                                                 <div key={index} className="flex items-center justify-between py-2">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 relative">
-                                                            {/* Use regular img tag instead of Next Image for dynamic paths in production */}
                                                             <img
                                                                 src={getTokenIcon(token.symbol)}
                                                                 alt={token.symbol}
@@ -528,7 +525,7 @@ export default function Navbar() {
 
                                 {/* Action Buttons */}
                                 <div className="p-3 grid grid-cols-4 gap-2">
-                                    <button className="flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
+                                    <button className="cursor-pointer flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
                                         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -536,7 +533,7 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-xs">Add</span>
                                     </button>
-                                    <button className="flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
+                                    <button className="cursor-pointer flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
                                         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -544,7 +541,7 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-xs">Bridge</span>
                                     </button>
-                                    <button className="flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
+                                    <button className="cursor-pointer flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
                                         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -552,7 +549,7 @@ export default function Navbar() {
                                         </div>
                                         <span className="text-xs">Swap</span>
                                     </button>
-                                    <button className="flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
+                                    <button className="cursor-pointer flex flex-col items-center gap-1 p-2 hover:bg-gray-800 rounded-lg transition">
                                         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
