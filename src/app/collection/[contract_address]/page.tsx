@@ -784,31 +784,27 @@ const CardsPage = () => {
   )
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #202225;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #4a4a4a;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #5a5a5a;
-        }
-      `}</style>
-
+    <div className="min-h-screen  bg-background relative">
       {/* Hero Section */}
-      <div className="relative h-[500px] overflow-hidden">
+      <div className="relative h-[300px] overflow-hidden flex items-center justify-center">
+
         <img
           src="/assets/bg.png"
           className="absolute inset-0 w-full h-full object-cover scale-110"
           alt=""
         />
+
+        <div className="flex justify-between items-center z-20">
+          <div>
+            <h1 className="text-3xl font-bold text-white my-4">
+              {loading ? (
+                "") : (
+                contractData?.name
+              )}
+            </h1>
+          </div>
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         <div className="absolute inset-0 bg-black/60" />
       </div>
@@ -865,94 +861,94 @@ const CardsPage = () => {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 px-8 flex">
-          <div className="w-full max-w-[1920px] pb-16 mx-auto">
+        <div className="flex-1 px-2 flex">
+          <div className="w-full max-w-[1920px] pb-16">
             {/* Header */}
             <div className="z-10 bg-background border-lines border-b sticky top-16">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-white my-4">
-                    {loading ? (
-                      <div className="h-9 w-64 bg-gray-700 rounded animate-pulse"></div>
-                    ) : (
-                      contractData?.name
-                    )}
-                  </h1>
+
+              <div className='flex items-center justify-start   py-2 gap-2 text-text text-xl font-bold'>
+                <div className='px-2 py-1 bg-background flex items-center justify-center cursor-pointer'>
+                  Market
+                </div>
+                <div className='px-2 py-1 bg-background flex items-center justify-center cursor-pointer'>
+                  My Nfts
                 </div>
               </div>
 
               <div>
                 {/* Search and Sort */}
-                <div className="mb-6 flex items-center justify-center relative gap-4">
-                  <button
-                    onClick={() => setIsMobileFilterOpen(true)}
-                    className="lg:hidden h-full w-[150px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
-                  >
-                    <Menu />
+                <div className="mb-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
 
-                  </button>
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
-                  />
-                  {/* Sort Section */}
-                  <div className="flex items-center gap-2 cursor-pointer">
-                    {/* Sort Type Dropdown */}
-                    <div ref={sortRef} className="relative">
-                      <button
-                        onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm min-w-[140px] justify-between"
-                      >
-                        <div className="flex items-center gap-2 ">
-                          <span className="text-gray-400 text-xs">Sort By:</span>
-                          <span className="font-medium">
-                            {sortOptions.find(opt => opt.value === sortType)?.label || 'Price'}
-                          </span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
-                      </button>
 
-                      {isSortOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-[#36393f] border border-[#3d4147] rounded-lg shadow-xl z-50 overflow-hidden">
-                          {sortOptions.map((option) => (
-                            <button
-                              key={option.value}
-                              onClick={() => {
-                                setSortType(option.value)
-                                setIsSortOpen(false)
-                              }}
-                              className={`cursor-pointer w-full text-left px-4 py-3 hover:bg-[#3d4147] transition text-sm ${sortType === option.value ? 'bg-[#2081E2] text-white' : 'text-gray-300'
-                                }`}
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Direction Toggle Button */}
+                  <div className='flex w-full gap-4'>
+                    {/* Mobile Filter Button */}
                     <button
-                      onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                      className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm"
-                      title={sortDirection === 'asc' ? 'Low to High' : 'High to Low'}
+                      onClick={() => setIsMobileFilterOpen(true)}
+                      className="lg:hidden sm:w-auto px-4 cursor-pointer flex items-center justify-center gap-2 bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
                     >
-                      {sortDirection === 'asc' ? (
-                        <>
-                          <ChevronDown className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          <ChevronUp className="w-4 h-4" />
-                        </>
-                      )}
+                      <Menu className="w-4 h-4" />
                     </button>
+                    {/* Search Input */}
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full  px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                    />
+
+                    {/* Sort Section */}
+                    <div className="flex items-center gap-2  sm:w-auto">
+                      {/* Sort Type Dropdown */}
+                      <div ref={sortRef} className="relative flex-1 sm:flex-initial">
+                        <button
+                          onClick={() => setIsSortOpen(!isSortOpen)}
+                          className="w-full cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm sm:min-w-[140px] justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {sortOptions.find(opt => opt.value === sortType)?.label || 'Price'}
+                            </span>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isSortOpen && (
+                          <div className="absolute right-0 mt-2 w-48 bg-[#36393f] border border-[#3d4147] rounded-lg shadow-xl z-50 overflow-hidden">
+                            {sortOptions.map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => {
+                                  setSortType(option.value)
+                                  setIsSortOpen(false)
+                                }}
+                                className={`cursor-pointer w-full text-left px-4 py-3 hover:bg-[#3d4147] transition text-sm ${sortType === option.value ? 'bg-[#2081E2] text-white' : 'text-gray-300'
+                                  }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Direction Toggle Button */}
+                      <button
+                        onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                        className="h-full cursor-pointer flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition text-sm flex-shrink-0"
+                        title={sortDirection === 'asc' ? 'Low to High' : 'High to Low'}
+                      >
+                        {sortDirection === 'asc' ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronUp className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
 
             {/* Error message */}

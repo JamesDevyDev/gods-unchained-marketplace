@@ -275,7 +275,7 @@ const Page = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-6 mb-2" ref={emblaRef}>
+                        <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-4 mb-2" ref={emblaRef}>
                             <div className="flex">
                                 {allCollections.map((collection, index) => {
                                     const collectionVolume = volumeData[collection.contract_address]
@@ -400,7 +400,7 @@ const Page = () => {
             </div>
 
             {/* Top Collections by 7-Day Volume - Table View */}
-            <div className="pb-8 px-6">
+            <div className="pb-8 px-4">
                 <h2 className="text-2xl font-bold mb-2">Top Collections</h2>
                 <p className="text-gray-400 text-sm mb-6">Collections by Project</p>
 
@@ -418,7 +418,7 @@ const Page = () => {
                     {/* Table Body */}
                     <div>
                         {isLoading ? (
-                            <div className="p-8 text-center text-gray-400">
+                            <div className="p-4 text-center text-gray-400">
                                 {/* Loading..... */}
                             </div>
                         ) : (

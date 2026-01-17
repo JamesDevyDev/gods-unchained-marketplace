@@ -18,7 +18,7 @@ export default function RootLayout({
         <link rel="icon" href="/assets/icon2.png" sizes="192x192" type="image/png" />
       </head>
       <body>
-        <div className="min-h-screen relative bg-background text-text">
+        <div className="min-h-screen bg-background text-text">
           <Navbar />
           {children}
         </div>

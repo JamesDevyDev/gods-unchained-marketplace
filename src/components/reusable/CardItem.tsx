@@ -78,12 +78,13 @@ const CardItem = ({
     const displayPrice = getPriceToDisplay()
 
     return (
-        <div
-            className="bg-background border-lines border-1 rounded-md overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-101 transform cursor-pointer group"
+        < div
+            className="bg-background  rounded-md overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-101 transform cursor-pointer group"
             onClick={onClick}
         >
+            {/* border-lines border-1 */}
             {/* Image */}
-            <div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center">
+            < div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center" >
                 <img
                     src={card.image}
                     alt={card.name}
@@ -99,51 +100,53 @@ const CardItem = ({
                 >
                     {card.rarity}
                 </div>
-            </div>
+            </div >
 
             {/* Info */}
-            <div className="p-3">
+            < div className="p-3" >
                 <h3 className="text-white font-semibold truncate mb-2">
                     {card.name}
                 </h3>
 
-                {displayPrice ? (
-                    <div className="">
-                        {/* USD Price - Main Highlight */}
-                        <p className="font-bold text-sm mb-1">
-                            ${formatPrice(displayPrice.priceInfo.usd)} USD
-                        </p>
+                {
+                    displayPrice ? (
+                        <div className="">
+                            {/* USD Price - Main Highlight */}
+                            <p className="font-bold text-sm mb-1">
+                                ${formatPrice(displayPrice.priceInfo.usd)} USD
+                            </p>
 
-                        {/* Currency Price - Bottom */}
-                        <div className="flex items-center gap-1.5">
-                            <img
-                                src={getCurrencyIcon(displayPrice.currency)}
-                                alt={displayPrice.currency}
-                                className="w-3.5 h-3.5 rounded-full"
-                                onError={(e) => {
-                                    // Fallback if image doesn't load
-                                    e.currentTarget.style.display = 'none'
-                                }}
-                            />
-                            <p className="text-gray-500 text-xs">
-                                {formatPrice(displayPrice.priceInfo.price)} {displayPrice.currency}
+                            {/* Currency Price - Bottom */}
+                            <div className="flex items-center gap-1.5">
+                                <img
+                                    src={getCurrencyIcon(displayPrice.currency)}
+                                    alt={displayPrice.currency}
+                                    className="w-3.5 h-3.5 rounded-full"
+                                    onError={(e) => {
+                                        // Fallback if image doesn't load
+                                        e.currentTarget.style.display = 'none'
+                                    }}
+                                />
+                                <p className="text-gray-500 text-xs">
+                                    {formatPrice(displayPrice.priceInfo.price)} {displayPrice.currency}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="">
+                            <p className="text-gray-500 text-sm italic">
+                                No listings
                             </p>
                         </div>
-                    </div>
-                ) : (
-                    <div className="">
-                        <p className="text-gray-500 text-sm italic">
-                            No listings
-                        </p>
-                    </div>
-                )}
+                    )
+                }
 
                 <p className="text-gray-400 text-xs mt-1">
                     {card.total_listings} listing
                     {card.total_listings !== 1 ? 's' : ''}
                 </p>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 
