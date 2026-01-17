@@ -401,24 +401,25 @@ const Page = () => {
 
             {/* Top Collections by 7-Day Volume - Table View */}
             <div className="pb-8 px-6">
-                <h2 className="text-2xl font-bold mb-2">Top Collections (7 Days)</h2>
-                <p className="text-gray-400 text-sm mb-6">Collections ranked by 7-day trading volume</p>
+                <h2 className="text-2xl font-bold mb-2">Top Collections</h2>
+                <p className="text-gray-400 text-sm mb-6">Collections by Project</p>
 
                 <div className="bg-background border border-lines rounded-xl overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-10 gap-4 p-4 border-b border-lines bg-[#1a1d29] text-xs text-gray-400 uppercase font-medium">
-                        <div className="col-span-3">Collection</div>
-                        <div className="col-span-2 text-right">Change</div>
-                        <div className="col-span-2 text-right">Sales</div>
-                        <div className="col-span-2 text-right">7d Volume</div>
-                        <div className="col-span-1 text-right">Vol %</div>
+                    <div className="grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines bg-[#1a1d29] text-xs text-gray-400 uppercase font-medium">
+                        <div className="col-span-2 md:col-span-3">Collection</div>
+                        <div className="hidden md:block md:col-span-2 text-right">Change</div>
+                        <div className="hidden md:block md:col-span-2 text-right">Sales</div>
+                        <div className="col-span-2 text-right">24h Volume</div>
+                        <div className="hidden md:block md:col-span-2 text-right">7d Volume</div>
+                        <div className="hidden md:block md:col-span-1 text-right">Vol %</div>
                     </div>
 
                     {/* Table Body */}
                     <div>
                         {isLoading ? (
                             <div className="p-8 text-center text-gray-400">
-                                {/* Lagay mo dito yung gusto mong skeleton in the future */}
+                                {/* Loading... */}
                             </div>
                         ) : (
                             getTopCollectionsByVolume().map((collection, index) => {
@@ -439,11 +440,11 @@ const Page = () => {
                                 return (
                                     <div
                                         key={collection.contract_address}
-                                        className="grid grid-cols-10 gap-4 p-4 border-b border-lines hover:bg-[#1a1d29] cursor-pointer transition-colors"
+                                        className="grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines hover:bg-[#1a1d29] cursor-pointer transition-colors"
                                         onClick={() => router.push(`/collection/${collection.contract_address}`)}
                                     >
                                         {/* Collection Name & Icon */}
-                                        <div className="col-span-3 flex items-center gap-3">
+                                        <div className="col-span-2 md:col-span-3 flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-[#2a2d3a] overflow-hidden flex-shrink-0">
                                                 <img
                                                     src={collection.image}
@@ -458,8 +459,8 @@ const Page = () => {
                                             </div>
                                         </div>
 
-                                        {/* 24h Change % */}
-                                        <div className="col-span-2 text-right">
+                                        {/* 24h Change % - Hidden on mobile */}
+                                        <div className="hidden md:block md:col-span-2 text-right">
                                             <div className={`font-bold text-sm flex items-center justify-end gap-1 ${percentChange > 0 ? 'text-green-400' : percentChange < 0 ? 'text-red-400' : 'text-gray-400'
                                                 }`}>
                                                 {percentChange > 0 ? (
@@ -469,28 +470,35 @@ const Page = () => {
                                                 ) : null}
                                                 {percentChange > 0 ? '+' : ''}{percentChange.toFixed(2)}%
                                             </div>
-                                            <div className="text-xs text-gray-400">
-                                                {volume24h ? formatCurrency(volume24h.volume_usd) : 'N/A'}
-                                            </div>
                                         </div>
 
-                                        {/* 7d Sales */}
-                                        <div className="col-span-2 text-right">
+                                        {/* 7d Sales - Hidden on mobile */}
+                                        <div className="hidden md:block md:col-span-2 text-right">
                                             <div className="font-bold text-sm">
                                                 {volume7d?.sales.toLocaleString() || '0'}
                                             </div>
                                         </div>
 
-                                        {/* 7d Volume */}
+                                        {/* 24h Volume */}
                                         <div className="col-span-2 text-right">
+                                            <div className="font-bold text-sm text-green-400">
+                                                {volume24h ? formatCurrency(volume24h.volume_usd) : '$0'}
+                                            </div>
+                                            <div className="text-xs text-gray-400 md:block hidden">
+                                                {volume24h?.sales.toLocaleString() || '0'} sales
+                                            </div>
+                                        </div>
+
+                                        {/* 7d Volume - Hidden on mobile */}
+                                        <div className="hidden md:block md:col-span-2 text-right">
                                             <div className="font-bold text-sm">
                                                 {volume7d ? formatCurrency(volume7d.volume_usd) : '$0'}
                                             </div>
                                         </div>
 
-                                        {/* Volume Percentage */}
-                                        <div className="col-span-1 text-right">
-                                            <div className="font-bold text-sm text-green-400">
+                                        {/* Volume Percentage - Hidden on mobile */}
+                                        <div className="hidden md:block md:col-span-1 text-right">
+                                            <div className="font-bold text-sm text-blue-400">
                                                 {volumePercent.toFixed(2)}%
                                             </div>
                                         </div>
@@ -563,7 +571,15 @@ const Page = () => {
                                                             : 'N/A'}
                                                     </div>
                                                 </div>
-                                                {stats.total7dVolume > 0 && (
+                                                {stats.total24hVolume > 0 && (
+                                                    <div>
+                                                        <div className="text-xs text-gray-400 uppercase mb-1">24h Vol</div>
+                                                        <div className="text-sm font-bold text-green-400">
+                                                            {formatCurrency(stats.total24hVolume)}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {stats.total7dVolume > 0 && stats.total24hVolume === 0 && (
                                                     <div>
                                                         <div className="text-xs text-gray-400 uppercase mb-1">7d Vol</div>
                                                         <div className="text-sm font-bold text-blue-400">
@@ -600,6 +616,11 @@ const Page = () => {
                                                                     </div>
                                                                     <div className="text-xs text-gray-400 flex items-center gap-2">
                                                                         {collection.symbol}
+                                                                        {collectionVolume?.volume?.['24h'] && (
+                                                                            <span className="text-green-400 flex items-center gap-0.5">
+                                                                                24h: {formatCurrency(collectionVolume.volume['24h'].volume_usd)}
+                                                                            </span>
+                                                                        )}
                                                                         {collectionVolume?.volume?.['7d'] && (
                                                                             <span className="text-blue-400 flex items-center gap-0.5">
                                                                                 7d: {formatCurrency(collectionVolume.volume['7d'].volume_usd)}
