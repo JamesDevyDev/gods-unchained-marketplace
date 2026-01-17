@@ -335,12 +335,10 @@ export default function Navbar() {
 
     const copyAddress = () => {
         navigator.clipboard.writeText(account);
-        alert("Address copied!");
     };
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
-        alert(`${label} copied to clipboard!`);
     };
 
     const getAvatarUrl = (address: string) => {
@@ -349,7 +347,7 @@ export default function Navbar() {
 
     // Get token icon - works in production
     const getTokenIcon = (symbol: string) => {
-        return `/assets/currency/${symbol}.png`;
+        return `/assets/currency/${symbol.toLocaleLowerCase()}.png`;
     };
 
     return (
