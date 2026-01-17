@@ -30,12 +30,59 @@ interface Stack {
     last_sold_price: number | null
 }
 
+interface FeeBreakdown {
+    amount: number
+    amount_usd: number
+    recipient: string
+    type: string
+}
+
+interface ListingPrices {
+    base_price: number
+    base_price_usd: number
+    fees: number
+    fees_usd: number
+    total_usd: number
+    total_with_fees: number
+}
+
+interface Listing {
+    created_at: string
+    currency: string
+    end_at: string
+    fee_breakdown: FeeBreakdown[]
+    listing_id: string
+    order_hash: string
+    prices: ListingPrices
+    seller_address: string
+    start_at: string
+    status: string
+    token_address: string
+    token_id: string
+}
+
+interface ListingsResponse {
+    all_listings: Listing[]
+    by_currency: {
+        ETH: Listing[]
+        GODS: Listing[]
+        IMX: Listing[]
+        USDC: Listing[]
+        OTHER: Listing[]
+    }
+    cheapest_listing: Listing
+    contract_address: string
+    metadata_id: string
+    total_listings: number
+}
+
 type Props = {
     card: Stack | null
     getRarityColor: (rarity: string) => string
     formatPrice: (price: number | null) => string
     onClose: () => void
     selectedCurrency: string
+    contract_address: string
 }
 
 const CardModal = ({
@@ -44,17 +91,45 @@ const CardModal = ({
     formatPrice,
     onClose,
     selectedCurrency,
+    contract_address,
 }: Props) => {
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [quantity, setQuantity] = useState(1)
     const [showGroupOrders, setShowGroupOrders] = useState(true)
     const [showMyOrders, setShowMyOrders] = useState(false)
+    const [listingsData, setListingsData] = useState<ListingsResponse | null>(null)
+    const [isLoadingListings, setIsLoadingListings] = useState(false)
+    const [currencyFilter, setCurrencyFilter] = useState<string>('All')
 
     // Get currency icon path
     const getCurrencyIcon = (currency: string): string => {
         const currencyLower = currency.toLowerCase()
         return `/assets/currency/${currencyLower}.png`
     }
+
+    // Fetch listings when card changes
+    useEffect(() => {
+        const fetchListings = async () => {
+            if (!card?.metadata_id || !contract_address) return
+
+            setIsLoadingListings(true)
+            try {
+                const response = await fetch(
+                    `https://immutable-marketplace.onrender.com/api/collections/${contract_address}/listings/${card.metadata_id}`
+                )
+                if (response.ok) {
+                    const data = await response.json()
+                    setListingsData(data)
+                }
+            } catch (err) {
+                console.error('Failed to fetch listings:', err)
+            } finally {
+                setIsLoadingListings(false)
+            }
+        }
+
+        fetchListings()
+    }, [card?.metadata_id, contract_address])
 
     // Prevent body scroll when modal is open
     useEffect(() => {
@@ -106,19 +181,53 @@ const CardModal = ({
         return null
     }
 
+    // Get filtered listings based on currency filter
+    const getFilteredListings = (): Listing[] => {
+        if (!listingsData) return []
+
+        if (currencyFilter === 'All') {
+            return listingsData.all_listings
+        }
+
+        return listingsData.by_currency[currencyFilter as keyof typeof listingsData.by_currency] || []
+    }
+
+    // Calculate time until expiration
+    const getTimeUntilExpiration = (endAt: string): string => {
+        const now = new Date()
+        const end = new Date(endAt)
+        const diffMs = end.getTime() - now.getTime()
+
+        if (diffMs <= 0) return 'Expired'
+
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        const months = Math.floor(days / 30)
+        const years = Math.floor(days / 365)
+
+        if (years > 0) return `${years} year${years > 1 ? 's' : ''}`
+        if (months > 0) return `${months} month${months > 1 ? 's' : ''}`
+        if (days > 0) return `${days} day${days > 1 ? 's' : ''}`
+
+        const hours = Math.floor(diffMs / (1000 * 60 * 60))
+        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`
+
+        const minutes = Math.floor(diffMs / (1000 * 60))
+        return `${minutes} minute${minutes > 1 ? 's' : ''}`
+    }
+
     const displayPrice = getPriceToDisplay()
+    const filteredListings = getFilteredListings()
     const youOwn = 5
 
     return (
         <div
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2 sm:p-4 "
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2 sm:p-4"
             onClick={onClose}
         >
             <div
                 className="bg-background rounded-lg max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* {console.log(card)} */}
                 {/* Header */}
                 <div className="bg-background border-lines border-b px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
                     <h2 className="text-lg sm:text-2xl font-bold text-white truncate pr-4">{card.name}</h2>
@@ -223,7 +332,7 @@ const CardModal = ({
                                     <div className="flex items-center gap-3 flex-1">
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors"
+                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
                                         >
                                             −
                                         </button>
@@ -235,14 +344,19 @@ const CardModal = ({
                                         />
                                         <button
                                             onClick={() => setQuantity(quantity + 1)}
-                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors"
+                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
                                         >
                                             +
                                         </button>
                                     </div>
 
-                                    <select className="bg-gray-700 text-white px-4 py-2 rounded font-semibold text-sm sm:text-base">
+                                    <select
+                                        className="bg-gray-700 text-white px-4 py-2 rounded font-semibold text-sm sm:text-base cursor-pointer"
+                                        value={currencyFilter}
+                                        onChange={(e) => setCurrencyFilter(e.target.value)}
+                                    >
                                         <option>All</option>
+                                        <option>ETH</option>
                                         <option>USDC</option>
                                         <option>GODS</option>
                                         <option>IMX</option>
@@ -251,10 +365,10 @@ const CardModal = ({
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-3">
-                                    <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base">
+                                    <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
                                         Buy
                                     </button>
-                                    <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base">
+                                    <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
                                         Make Offer
                                     </button>
                                 </div>
@@ -263,7 +377,9 @@ const CardModal = ({
                             {/* For Sale Section */}
                             <div className="mb-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
-                                    <h3 className="text-white font-semibold text-base sm:text-lg">For Sale</h3>
+                                    <h3 className="text-white font-semibold text-base sm:text-lg">
+                                        For Sale ({listingsData?.total_listings || 0})
+                                    </h3>
                                     <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4 text-xs sm:text-sm w-full sm:w-auto">
                                         <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
                                             <input
@@ -295,49 +411,105 @@ const CardModal = ({
                                         <div></div>
                                     </div>
 
-                                    <div>
-
-                                        {/* Dito yung data */}
-                                        <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                                            <div>
-                                                <div className="text-yellow-500 font-bold">$</div>
+                                    <div className="max-h-80 overflow-y-auto">
+                                        {isLoadingListings ? (
+                                            <div className="px-4 py-12 text-center text-gray-400 text-sm">
+                                                Loading listings...
                                             </div>
-                                            <div className="text-white">1</div>
-                                            <div className="text-gray-400 text-sm">
-                                                {Math.floor(Math.random() * 24)} months
+                                        ) : filteredListings.length > 0 ? (
+                                            filteredListings.map((listing) => (
+                                                <div
+                                                    key={listing.listing_id}
+                                                    className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <img
+                                                            src={getCurrencyIcon(listing.currency)}
+                                                            alt={listing.currency}
+                                                            className="w-5 h-5 rounded-full"
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = 'none'
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <div className="text-yellow-500 font-bold text-sm">
+                                                                ${listing.prices.total_usd.toFixed(4)}
+                                                            </div>
+                                                            <div className="text-gray-400 text-xs">
+                                                                {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-white flex items-center">1</div>
+                                                    <div className="text-gray-400 text-sm flex items-center">
+                                                        {getTimeUntilExpiration(listing.end_at)}
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors cursor-pointer">
+                                                            Buy
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="px-4 py-12 text-center text-gray-400 text-sm">
+                                                No listings available
                                             </div>
-                                            <div>
-                                                <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors">
-                                                    Buy
-                                                </button>
-                                            </div>
-                                        </div>
-
+                                        )}
                                     </div>
                                 </div>
 
                                 {/* Orders Cards - Mobile */}
                                 <div className="sm:hidden space-y-3">
-                                    <div className="bg-background border border-lines rounded-lg p-3">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div>
-                                                <div className="text-yellow-500 font-bold text-sm">$</div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-gray-400 text-xs">Amount</div>
-                                                <div className="text-white text-sm font-semibold">1</div>
-                                            </div>
+                                    {isLoadingListings ? (
+                                        <div className="bg-background border border-lines rounded-lg p-8 text-center text-gray-400 text-sm">
+                                            Loading listings...
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <div className="text-gray-400 text-xs">Expires In</div>
-                                                <div className="text-gray-300 text-sm">3 months</div>
+                                    ) : filteredListings.length > 0 ? (
+                                        filteredListings.map((listing) => (
+                                            <div key={listing.listing_id} className="bg-background border border-lines rounded-lg p-3">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <img
+                                                            src={getCurrencyIcon(listing.currency)}
+                                                            alt={listing.currency}
+                                                            className="w-5 h-5 rounded-full"
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = 'none'
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <div className="text-yellow-500 font-bold text-sm">
+                                                                ${listing.prices.total_usd.toFixed(4)}
+                                                            </div>
+                                                            <div className="text-gray-400 text-xs">
+                                                                {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-gray-400 text-xs">Amount</div>
+                                                        <div className="text-white text-sm font-semibold">1</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <div className="text-gray-400 text-xs">Expires In</div>
+                                                        <div className="text-gray-300 text-sm">
+                                                            {getTimeUntilExpiration(listing.end_at)}
+                                                        </div>
+                                                    </div>
+                                                    <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors cursor-pointer">
+                                                        Buy
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors">
-                                                Buy
-                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="bg-background border border-lines rounded-lg p-8 text-center text-gray-400 text-sm">
+                                            No listings available
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 

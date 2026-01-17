@@ -904,6 +904,7 @@ const CardsPage = () => {
       </div>
 
       <CardModal
+        contract_address={contract_address} 
         card={selectedCard}
         getRarityColor={getRarityColor}
         formatPrice={formatPrice}
