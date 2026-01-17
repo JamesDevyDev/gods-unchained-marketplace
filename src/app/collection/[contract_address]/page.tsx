@@ -92,7 +92,7 @@ interface DropdownFilterProps {
 }
 
 const DropdownFilter: React.FC<DropdownFilterProps> = ({ label, count, isOpen, onToggle, children }) => (
-  <div className=" border-b border-[#353840]">
+  <div className="border-b border-[#353840]">
     <button
       onClick={onToggle}
       className="w-full flex items-center justify-between py-4 px-0 hover:opacity-80 transition-opacity"
@@ -220,7 +220,7 @@ const CardsPage = () => {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' })
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, Set<string>>>({})
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('') // Changed to single string
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('')
 
   // Search states for filters
   const [raritySearch, setRaritySearch] = useState('')
@@ -307,32 +307,46 @@ const CardsPage = () => {
     const attributes: Record<string, Set<string>> = {}
 
     cards.forEach(card => {
-      rarities.add(card.rarity)
-      types.add(card.item_type)
+      // Only add non-empty rarities
+      if (card.rarity) {
+        rarities.add(card.rarity)
+      }
+
+      // Only add non-empty types
+      if (card.item_type) {
+        types.add(card.item_type)
+      }
 
       if (card.all_prices) {
         Object.keys(card.all_prices).forEach(currency => {
-          currencies.add(currency)
+          if (currency) {
+            currencies.add(currency)
+          }
         })
       }
 
       // Only include allowed attributes
-      Object.entries(card.attributes).forEach(([key, value]) => {
-        if (ALLOWED_ATTRIBUTES.includes(key)) {
-          if (!attributes[key]) {
-            attributes[key] = new Set()
+      if (card.attributes) {
+        Object.entries(card.attributes).forEach(([key, value]) => {
+          if (ALLOWED_ATTRIBUTES.includes(key) && value !== null && value !== undefined && value !== '') {
+            if (!attributes[key]) {
+              attributes[key] = new Set()
+            }
+            attributes[key].add(String(value))
           }
-          attributes[key].add(String(value))
-        }
-      })
+        })
+      }
     })
 
     return {
-      rarities: Array.from(rarities).sort(),
-      types: Array.from(types).sort(),
-      currencies: Array.from(currencies).sort(),
+      rarities: Array.from(rarities).filter(Boolean).sort(),
+      types: Array.from(types).filter(Boolean).sort(),
+      currencies: Array.from(currencies).filter(Boolean).sort(),
       attributes: Object.fromEntries(
-        Object.entries(attributes).map(([key, values]) => [key, Array.from(values).sort()])
+        Object.entries(attributes).map(([key, values]) => [
+          key,
+          Array.from(values).filter(Boolean).sort()
+        ])
       )
     }
   }, [cards])
@@ -345,23 +359,23 @@ const CardsPage = () => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(card =>
-        card.name.toLowerCase().includes(query) ||
-        card.rarity.toLowerCase().includes(query) ||
-        card.item_type.toLowerCase().includes(query) ||
-        Object.values(card.attributes).some(attr =>
+        card.name?.toLowerCase().includes(query) ||
+        card.rarity?.toLowerCase().includes(query) ||
+        card.item_type?.toLowerCase().includes(query) ||
+        (card.attributes && Object.values(card.attributes).some(attr =>
           String(attr).toLowerCase().includes(query)
-        )
+        ))
       )
     }
 
     // Rarity filter (multiple)
     if (selectedRarities.size > 0) {
-      filtered = filtered.filter(card => selectedRarities.has(card.rarity))
+      filtered = filtered.filter(card => card.rarity && selectedRarities.has(card.rarity))
     }
 
     // Type filter (multiple)
     if (selectedTypes.size > 0) {
-      filtered = filtered.filter(card => selectedTypes.has(card.item_type))
+      filtered = filtered.filter(card => card.item_type && selectedTypes.has(card.item_type))
     }
 
     // Currency filter (single selection)
@@ -389,7 +403,7 @@ const CardsPage = () => {
     Object.entries(selectedAttributes).forEach(([key, valueSet]) => {
       if (valueSet.size > 0) {
         filtered = filtered.filter(card =>
-          valueSet.has(String(card.attributes[key]))
+          card.attributes && valueSet.has(String(card.attributes[key]))
         )
       }
     })
@@ -440,7 +454,7 @@ const CardsPage = () => {
     setPriceRange({ min: '', max: '' })
     setSelectedAttributes({})
     setSearchQuery('')
-    setSelectedCurrency('') // Changed
+    setSelectedCurrency('')
     setRaritySearch('')
     setTypeSearch('')
     setCurrencySearch('')
@@ -464,13 +478,13 @@ const CardsPage = () => {
       legendary: 'text-orange-400',
       mythic: 'text-red-400'
     }
-    return rarityColors[rarity.toLowerCase()] || 'text-gray-400'
+    return rarityColors[rarity?.toLowerCase()] || 'text-gray-400'
   }
 
   const activeFiltersCount =
     selectedRarities.size +
     selectedTypes.size +
-    (selectedCurrency ? 1 : 0) + // Changed
+    (selectedCurrency ? 1 : 0) +
     Object.values(selectedAttributes).reduce((sum, set) => sum + set.size, 0) +
     (priceRange.min || priceRange.max ? 1 : 0)
 
@@ -482,7 +496,7 @@ const CardsPage = () => {
       ) : (
         <>
           {/* Currency Filter - Single Selection */}
-          {filterOptions.currencies.length > 0 && (
+          {filterOptions.currencies && filterOptions.currencies.length > 0 && (
             <DropdownFilter
               label="Currency"
               count={selectedCurrency ? 1 : 0}
@@ -512,7 +526,7 @@ const CardsPage = () => {
                   />
 
                   {filterOptions.currencies
-                    .filter(currency => currency.toLowerCase().includes(currencySearch.toLowerCase()))
+                    .filter(currency => currency && currency.toLowerCase().includes(currencySearch.toLowerCase()))
                     .map(currency => (
                       <RadioOption
                         key={currency}
@@ -528,40 +542,42 @@ const CardsPage = () => {
           )}
 
           {/* Rarity Filter */}
-          <DropdownFilter
-            label="Rarity"
-            count={selectedRarities.size}
-            isOpen={openDropdowns.rarity}
-            onToggle={() => toggleDropdown('rarity')}
-          >
-            <div className="space-y-1">
-              {/* Search */}
-              <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search rarities"
-                  value={raritySearch}
-                  onChange={(e) => setRaritySearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
-                />
-              </div>
+          {filterOptions.rarities && filterOptions.rarities.length > 0 && (
+            <DropdownFilter
+              label="Rarity"
+              count={selectedRarities.size}
+              isOpen={openDropdowns.rarity}
+              onToggle={() => toggleDropdown('rarity')}
+            >
+              <div className="space-y-1">
+                {/* Search */}
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search rarities"
+                    value={raritySearch}
+                    onChange={(e) => setRaritySearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
+                  />
+                </div>
 
-              <div className="max-h-48 overflow-y-auto custom-scrollbar">
-                {filterOptions.rarities
-                  .filter(rarity => rarity.toLowerCase().includes(raritySearch.toLowerCase()))
-                  .map(rarity => (
-                    <CheckboxOption
-                      key={rarity}
-                      label={rarity}
-                      count={cards.filter(c => c.rarity === rarity).length}
-                      checked={selectedRarities.has(rarity)}
-                      onChange={() => setSelectedRarities(prev => toggleSetItem(prev, rarity))}
-                    />
-                  ))}
+                <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                  {filterOptions.rarities
+                    .filter(rarity => rarity && rarity.toLowerCase().includes(raritySearch.toLowerCase()))
+                    .map(rarity => (
+                      <CheckboxOption
+                        key={rarity}
+                        label={rarity}
+                        count={cards.filter(c => c.rarity === rarity).length}
+                        checked={selectedRarities.has(rarity)}
+                        onChange={() => setSelectedRarities(prev => toggleSetItem(prev, rarity))}
+                      />
+                    ))}
+                </div>
               </div>
-            </div>
-          </DropdownFilter>
+            </DropdownFilter>
+          )}
 
           {/* Price Filter */}
           <DropdownFilter
@@ -589,7 +605,7 @@ const CardsPage = () => {
           </DropdownFilter>
 
           {/* Type Filter */}
-          {filterOptions.types.length > 0 && (
+          {filterOptions.types && filterOptions.types.length > 0 && (
             <DropdownFilter
               label="Type"
               count={selectedTypes.size}
@@ -611,7 +627,7 @@ const CardsPage = () => {
 
                 <div className="max-h-48 overflow-y-auto custom-scrollbar">
                   {filterOptions.types
-                    .filter(type => type.toLowerCase().includes(typeSearch.toLowerCase()))
+                    .filter(type => type && type.toLowerCase().includes(typeSearch.toLowerCase()))
                     .map(type => (
                       <CheckboxOption
                         key={type}
@@ -658,12 +674,12 @@ const CardsPage = () => {
 
                   <div className="max-h-48 overflow-y-auto custom-scrollbar">
                     {values
-                      .filter(value => value.toLowerCase().includes(searchValue.toLowerCase()))
+                      .filter(value => value && value.toLowerCase().includes(searchValue.toLowerCase()))
                       .map(value => (
                         <CheckboxOption
                           key={value}
                           label={value}
-                          count={cards.filter(c => String(c.attributes[attributeKey]) === value).length}
+                          count={cards.filter(c => c.attributes && String(c.attributes[attributeKey]) === value).length}
                           checked={selectedSet.has(value)}
                           onChange={() => {
                             setSelectedAttributes(prev => ({
@@ -751,7 +767,7 @@ const CardsPage = () => {
                   )}
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
-                    className=" text-gray-400 hover:text-white transition cursor-pointer"
+                    className="text-gray-400 hover:text-white transition cursor-pointer"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

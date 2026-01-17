@@ -118,6 +118,7 @@ const CardModal = ({
                 className="bg-background rounded-lg max-w-7xl w-full max-h-[95vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* {console.log(card)} */}
                 {/* Header */}
                 <div className="bg-background border-lines border-b px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
                     <h2 className="text-lg sm:text-2xl font-bold text-white truncate pr-4">{card.name}</h2>
