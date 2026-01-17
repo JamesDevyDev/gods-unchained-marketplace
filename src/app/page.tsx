@@ -417,7 +417,9 @@ const Page = () => {
                     {/* Table Body */}
                     <div>
                         {isLoading ? (
-                            <div className="p-8 text-center text-gray-400">Loading...</div>
+                            <div className="p-8 text-center text-gray-400">
+                                {/* Lagay mo dito yung gusto mong skeleton in the future */}
+                            </div>
                         ) : (
                             getTopCollectionsByVolume().map((collection, index) => {
                                 const volume7d = collection.volumeData?.volume?.['7d']

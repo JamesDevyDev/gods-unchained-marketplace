@@ -204,6 +204,11 @@ const CardsPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Sort state
+  const [sortType, setSortType] = useState('price')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [isSortOpen, setIsSortOpen] = useState(false)
+
   // Mobile filter drawer state
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
@@ -232,6 +237,32 @@ const CardsPage = () => {
   const [displayedCount, setDisplayedCount] = useState(50)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const sortRef = useRef<HTMLDivElement>(null)
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Sort options
+  const sortOptions = [
+    { value: 'price', label: 'Price' },
+    { value: 'listing-time', label: 'Listing Time' },
+    { value: 'name', label: 'Name' },
+    { value: 'quality', label: 'Quality' },
+    { value: 'quantity', label: 'Quantity' },
+    { value: 'volume', label: 'Volume' },
+    { value: 'price-change', label: 'Price Change' },
+    { value: 'win-rate', label: 'Win %' },
+    { value: 'matches', label: 'Matches' },
+  ]
 
   // Toggle dropdown
   const toggleDropdown = (key: string) => {
@@ -411,15 +442,68 @@ const CardsPage = () => {
     return filtered
   }, [cards, searchQuery, selectedRarities, selectedTypes, selectedCurrency, priceRange, selectedAttributes])
 
+  // Sort filtered cards
+  const sortedCards = useMemo(() => {
+    const sorted = [...filteredCards]
+
+    switch (sortType) {
+      case 'price':
+        sorted.sort((a, b) => {
+          const priceA = a.best_usd_price ?? Infinity
+          const priceB = b.best_usd_price ?? Infinity
+          return sortDirection === 'asc' ? priceA - priceB : priceB - priceA
+        })
+        break
+      case 'name':
+        sorted.sort((a, b) => {
+          const comparison = (a.name || '').localeCompare(b.name || '')
+          return sortDirection === 'asc' ? comparison : -comparison
+        })
+        break
+      case 'quantity':
+      case 'listing-time':
+        sorted.sort((a, b) => {
+          const qtyA = a.total_listings || 0
+          const qtyB = b.total_listings || 0
+          return sortDirection === 'asc' ? qtyA - qtyB : qtyB - qtyA
+        })
+        break
+      case 'quality':
+        const rarityOrder: Record<string, number> = {
+          'common': 1,
+          'rare': 2,
+          'epic': 3,
+          'legendary': 4,
+          'mythic': 5
+        }
+        sorted.sort((a, b) => {
+          const rarityA = rarityOrder[a.rarity?.toLowerCase()] || 0
+          const rarityB = rarityOrder[b.rarity?.toLowerCase()] || 0
+          return sortDirection === 'asc' ? rarityA - rarityB : rarityB - rarityA
+        })
+        break
+      // Add other sort types as needed
+      default:
+        // Default to price sorting
+        sorted.sort((a, b) => {
+          const priceA = a.best_usd_price ?? Infinity
+          const priceB = b.best_usd_price ?? Infinity
+          return sortDirection === 'asc' ? priceA - priceB : priceB - priceA
+        })
+    }
+
+    return sorted
+  }, [filteredCards, sortType, sortDirection])
+
   // Reset displayed count when filters change
   useEffect(() => {
     setDisplayedCount(50)
-  }, [filteredCards])
+  }, [sortedCards])
 
-  // Cards to display (filtered + limited by displayedCount)
+  // Cards to display (filtered + sorted + limited by displayedCount)
   const displayedCards = useMemo(() => {
-    return filteredCards.slice(0, displayedCount)
-  }, [filteredCards, displayedCount])
+    return sortedCards.slice(0, displayedCount)
+  }, [sortedCards, displayedCount])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -428,8 +512,8 @@ const CardsPage = () => {
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !loading) {
-          if (displayedCount < filteredCards.length) {
-            setDisplayedCount(prev => Math.min(prev + 50, filteredCards.length))
+          if (displayedCount < sortedCards.length) {
+            setDisplayedCount(prev => Math.min(prev + 50, sortedCards.length))
           }
         }
       },
@@ -445,7 +529,7 @@ const CardsPage = () => {
         observerRef.current.disconnect()
       }
     }
-  }, [loading, displayedCount, filteredCards.length])
+  }, [loading, displayedCount, sortedCards.length])
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -794,19 +878,11 @@ const CardsPage = () => {
                       contractData?.name
                     )}
                   </h1>
-                  {loading ? (
-                    <div className="h-5 w-48 bg-gray-700 rounded animate-pulse"></div>
-                  ) : (
-                    <p className="text-gray-400">
-                      {displayedCards.length} of {filteredCards.length} items
-                      {searchQuery && ` (filtered from ${cards.length} total)`}
-                    </p>
-                  )}
                 </div>
               </div>
 
               <div>
-                {/* Search */}
+                {/* Search and Sort */}
                 <div className="mb-6 flex items-center justify-center relative gap-4">
                   <button
                     onClick={() => setIsMobileFilterOpen(true)}
@@ -821,6 +897,59 @@ const CardsPage = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
                   />
+                  {/* Sort Section */}
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    {/* Sort Type Dropdown */}
+                    <div ref={sortRef} className="relative">
+                      <button
+                        onClick={() => setIsSortOpen(!isSortOpen)}
+                        className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm min-w-[140px] justify-between"
+                      >
+                        <div className="flex items-center gap-2 ">
+                          <span className="text-gray-400 text-xs">Sort By:</span>
+                          <span className="font-medium">
+                            {sortOptions.find(opt => opt.value === sortType)?.label || 'Price'}
+                          </span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isSortOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-[#36393f] border border-[#3d4147] rounded-lg shadow-xl z-50 overflow-hidden">
+                          {sortOptions.map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => {
+                                setSortType(option.value)
+                                setIsSortOpen(false)
+                              }}
+                              className={`cursor-pointer w-full text-left px-4 py-3 hover:bg-[#3d4147] transition text-sm ${sortType === option.value ? 'bg-[#2081E2] text-white' : 'text-gray-300'
+                                }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Direction Toggle Button */}
+                    <button
+                      onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                      className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm"
+                      title={sortDirection === 'asc' ? 'Low to High' : 'High to Low'}
+                    >
+                      {sortDirection === 'asc' ? (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -859,7 +988,7 @@ const CardsPage = () => {
                 </div>
 
                 {/* Load more trigger */}
-                {displayedCount < filteredCards.length && (
+                {displayedCount < sortedCards.length && (
                   <div
                     ref={loadMoreRef}
                     className="flex justify-center items-center py-8"
@@ -870,7 +999,7 @@ const CardsPage = () => {
                 )}
 
                 {/* End of results */}
-                {displayedCount >= filteredCards.length && filteredCards.length > 50 && (
+                {displayedCount >= sortedCards.length && sortedCards.length > 50 && (
                   <div className="text-center py-8">
                     <p className="text-gray-400">All cards loaded</p>
                   </div>
@@ -879,7 +1008,7 @@ const CardsPage = () => {
             )}
 
             {/* No results state */}
-            {!loading && filteredCards.length === 0 && cards.length > 0 && (
+            {!loading && sortedCards.length === 0 && cards.length > 0 && (
               <div className="text-center py-20">
                 <p className="text-gray-400 text-xl mb-4">
                   No cards found matching your filters
@@ -904,7 +1033,7 @@ const CardsPage = () => {
       </div>
 
       <CardModal
-        contract_address={contract_address} 
+        contract_address={contract_address}
         card={selectedCard}
         getRarityColor={getRarityColor}
         formatPrice={formatPrice}
