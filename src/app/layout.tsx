@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/assets/iconBg.png" sizes="any" type="image/png" />
+        <link rel="icon" href="/assets/icon2.png" sizes="192x192" type="image/png" />
       </head>
       <body>
         <div
@@ -28,7 +28,7 @@ export default function RootLayout({
               {/* Logo */}
               <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative ">
                 <Image
-                  src="/assets/iconBg.png"
+                  src="/assets/icon2.png"
                   alt="Chained Icon"
                   fill
                   className="object-contain scale-150"
