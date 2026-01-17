@@ -886,9 +886,10 @@ const CardsPage = () => {
                 <div className="mb-6 flex items-center justify-center relative gap-4">
                   <button
                     onClick={() => setIsMobileFilterOpen(true)}
-                    className="lg:hidden h-full w-[50px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
+                    className="lg:hidden h-full w-[150px] py-2 cursor-pointer flex items-center justify-center bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
                   >
                     <Menu />
+
                   </button>
                   <input
                     type="text"
