@@ -5,6 +5,7 @@ import Autoplay from 'embla-carousel-autoplay'
 import useEmblaCarousel from 'embla-carousel-react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react'
+import Footer from '@/components/Footer'
 
 type Collection = {
     name: string
@@ -266,7 +267,7 @@ const Page = () => {
     }
 
     return (
-        <div className="pt-20 bg-background">
+        <div className="pt-20 bg-background overflow-hidden">
             {/* Featured Collection Carousel */}
             <div className="relative group">
                 {isLoading ? (
@@ -673,6 +674,8 @@ const Page = () => {
                     )}
                 </div>
             </div>
+
+            <Footer />
         </div>
     )
 }
