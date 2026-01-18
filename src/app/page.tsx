@@ -53,7 +53,7 @@ type VolumeData = {
 }
 
 const CarouselSkeleton = () => (
-    <div className="relative h-120 overflow-hidden bg-light border-lines border rounded-xl">
+    <div className="relative h-120 overflow-hidden bg-light sm:border-lines sm:border sm:rounded-xl">
         <div className="absolute inset-0 bg-light animate-pulse"></div>
     </div>
 )
@@ -245,7 +245,7 @@ const Page = () => {
     return (
         <div className="pt-20 bg-background overflow-hidden">
             {/* Featured Collection Carousel */}
-            <div className="relative group px-6 pb-2">
+            <div className="w-full sm:px-6 mb-16 ">
                 {isLoading ? (
                     <CarouselSkeleton />
                 ) : (
