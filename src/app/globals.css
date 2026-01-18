@@ -3,6 +3,8 @@
 
 @theme {
     --color-background: #101011;
+    --color-light: #1a1a1a;
+    --color-hoverp: #1a1d29;
     --color-lines: rgba(128, 128, 128, 0.5);
     --color-text: white;
 }

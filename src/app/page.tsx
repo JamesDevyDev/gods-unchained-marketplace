@@ -53,50 +53,26 @@ type VolumeData = {
 }
 
 const CarouselSkeleton = () => (
-    <div className="relative h-120 overflow-hidden">
-        <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>
+    <div className="relative h-120 overflow-hidden bg-light border-lines border rounded-xl">
+        <div className="absolute inset-0 bg-light animate-pulse"></div>
+    </div>
+)
 
-        <div className="absolute bottom-0 left-0 md:left-10 p-4 md:p-8 z-10">
-            <div className="h-8 md:h-10 w-64 bg-gray-700 rounded mb-2 animate-pulse"></div>
-            <div className="h-4 w-32 bg-gray-700 rounded mb-4 animate-pulse"></div>
+const TopProjectSkeleton = () => (
+    <div className="bg-light border-lines rounded-xl p-6">
+        <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
 
-            <div className="flex gap-4 md:gap-8 rounded-lg p-3 bg-black/20 border border-lines backdrop-blur-md">
-                <div>
-                    <div className="h-3 w-16 bg-gray-700 rounded mb-1 animate-pulse"></div>
-                    <div className="h-5 w-24 bg-gray-700 rounded animate-pulse"></div>
-                </div>
-                <div>
-                    <div className="h-3 w-16 bg-gray-700 rounded mb-1 animate-pulse"></div>
-                    <div className="h-5 w-16 bg-gray-700 rounded animate-pulse"></div>
-                </div>
-                <div>
-                    <div className="h-3 w-16 bg-gray-700 rounded mb-1 animate-pulse"></div>
-                    <div className="h-5 w-20 bg-gray-700 rounded animate-pulse"></div>
-                </div>
-            </div>
         </div>
 
-        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-10">
-            <div className="w-16 h-16 md:w-24 md:h-24 bg-gray-700 rounded-lg animate-pulse"></div>
-        </div>
     </div>
 )
 
 const ProjectCardSkeleton = () => (
-    <div className="bg-background border border-lines rounded-xl p-6">
+    <div className="bg-light border border-lines rounded-xl p-6">
         <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-700 animate-pulse"></div>
-                <div>
-                    <div className="h-6 w-32 bg-gray-700 rounded mb-2 animate-pulse"></div>
-                    <div className="h-4 w-24 bg-gray-700 rounded animate-pulse"></div>
-                </div>
-            </div>
+
         </div>
-        <div className="space-y-2">
-            <div className="h-16 bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-16 bg-gray-700 rounded animate-pulse"></div>
-        </div>
+
     </div>
 )
 
@@ -269,14 +245,12 @@ const Page = () => {
     return (
         <div className="pt-20 bg-background overflow-hidden">
             {/* Featured Collection Carousel */}
-            <div className="relative group">
+            <div className="relative group px-6 pb-2">
                 {isLoading ? (
-                    <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-6 mb-2 md:border border-lines">
-                        <CarouselSkeleton />
-                    </div>
+                    <CarouselSkeleton />
                 ) : (
                     <>
-                        <div className="overflow-hidden rounded-none md:rounded-2xl md:mx-4 mb-2" ref={emblaRef}>
+                        <div className="overflow-hidden rounded-none md:rounded-2xl mb-2 " ref={emblaRef}>
                             <div className="flex">
                                 {allCollections.map((collection, index) => {
                                     const collectionVolume = volumeData[collection.contract_address]
@@ -401,118 +375,128 @@ const Page = () => {
             </div>
 
             {/* Top Collections by 7-Day Volume - Table View */}
-            <div className="pb-8 px-4">
+            <div className="pb-8 px-6">
                 <h2 className="text-2xl font-bold mb-2">Top Collections</h2>
                 <p className="text-gray-400 text-sm mb-6">Collections by Project</p>
 
-                <div className="bg-background border border-lines rounded-xl overflow-hidden">
-                    {/* Table Header */}
-                    <div className="grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines bg-[#1a1d29] text-xs text-gray-400 uppercase font-medium">
-                        <div className="col-span-2 md:col-span-3">Collection</div>
-                        <div className="hidden md:block md:col-span-2 text-right">Change</div>
-                        <div className="hidden md:block md:col-span-2 text-right">Sales</div>
-                        <div className="col-span-2 text-right">24h Volume</div>
-                        <div className="hidden md:block md:col-span-2 text-right">7d Volume</div>
-                        <div className="hidden md:block md:col-span-1 text-right">Vol %</div>
+                {isLoading ? (
+                    <div className="overflow-hidden rounded-none md:rounded-2xl mb-2 md:border border-lines">
+                        <TopProjectSkeleton />
                     </div>
-
-                    {/* Table Body */}
-                    <div>
-                        {isLoading ? (
-                            <div className="p-4 text-center text-gray-400">
-                                {/* Loading..... */}
+                ) : (
+                    <>
+                        <div className="bg-background border border-lines rounded-xl overflow-hidden">
+                            {/* Table Header */}
+                            <div className="bg-light grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines hover text-xs text-gray-400 uppercase font-medium">
+                                <div className="col-span-2 md:col-span-3">Collection</div>
+                                <div className="hidden md:block md:col-span-2 text-right">Change</div>
+                                <div className="hidden md:block md:col-span-2 text-right">Sales</div>
+                                <div className="col-span-2 text-right">24h Volume</div>
+                                <div className="hidden md:block md:col-span-2 text-right">7d Volume</div>
+                                <div className="hidden md:block md:col-span-1 text-right">Vol %</div>
                             </div>
-                        ) : (
-                            getTopCollectionsByVolume().map((collection, index) => {
-                                const volume7d = collection.volumeData?.volume?.['7d']
-                                const volume24h = collection.volumeData?.volume?.['24h']
 
-                                // Calculate percentage change (simplified - comparing 24h to avg daily from 7d)
-                                const avgDaily7d = volume7d ? volume7d.volume_usd / 7 : 0
-                                const change24h = volume24h ? volume24h.volume_usd : 0
-                                const percentChange = calculatePercentageChange(change24h, avgDaily7d)
+                            {/* Table Body */}
+                            <div>
+                                {isLoading ? (
+                                    <div className="p-4 text-center text-gray-400">
+                                        {/* Loading..... */}
+                                    </div>
+                                ) : (
+                                    getTopCollectionsByVolume().map((collection, index) => {
+                                        const volume7d = collection.volumeData?.volume?.['7d']
+                                        const volume24h = collection.volumeData?.volume?.['24h']
 
-                                // Calculate volume percentage (7d volume as % of total - simplified example)
-                                const totalVolume = getTopCollectionsByVolume().reduce((sum, c) =>
-                                    sum + (c.volumeData?.volume?.['7d']?.volume_usd || 0), 0
-                                )
-                                const volumePercent = volume7d ? (volume7d.volume_usd / totalVolume) * 100 : 0
+                                        // Calculate percentage change (simplified - comparing 24h to avg daily from 7d)
+                                        const avgDaily7d = volume7d ? volume7d.volume_usd / 7 : 0
+                                        const change24h = volume24h ? volume24h.volume_usd : 0
+                                        const percentChange = calculatePercentageChange(change24h, avgDaily7d)
 
-                                return (
-                                    <div
-                                        key={collection.contract_address}
-                                        className="grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines hover:bg-[#1a1d29] cursor-pointer transition-colors"
-                                        onClick={() => router.push(`/collection/${collection.contract_address}`)}
-                                    >
-                                        {/* Collection Name & Icon */}
-                                        <div className="col-span-2 md:col-span-3 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-[#2a2d3a] overflow-hidden flex-shrink-0">
-                                                <img
-                                                    src={collection.image}
-                                                    alt={collection.symbol}
-                                                    className="w-full h-full object-contain"
-                                                />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="font-medium text-sm truncate">
-                                                    {collection.name}
+                                        // Calculate volume percentage (7d volume as % of total - simplified example)
+                                        const totalVolume = getTopCollectionsByVolume().reduce((sum, c) =>
+                                            sum + (c.volumeData?.volume?.['7d']?.volume_usd || 0), 0
+                                        )
+                                        const volumePercent = volume7d ? (volume7d.volume_usd / totalVolume) * 100 : 0
+
+                                        return (
+                                            <div
+                                                key={collection.contract_address}
+                                                className="grid grid-cols-4 md:grid-cols-12 gap-4 p-4 border-b border-lines hover:bg-hoverp cursor-pointer transition-colors"
+                                                onClick={() => router.push(`/collection/${collection.contract_address}`)}
+                                            >
+                                                {/* Collection Name & Icon */}
+                                                <div className="col-span-2 md:col-span-3 flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-lg bg-[#2a2d3a] overflow-hidden flex-shrink-0">
+                                                        <img
+                                                            src={collection.image}
+                                                            alt={collection.symbol}
+                                                            className="w-full h-full object-contain"
+                                                        />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="font-medium text-sm truncate">
+                                                            {collection.name}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* 24h Change % - Hidden on mobile */}
+                                                <div className="hidden md:block md:col-span-2 text-right">
+                                                    <div className={`font-bold text-sm flex items-center justify-end gap-1 ${percentChange > 0 ? 'text-green-400' : percentChange < 0 ? 'text-red-400' : 'text-gray-400'
+                                                        }`}>
+                                                        {percentChange > 0 ? (
+                                                            <TrendingUp className="w-3 h-3" />
+                                                        ) : percentChange < 0 ? (
+                                                            <TrendingDown className="w-3 h-3" />
+                                                        ) : null}
+                                                        {percentChange > 0 ? '+' : ''}{percentChange.toFixed(2)}%
+                                                    </div>
+                                                </div>
+
+                                                {/* 7d Sales - Hidden on mobile */}
+                                                <div className="hidden md:block md:col-span-2 text-right">
+                                                    <div className="font-bold text-sm">
+                                                        {volume7d?.sales.toLocaleString() || '0'}
+                                                    </div>
+                                                </div>
+
+                                                {/* 24h Volume */}
+                                                <div className="col-span-2 text-right">
+                                                    <div className="font-bold text-sm text-green-400">
+                                                        {volume24h ? formatCurrency(volume24h.volume_usd) : '$0'}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 md:block hidden">
+                                                        {volume24h?.sales.toLocaleString() || '0'} sales
+                                                    </div>
+                                                </div>
+
+                                                {/* 7d Volume - Hidden on mobile */}
+                                                <div className="hidden md:block md:col-span-2 text-right">
+                                                    <div className="font-bold text-sm">
+                                                        {volume7d ? formatCurrency(volume7d.volume_usd) : '$0'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Volume Percentage - Hidden on mobile */}
+                                                <div className="hidden md:block md:col-span-1 text-right">
+                                                    <div className="font-bold text-sm text-blue-400">
+                                                        {volumePercent.toFixed(2)}%
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
 
-                                        {/* 24h Change % - Hidden on mobile */}
-                                        <div className="hidden md:block md:col-span-2 text-right">
-                                            <div className={`font-bold text-sm flex items-center justify-end gap-1 ${percentChange > 0 ? 'text-green-400' : percentChange < 0 ? 'text-red-400' : 'text-gray-400'
-                                                }`}>
-                                                {percentChange > 0 ? (
-                                                    <TrendingUp className="w-3 h-3" />
-                                                ) : percentChange < 0 ? (
-                                                    <TrendingDown className="w-3 h-3" />
-                                                ) : null}
-                                                {percentChange > 0 ? '+' : ''}{percentChange.toFixed(2)}%
-                                            </div>
-                                        </div>
 
-                                        {/* 7d Sales - Hidden on mobile */}
-                                        <div className="hidden md:block md:col-span-2 text-right">
-                                            <div className="font-bold text-sm">
-                                                {volume7d?.sales.toLocaleString() || '0'}
-                                            </div>
-                                        </div>
-
-                                        {/* 24h Volume */}
-                                        <div className="col-span-2 text-right">
-                                            <div className="font-bold text-sm text-green-400">
-                                                {volume24h ? formatCurrency(volume24h.volume_usd) : '$0'}
-                                            </div>
-                                            <div className="text-xs text-gray-400 md:block hidden">
-                                                {volume24h?.sales.toLocaleString() || '0'} sales
-                                            </div>
-                                        </div>
-
-                                        {/* 7d Volume - Hidden on mobile */}
-                                        <div className="hidden md:block md:col-span-2 text-right">
-                                            <div className="font-bold text-sm">
-                                                {volume7d ? formatCurrency(volume7d.volume_usd) : '$0'}
-                                            </div>
-                                        </div>
-
-                                        {/* Volume Percentage - Hidden on mobile */}
-                                        <div className="hidden md:block md:col-span-1 text-right">
-                                            <div className="font-bold text-sm text-blue-400">
-                                                {volumePercent.toFixed(2)}%
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            })
-                        )}
-                    </div>
-                </div>
             </div>
 
             {/* Projects Section - Grouped by Project */}
-            <div className="pb-20 px-6">
+            <div className="pb-8 px-6">
                 <h2 className="text-2xl font-bold mb-2">Browse Collections</h2>
                 <p className="text-gray-400 text-sm mb-6">Explore collections by project</p>
 
@@ -537,10 +521,10 @@ const Page = () => {
                                         className="bg-background border border-lines rounded-xl overflow-hidden hover:border-gray-600 transition-colors"
                                     >
                                         {/* Project Header */}
-                                        <div className="p-6 border-b border-lines">
+                                        <div className="p-6 border-b border-lines ">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-14 h-14 rounded-lg bg-[#1f2937] overflow-hidden flex-shrink-0 border-2 border-white/10">
+                                                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 border-white/10">
                                                         <img
                                                             src={activeCollections[0]?.image}
                                                             alt={project.name}
@@ -600,7 +584,7 @@ const Page = () => {
                                                     return (
                                                         <div
                                                             key={idx}
-                                                            className="flex items-center justify-between p-3 bg-[#1a1d29] hover:bg-[#1f2937] rounded-lg cursor-pointer transition-colors group"
+                                                            className="flex items-center justify-between p-3 bg-light hover:bg-[#1f2937] rounded-lg cursor-pointer transition-colors group"
                                                             onClick={() => router.push(`/collection/${collection.contract_address}`)}
                                                         >
                                                             <div className="flex items-center gap-3 flex-1 min-w-0">

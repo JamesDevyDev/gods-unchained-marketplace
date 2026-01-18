@@ -55,19 +55,18 @@ interface ApiResponse {
 
 // Skeleton Components
 const CardSkeleton = () => (
-  <div className="bg-background border-lines border-1 rounded-md overflow-hidden shadow-lg">
-    <div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center bg-gray-800 animate-pulse">
-      <div className="w-[90%] h-[90%] bg-gray-700 rounded"></div>
-      <div className="absolute top-2 right-2 w-16 h-5 bg-gray-700 rounded animate-pulse"></div>
+  <div className="bg-background px-2 rounded-md overflow-hidden shadow-lg">
+    <div className="aspect-[2/3] relative overflow-hidden flex items-center justify-center bg-light animate-pulse">
+
     </div>
     <div className="p-3 space-y-2">
-      <div className="h-5 bg-gray-700 rounded w-3/4 animate-pulse"></div>
-      <div className="h-4 bg-gray-700 rounded w-1/2 animate-pulse"></div>
+      <div className="h-5 bg-light rounded w-3/4 animate-pulse"></div>
+      <div className="h-4 bg-light rounded w-1/2 animate-pulse"></div>
       <div className="flex items-center gap-1.5">
-        <div className="w-3.5 h-3.5 bg-gray-700 rounded-full animate-pulse"></div>
-        <div className="h-3 bg-gray-700 rounded w-20 animate-pulse"></div>
+        <div className="w-3.5 h-3.5 bg-light rounded-full animate-pulse"></div>
+        <div className="h-3 bg-light rounded w-20 animate-pulse"></div>
       </div>
-      <div className="h-3 bg-gray-700 rounded w-16 animate-pulse"></div>
+      <div className="h-3 bg-light rounded w-16 animate-pulse"></div>
     </div>
   </div>
 )
@@ -76,7 +75,7 @@ const FilterSkeleton = () => (
   <div className="space-y-1">
     {[...Array(6)].map((_, i) => (
       <div key={i} className="border-b border-[#353840] py-4">
-        <div className="h-5 w-24 bg-gray-700 rounded animate-pulse"></div>
+        <div className="h-5 w-24 bg-light rounded animate-pulse"></div>
       </div>
     ))}
   </div>
@@ -92,10 +91,10 @@ interface DropdownFilterProps {
 }
 
 const DropdownFilter: React.FC<DropdownFilterProps> = ({ label, count, isOpen, onToggle, children }) => (
-  <div className="border-b border-[#353840]">
+  <div className="border-b border-[#353840] ">
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between py-4 px-0 hover:opacity-80 transition-opacity"
+      className="w-full flex items-center justify-between py-4 px-0 hover:opacity-80 transition-opacity cursor-pointer"
     >
       <div className="flex items-center gap-2">
         <span className="text-white font-semibold text-base">{label}</span>
@@ -192,6 +191,14 @@ const RadioOption: React.FC<RadioOptionProps> = ({ label, count, checked, onChan
     <span className="text-gray-400 text-sm">{count}</span>
   </label>
 )
+
+// Filter footer - Remove mt-4 and add border-top for separation
+const FilterFooter = () => (
+  <div className="w-full p-4 bg-light border-t border-lines flex items-center justify-start text-text font-bold">
+    ChainedX
+  </div>
+)
+
 
 const CardsPage = () => {
   const params = useParams()
@@ -811,8 +818,8 @@ const CardsPage = () => {
 
       <div className="flex ">
         {/* Desktop Sidebar Filters */}
-        <div className="hidden lg:block w-80 bg-background border-r border-lines px-5 py-6 overflow-y-auto h-screen sticky top-16 custom-scrollbar">
-          <div className="flex items-center justify-between mb-6">
+        <div className="hidden lg:flex lg:flex-col w-80 bg-background border-r border-lines h-screen sticky top-16">
+          <div className="flex items-center justify-between px-5 py-[35px]  flex-shrink-0 border-b border-lines">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {activeFiltersCount > 0 && (
               <button
@@ -823,7 +830,10 @@ const CardsPage = () => {
               </button>
             )}
           </div>
-          <FilterContent />
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4">
+            <FilterContent />
+            <FilterFooter />
+          </div>
         </div>
 
         {/* Mobile Filter Drawer */}
@@ -833,8 +843,8 @@ const CardsPage = () => {
               className="fixed inset-0 bg-black/60 z-40 lg:hidden"
               onClick={() => setIsMobileFilterOpen(false)}
             />
-            <div className="fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-lines px-5 py-6 overflow-y-auto z-50 lg:hidden animate-slide-in custom-scrollbar">
-              <div className="flex items-center justify-between mb-6">
+            <div className="fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-lines z-50 lg:hidden animate-slide-in flex flex-col">
+              <div className="flex items-center justify-between px-5 py-6 border-b border-lines flex-shrink-0">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
                 <div className="flex items-center gap-2">
                   {activeFiltersCount > 0 && (
@@ -855,22 +865,27 @@ const CardsPage = () => {
                   </button>
                 </div>
               </div>
-              <FilterContent />
+              <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4">
+                <FilterContent />
+              </div>
+              <div className="flex-shrink-0">
+                <FilterFooter />
+              </div>
             </div>
           </>
         )}
 
         {/* Main Content */}
-        <div className="flex-1 px-2 flex">
+        <div className="flex-1 flex">
           <div className="w-full max-w-[1920px] pb-16">
             {/* Header */}
-            <div className="z-10 bg-background border-lines border-b sticky top-16">
+            <div className="z-10 bg-background border-lines border-b sticky top-16 px-2">
 
               <div className='flex items-center justify-start   py-2 gap-2 text-text text-xl font-bold'>
-                <div className='px-2 py-1 bg-background flex items-center justify-center cursor-pointer'>
+                <div className='py-1 bg-background flex items-center justify-center cursor-pointer'>
                   Market
                 </div>
-                <div className='px-2 py-1 bg-background flex items-center justify-center cursor-pointer'>
+                <div className='py-1 bg-background flex items-center justify-center cursor-pointer'>
                   My Nfts
                 </div>
               </div>
@@ -971,7 +986,7 @@ const CardsPage = () => {
             {/* Cards grid */}
             {!loading && displayedCards.length > 0 && (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 px-2">
                   {displayedCards.map((card) => (
                     <CardItem
                       key={card.metadata_id}
