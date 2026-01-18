@@ -1306,7 +1306,7 @@ const CardsPage = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex">
-          <div className="w-full max-w-[1920px] pb-16">
+          <div className="w-full max-w-[1920px] pb-16 ">
             <div className="z-10 bg-background border-lines border-b sticky top-16 px-2">
               <ViewTabs
                 activeView={activeView}
@@ -1342,6 +1342,16 @@ const CardsPage = () => {
               loadMoreRef={loadMoreRef}
               clearAllFilters={clearAllFilters}
             />
+
+            {activeView === 'nfts' &&
+              <div className='bg-background border-t border-lines w-full h-[50px] fixed bottom-0 flex'>
+                <div className='h-full flex items-center justify-center text-text text-sm font-bold px-2'>
+                  Collection Value :
+                </div>
+              </div>
+            }
+
+
           </div>
         </div>
       </div>
