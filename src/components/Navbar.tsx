@@ -375,7 +375,7 @@ export default function Navbar() {
                     <img
                         src="/assets/icon2.png"
                         alt="Chained Icon"
-                        className="w-full h-full object-contain scale-150"
+                        className="w-full h-full object-contain "
                     />
                 </Link>
             </div>
