@@ -106,7 +106,7 @@ const CardModal = ({
     // Check if current user has listings for this card
     const userHasListings = () => {
         if (!listingsData || !loggedWallet) return false
-        
+
         return listingsData.all_listings.some(
             listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
         )
@@ -115,7 +115,7 @@ const CardModal = ({
     // Get user's listings
     const getUserListings = (): Listing[] => {
         if (!listingsData || !loggedWallet) return []
-        
+
         return listingsData.all_listings.filter(
             listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
         )
@@ -454,7 +454,7 @@ const CardModal = ({
                                         ) : filteredListings.length > 0 ? (
                                             filteredListings.map((listing) => {
                                                 const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
-                                                
+
                                                 return (
                                                     <div
                                                         key={listing.listing_id}
@@ -518,10 +518,10 @@ const CardModal = ({
                                     ) : filteredListings.length > 0 ? (
                                         filteredListings.map((listing) => {
                                             const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
-                                            
+
                                             return (
-                                                <div 
-                                                    key={listing.listing_id} 
+                                                <div
+                                                    key={listing.listing_id}
                                                     className={`bg-background border border-lines rounded-lg p-3 ${isUserListing ? 'border-blue-500' : ''}`}
                                                 >
                                                     <div className="flex justify-between items-start mb-3">

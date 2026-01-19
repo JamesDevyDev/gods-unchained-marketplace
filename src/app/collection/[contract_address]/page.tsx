@@ -1382,13 +1382,10 @@ const CardsPage = () => {
                     <BarChart3 className='w-4 h-4 text-gray-400 group-hover:text-text transition-colors' />
                   </div>
 
-                  <span className='text-text text-sm font-bold'>
+                  <span className='text-text text-[12px] font-bold'>
                     Collection Value: ${formatPrice(totalRealValue)}
                   </span>
                 </div>
-                <span className='text-xs text-gray-400 group-hover:text-text transition-colors'>
-                  View Details →
-                </span>
               </div>
             )}
           </div>

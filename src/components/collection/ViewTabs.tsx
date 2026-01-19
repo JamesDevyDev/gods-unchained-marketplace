@@ -12,9 +12,9 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
     loggedWallet
 }) => {
     return (
-        <div className='flex items-center justify-start py-2 gap-8 text-text text-xl font-bold'>
+        <div className='flex items-center justify-start py-1 gap-5 text-text text-xl font-bold'>
             <div
-                className={`py-1 px-2 bg-background flex items-center justify-center cursor-pointer hover:bg-light rounded-md ${activeView === 'market' ? 'bg-light' : ''
+                className={` px-2 bg-background flex items-center justify-center cursor-pointer hover:bg-light rounded-md ${activeView === 'market' ? 'bg-light' : ''
                     }`}
                 onClick={() => onViewChange('market')}
             >
@@ -23,7 +23,7 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
 
             {loggedWallet && (
                 <div
-                    className={`py-1 px-2 bg-background flex items-center justify-center cursor-pointer hover:bg-light rounded-md ${activeView === 'nfts' ? 'bg-light' : ''
+                    className={` px-2 bg-background flex items-center justify-center cursor-pointer hover:bg-light rounded-md ${activeView === 'nfts' ? 'bg-light' : ''
                         }`}
                     onClick={() => onViewChange('nfts')}
                 >
