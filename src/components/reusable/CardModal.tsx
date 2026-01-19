@@ -451,7 +451,7 @@ const CardModal = ({
                                             onClick={() => setActiveTab('details')}
                                             className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'details'
                                                 ? 'text-white'
-                                                : 'text-gray-400 hover:text-gray-300'
+                                                : 'text-gray-400 hover:text-hover'
                                                 }`}
                                         >
                                             Details
@@ -464,7 +464,7 @@ const CardModal = ({
                                             onClick={() => setActiveTab('buy')}
                                             className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'buy'
                                                 ? 'text-white'
-                                                : 'text-gray-400 hover:text-gray-300'
+                                                : 'text-gray-400 hover:text-hover'
                                                 }`}
                                         >
                                             Buy
@@ -477,7 +477,7 @@ const CardModal = ({
                                             onClick={() => setActiveTab('sell')}
                                             className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'sell'
                                                 ? 'text-white'
-                                                : 'text-gray-400 hover:text-gray-300'
+                                                : 'text-gray-400 hover:text-hover'
                                                 }`}
                                         >
                                             Sell
@@ -490,7 +490,7 @@ const CardModal = ({
                                             onClick={() => setActiveTab('owned')}
                                             className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'owned'
                                                 ? 'text-white'
-                                                : 'text-gray-400 hover:text-gray-300'
+                                                : 'text-gray-400 hover:text-hover'
                                                 }`}
                                         >
                                             Owned
@@ -503,7 +503,7 @@ const CardModal = ({
                                             onClick={() => setActiveTab('activity')}
                                             className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'activity'
                                                 ? 'text-white'
-                                                : 'text-gray-400 hover:text-gray-300'
+                                                : 'text-gray-400 hover:text-hover'
                                                 }`}
                                         >
                                             Activity
@@ -726,19 +726,19 @@ const CardModal = ({
                                                     <div className="px-4 py-3 bg-background border-b border-lines flex flex-wrap gap-2">
                                                         <button
                                                             onClick={selectAllTokens}
-                                                            className="bg-light hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
+                                                            className="bg-light hover:bg-hover text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
                                                         >
                                                             Select All
                                                         </button>
                                                         <button
                                                             onClick={selectAllNonListed}
-                                                            className="bg-light hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
+                                                            className="bg-light hover:bg-hover text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
                                                         >
                                                             Select All Non-Listed
                                                         </button>
                                                         <button
                                                             onClick={deselectAllTokens}
-                                                            className="bg-light hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
+                                                            className="bg-light hover:bg-hover text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer"
                                                         >
                                                             Deselect All
                                                         </button>
@@ -768,7 +768,7 @@ const CardModal = ({
                                                             return (
                                                                 <div
                                                                     key={index}
-                                                                    className={`grid grid-cols-5 gap-4 px-4 py-3 border-b border-lines hover:bg-light transition-colors ${isSelected ? 'bg-blue-900/20' : ''}`}
+                                                                    className={`grid grid-cols-5 gap-4 px-4 py-3 border-b border-lines hover:bg-hover transition-colors ${isSelected ? 'bg-hover' : ''}`}
                                                                 >
                                                                     <div className="flex items-center gap-2">
                                                                         <input
