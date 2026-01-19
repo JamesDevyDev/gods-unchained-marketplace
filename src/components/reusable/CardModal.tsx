@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import useCommonStore from '@/utils/zustand/useCommonStore'
 
 interface CardAttributes {
     [key: string]: string | number
@@ -93,6 +94,7 @@ const CardModal = ({
     selectedCurrency,
     contract_address,
 }: Props) => {
+    const { loggedWallet } = useCommonStore() // Get logged wallet
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [quantity, setQuantity] = useState(1)
     const [showGroupOrders, setShowGroupOrders] = useState(true)
@@ -100,6 +102,24 @@ const CardModal = ({
     const [listingsData, setListingsData] = useState<ListingsResponse | null>(null)
     const [isLoadingListings, setIsLoadingListings] = useState(false)
     const [currencyFilter, setCurrencyFilter] = useState<string>('All')
+
+    // Check if current user has listings for this card
+    const userHasListings = () => {
+        if (!listingsData || !loggedWallet) return false
+        
+        return listingsData.all_listings.some(
+            listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+        )
+    }
+
+    // Get user's listings
+    const getUserListings = (): Listing[] => {
+        if (!listingsData || !loggedWallet) return []
+        
+        return listingsData.all_listings.filter(
+            listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+        )
+    }
 
     // Get currency icon path
     const getCurrencyIcon = (currency: string): string => {
@@ -218,6 +238,8 @@ const CardModal = ({
     const displayPrice = getPriceToDisplay()
     const filteredListings = getFilteredListings()
     const youOwn = 5
+    const hasUserListings = userHasListings()
+    const userListings = getUserListings()
 
     return (
         <div
@@ -365,12 +387,25 @@ const CardModal = ({
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-3">
-                                    <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-                                        Buy
-                                    </button>
-                                    <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-                                        Make Offer
-                                    </button>
+                                    {hasUserListings ? (
+                                        <>
+                                            <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
+                                                Cancel Listing ({userListings.length})
+                                            </button>
+                                            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
+                                                Edit Listing
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
+                                                Buy
+                                            </button>
+                                            <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
+                                                Make Offer
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -417,40 +452,55 @@ const CardModal = ({
                                                 Loading listings...
                                             </div>
                                         ) : filteredListings.length > 0 ? (
-                                            filteredListings.map((listing) => (
-                                                <div
-                                                    key={listing.listing_id}
-                                                    className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <img
-                                                            src={getCurrencyIcon(listing.currency)}
-                                                            alt={listing.currency}
-                                                            className="w-5 h-5 rounded-full"
-                                                            onError={(e) => {
-                                                                e.currentTarget.style.display = 'none'
-                                                            }}
-                                                        />
-                                                        <div>
-                                                            <div className="text-yellow-500 font-bold text-sm">
-                                                                ${listing.prices.total_usd.toFixed(4)}
-                                                            </div>
-                                                            <div className="text-gray-400 text-xs">
-                                                                {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                            filteredListings.map((listing) => {
+                                                const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+                                                
+                                                return (
+                                                    <div
+                                                        key={listing.listing_id}
+                                                        className={`grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors ${isUserListing ? 'bg-light' : ''}`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <img
+                                                                src={getCurrencyIcon(listing.currency)}
+                                                                alt={listing.currency}
+                                                                className="w-5 h-5 rounded-full"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.style.display = 'none'
+                                                                }}
+                                                            />
+                                                            <div>
+                                                                <div className="text-yellow-500 font-bold text-sm">
+                                                                    ${listing.prices.total_usd.toFixed(4)}
+                                                                </div>
+                                                                <div className="text-gray-400 text-xs">
+                                                                    {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        <div className="text-white flex items-center">
+                                                            1
+                                                            {isUserListing && (
+                                                                <span className="ml-2 text-xs text-blue-400">(You)</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-gray-400 text-sm flex items-center">
+                                                            {getTimeUntilExpiration(listing.end_at)}
+                                                        </div>
+                                                        <div className="flex items-center">
+                                                            {isUserListing ? (
+                                                                <button className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors cursor-pointer">
+                                                                    Cancel
+                                                                </button>
+                                                            ) : (
+                                                                <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors cursor-pointer">
+                                                                    Buy
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-white flex items-center">1</div>
-                                                    <div className="text-gray-400 text-sm flex items-center">
-                                                        {getTimeUntilExpiration(listing.end_at)}
-                                                    </div>
-                                                    <div className="flex items-center">
-                                                        <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-1 rounded transition-colors cursor-pointer">
-                                                            Buy
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))
+                                                )
+                                            })
                                         ) : (
                                             <div className="px-4 py-12 text-center text-gray-400 text-sm">
                                                 No listings available
@@ -466,45 +516,60 @@ const CardModal = ({
                                             Loading listings...
                                         </div>
                                     ) : filteredListings.length > 0 ? (
-                                        filteredListings.map((listing) => (
-                                            <div key={listing.listing_id} className="bg-background border border-lines rounded-lg p-3">
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <img
-                                                            src={getCurrencyIcon(listing.currency)}
-                                                            alt={listing.currency}
-                                                            className="w-5 h-5 rounded-full"
-                                                            onError={(e) => {
-                                                                e.currentTarget.style.display = 'none'
-                                                            }}
-                                                        />
+                                        filteredListings.map((listing) => {
+                                            const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+                                            
+                                            return (
+                                                <div 
+                                                    key={listing.listing_id} 
+                                                    className={`bg-background border border-lines rounded-lg p-3 ${isUserListing ? 'border-blue-500' : ''}`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <img
+                                                                src={getCurrencyIcon(listing.currency)}
+                                                                alt={listing.currency}
+                                                                className="w-5 h-5 rounded-full"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.style.display = 'none'
+                                                                }}
+                                                            />
+                                                            <div>
+                                                                <div className="text-yellow-500 font-bold text-sm">
+                                                                    ${listing.prices.total_usd.toFixed(4)}
+                                                                </div>
+                                                                <div className="text-gray-400 text-xs">
+                                                                    {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-gray-400 text-xs">Amount</div>
+                                                            <div className="text-white text-sm font-semibold">
+                                                                1 {isUserListing && <span className="text-blue-400">(You)</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
                                                         <div>
-                                                            <div className="text-yellow-500 font-bold text-sm">
-                                                                ${listing.prices.total_usd.toFixed(4)}
-                                                            </div>
-                                                            <div className="text-gray-400 text-xs">
-                                                                {listing.prices.total_with_fees.toFixed(6)} {listing.currency}
+                                                            <div className="text-gray-400 text-xs">Expires In</div>
+                                                            <div className="text-gray-300 text-sm">
+                                                                {getTimeUntilExpiration(listing.end_at)}
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-gray-400 text-xs">Amount</div>
-                                                        <div className="text-white text-sm font-semibold">1</div>
+                                                        {isUserListing ? (
+                                                            <button className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors cursor-pointer">
+                                                                Cancel
+                                                            </button>
+                                                        ) : (
+                                                            <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors cursor-pointer">
+                                                                Buy
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <div className="text-gray-400 text-xs">Expires In</div>
-                                                        <div className="text-gray-300 text-sm">
-                                                            {getTimeUntilExpiration(listing.end_at)}
-                                                        </div>
-                                                    </div>
-                                                    <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors cursor-pointer">
-                                                        Buy
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
+                                            )
+                                        })
                                     ) : (
                                         <div className="bg-background border border-lines rounded-lg p-8 text-center text-gray-400 text-sm">
                                             No listings available
