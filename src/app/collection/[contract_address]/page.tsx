@@ -1332,7 +1332,7 @@ const CardsPage = () => {
         {/* Main Content */}
         <div className="flex-1 flex">
           <div className="w-full max-w-[1920px] pb-16">
-            <div className="z-10 bg-background border-lines border-b sticky top-14 px-2">
+            <div className="z-10 bg-background border-lines border-b sticky top-13 px-2">
               <ViewTabs
                 activeView={activeView}
                 onViewChange={handleViewChange}
@@ -1377,7 +1377,7 @@ const CardsPage = () => {
                 >
                   <div
                     onClick={() => setIsStatsModalOpen(true)}
-                    className='bg-light p-2 rounded-lg  w-[40px] flex items-center justify-center cursor-pointer'
+                    className='bg-light p-2 rounded-lg  w-[40px] flex items-center justify-center cursor-pointer border-lines border'
                   >
                     <BarChart3 className='w-4 h-4 text-gray-400 group-hover:text-text transition-colors' />
                   </div>

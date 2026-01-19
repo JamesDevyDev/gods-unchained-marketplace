@@ -107,7 +107,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </div> 
                 </div>
             </div>
         </div>

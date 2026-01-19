@@ -32,4 +32,4 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
             )}
         </div>
     )
-}
+} 

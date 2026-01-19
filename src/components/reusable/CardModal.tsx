@@ -1335,7 +1335,7 @@ const CardModal = ({
     contract_address,
 }: Props) => {
     const { loggedWallet } = useCommonStore()
-    const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sell' | 'activity'>('details')
+    const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sell' | 'listing'| 'activity'>('details')
     const [quantity, setQuantity] = useState(1)
     const [listingsData, setListingsData] = useState<ListingsResponse | null>(null)
     const [isLoadingListings, setIsLoadingListings] = useState(false)
@@ -1584,6 +1584,7 @@ const CardModal = ({
                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
                                         )}
                                     </button>
+
                                     <button
                                         onClick={() => setActiveTab('buy')}
                                         className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'buy'
@@ -1596,6 +1597,7 @@ const CardModal = ({
                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
                                         )}
                                     </button>
+
                                     <button
                                         onClick={() => setActiveTab('sell')}
                                         className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'sell'
@@ -1608,6 +1610,20 @@ const CardModal = ({
                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
                                         )}
                                     </button>
+                                    
+                                    <button
+                                        onClick={() => setActiveTab('listing')}
+                                        className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'activity'
+                                            ? 'text-white'
+                                            : 'text-gray-400 hover:text-gray-300'
+                                            }`}
+                                    >
+                                        My Listing
+                                        {activeTab === 'listing' && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+                                        )}
+                                    </button>
+
                                     <button
                                         onClick={() => setActiveTab('activity')}
                                         className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'activity'
@@ -1619,7 +1635,7 @@ const CardModal = ({
                                         {activeTab === 'activity' && (
                                             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
                                         )}
-                                    </button>
+                                    </button> 
                                 </div>
                             </div>
 
@@ -1829,88 +1845,8 @@ const CardModal = ({
                                 )}
 
                                 {/* Sell Tab */}
-                                {activeTab === 'sell' && (
+                                {activeTab === 'listing' && (
                                     <div>
-                                        <div className="bg-background border border-lines rounded-lg p-6">
-                                            <h3 className="text-white font-semibold text-base mb-4">List for Sale</h3>
-
-                                            {youOwn > 0 ? (
-                                                <>
-                                                    {/* Quantity Selector */}
-                                                    <div className="mb-4">
-                                                        <label className="text-gray-400 text-sm block mb-2">Quantity</label>
-                                                        <div className="flex items-center gap-3">
-                                                            <button
-                                                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                                className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <input
-                                                                type="number"
-                                                                value={quantity}
-                                                                onChange={(e) => setQuantity(Math.max(1, Math.min(youOwn, parseInt(e.target.value) || 1)))}
-                                                                className="flex-1 bg-gray-700 text-white text-center py-2 rounded font-semibold"
-                                                                max={youOwn}
-                                                            />
-                                                            <button
-                                                                onClick={() => setQuantity(Math.min(youOwn, quantity + 1))}
-                                                                className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                        <span className="text-gray-500 text-xs mt-1 block">
-                                                            You own {youOwn} of this card
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Price Input */}
-                                                    <div className="mb-4">
-                                                        <label className="text-gray-400 text-sm block mb-2">Price per item</label>
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="number"
-                                                                placeholder="0.00"
-                                                                className="flex-1 bg-gray-700 text-white px-4 py-2 rounded font-semibold"
-                                                                step="0.0001"
-                                                            />
-                                                            <select className="bg-gray-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">
-                                                                <option>ETH</option>
-                                                                <option>USDC</option>
-                                                                <option>GODS</option>
-                                                                <option>IMX</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Duration */}
-                                                    <div className="mb-6">
-                                                        <label className="text-gray-400 text-sm block mb-2">Duration</label>
-                                                        <select className="w-full bg-gray-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">
-                                                            <option>1 day</option>
-                                                            <option>3 days</option>
-                                                            <option>7 days</option>
-                                                            <option>1 month</option>
-                                                            <option>3 months</option>
-                                                            <option>6 months</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {/* List Button */}
-                                                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors cursor-pointer">
-                                                        List for Sale
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <p className="text-gray-400 text-sm">
-                                                        You don't own any of this card to sell.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-
                                         {/* Your Active Listings */}
                                         {hasUserListings && (
                                             <div className="mt-6">
@@ -1961,6 +1897,88 @@ const CardModal = ({
                                                 <span className="text-gray-400">Chart visualization will go here</span>
                                             </div>
                                         </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'sell' && (
+                                    <div className="bg-background border border-lines rounded-lg p-6">
+                                        <h3 className="text-white font-semibold text-base mb-4">List for Sale</h3>
+
+                                        {youOwn > 0 ? (
+                                            <>
+                                                {/* Quantity Selector */}
+                                                <div className="mb-4">
+                                                    <label className="text-gray-400 text-sm block mb-2">Quantity</label>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <input
+                                                            type="number"
+                                                            value={quantity}
+                                                            onChange={(e) => setQuantity(Math.max(1, Math.min(youOwn, parseInt(e.target.value) || 1)))}
+                                                            className="flex-1 bg-gray-700 text-white text-center py-2 rounded font-semibold"
+                                                            max={youOwn}
+                                                        />
+                                                        <button
+                                                            onClick={() => setQuantity(Math.min(youOwn, quantity + 1))}
+                                                            className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center text-white font-bold transition-colors cursor-pointer"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                    <span className="text-gray-500 text-xs mt-1 block">
+                                                        You own {youOwn} of this card
+                                                    </span>
+                                                </div>
+
+                                                {/* Price Input */}
+                                                <div className="mb-4">
+                                                    <label className="text-gray-400 text-sm block mb-2">Price per item</label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0.00"
+                                                            className="flex-1 bg-gray-700 text-white px-4 py-2 rounded font-semibold"
+                                                            step="0.0001"
+                                                        />
+                                                        <select className="bg-gray-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">
+                                                            <option>ETH</option>
+                                                            <option>USDC</option>
+                                                            <option>GODS</option>
+                                                            <option>IMX</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                {/* Duration */}
+                                                <div className="mb-6">
+                                                    <label className="text-gray-400 text-sm block mb-2">Duration</label>
+                                                    <select className="w-full bg-gray-700 text-white px-4 py-2 rounded font-semibold cursor-pointer">
+                                                        <option>1 day</option>
+                                                        <option>3 days</option>
+                                                        <option>7 days</option>
+                                                        <option>1 month</option>
+                                                        <option>3 months</option>
+                                                        <option>6 months</option>
+                                                    </select>
+                                                </div>
+
+                                                {/* List Button */}
+                                                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors cursor-pointer">
+                                                    List for Sale
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="text-center py-8">
+                                                <p className="text-gray-400 text-sm">
+                                                    You don't own any of this card to sell.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -369,9 +369,9 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 h-14 flex items-center px-4 z-50 border-b border-lines bg-background">
+        <nav className="fixed top-0 left-0 right-0 h-13 flex items-center px-4 z-50 border-b border-lines bg-background">
             <div className="flex items-center gap-4 flex-1">
-                <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative">
+                <Link href='/' className="w-9 h-9 rounded-full flex items-center justify-center relative">
                     <img
                         src="/assets/icon2.png"
                         alt="Chained Icon"
@@ -393,7 +393,7 @@ export default function Navbar() {
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setShowDropdown(!showDropdown)}
-                            className="cursor-pointer w-10 h-10 rounded-full bg-gray-800 overflow-hidden relative hover:ring-2 hover:ring-primary transition"
+                            className="cursor-pointer w-9 h-9 rounded-full bg-gray-800 overflow-hidden relative hover:ring-2 hover:ring-primary transition"
                         >
                             <img
                                 src={getAvatarUrl(account)}

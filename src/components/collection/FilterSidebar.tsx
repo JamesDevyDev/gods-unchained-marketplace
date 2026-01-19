@@ -33,8 +33,8 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = (props) => {
     const { activeFiltersCount, clearAllFilters } = props
 
     return (
-        <div className="hidden lg:flex lg:flex-col w-80 bg-background border-r border-lines h-screen sticky top-14">
-            <div className="flex items-center justify-between px-5 py-[27px] flex-shrink-0 border-b border-lines">
+        <div className="hidden lg:flex lg:flex-col w-80 bg-background border-r border-lines h-screen sticky top-13">
+            <div className="flex items-center justify-between px-5 py-[24px] flex-shrink-0 border-b border-lines">
                 <h2 className="text-xl font-bold text-white">Filters</h2>
                 {activeFiltersCount > 0 && (
                     <button

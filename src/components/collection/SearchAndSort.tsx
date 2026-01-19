@@ -32,11 +32,11 @@ export const SearchAndSort: React.FC<SearchAndSortProps> = ({
     return (
         <div>
             <div className="mb-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-                <div className='flex w-full gap-4'>
+                <div className='flex w-full  gap-4'>
                     {/* Mobile Filter Button */}
                     <button
                         onClick={onFilterToggle}
-                        className="lg:hidden sm:w-auto px-4 cursor-pointer flex items-center justify-center gap-2 bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
+                        className="h-8 lg:hidden sm:w-auto px-4 cursor-pointer flex items-center justify-center gap-2 bg-background border border-lines rounded-md hover:bg-[#36393f] transition"
                     >
                         <Menu className="w-4 h-4" />
                     </button>
@@ -47,7 +47,7 @@ export const SearchAndSort: React.FC<SearchAndSortProps> = ({
                         placeholder="Search..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                        className=" h-8 w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
                     />
 
                     {/* Sort Section */}
@@ -56,7 +56,7 @@ export const SearchAndSort: React.FC<SearchAndSortProps> = ({
                         <div ref={sortRef} className="relative flex-1 sm:flex-initial">
                             <button
                                 onClick={() => setIsSortOpen(!isSortOpen)}
-                                className="w-full cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm sm:min-w-[140px] justify-between"
+                                className="h-8 w-full cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition whitespace-nowrap text-sm sm:min-w-[140px] justify-between"
                             >
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium">
@@ -88,7 +88,7 @@ export const SearchAndSort: React.FC<SearchAndSortProps> = ({
                         {/* Direction Toggle Button */}
                         <button
                             onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                            className="h-full cursor-pointer flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition text-sm flex-shrink-0"
+                            className="h-8 cursor-pointer flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] hover:bg-[#3d4147] transition text-sm flex-shrink-0"
                             title={sortDirection === 'asc' ? 'Low to High' : 'High to Low'}
                         >
                             {sortDirection === 'asc' ? (
