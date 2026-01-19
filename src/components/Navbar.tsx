@@ -369,7 +369,7 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 h-16 flex items-center px-4 z-50 border-b border-lines bg-background">
+        <nav className="fixed top-0 left-0 right-0 h-14 flex items-center px-4 z-50 border-b border-lines bg-background">
             <div className="flex items-center gap-4 flex-1">
                 <Link href='/' className="w-10 h-10 rounded-full flex items-center justify-center relative">
                     <img

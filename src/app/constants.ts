@@ -31,4 +31,4 @@ export const RARITY_ORDER: Record<string, number> = {
 export const INITIAL_DISPLAY_COUNT = 50
 export const LOAD_MORE_COUNT = 50
 export const SCROLL_THRESHOLD = 0.5
-export const SCROLL_ROOT_MARGIN = '1000px'
+export const SCROLL_ROOT_MARGIN = '2000px'

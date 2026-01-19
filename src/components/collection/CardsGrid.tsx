@@ -43,7 +43,7 @@ export const CardsGrid: React.FC<CardsGridProps> = ({
     // Loading skeleton
     if (loading) {
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                 {[...Array(30)].map((_, i) => (
                     <CardSkeleton key={i} />
                 ))}
@@ -55,7 +55,7 @@ export const CardsGrid: React.FC<CardsGridProps> = ({
     if (displayedCards.length > 0) {
         return (
             <>
-                <div className=" grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 px-2">
+                <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 px-2">
                     {displayedCards.map((card) => (
                         <CardItem
                             key={card.metadata_id}

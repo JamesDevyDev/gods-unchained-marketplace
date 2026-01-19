@@ -103,7 +103,7 @@ const CardItem = ({
             </div >
 
             {/* Info */}
-            < div className="p-3" >
+            < div className="p-3 bg-light" >
                 <h3 className="text-white font-semibold truncate mb-2">
                     {card.name}
                 </h3>
