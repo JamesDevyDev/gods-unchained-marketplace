@@ -49,21 +49,21 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="bg-light  rounded-lg p-4 text-center">
                             <div className="text-xs text-gray-400 mb-2">Real Value</div>
-                            <div className="text-sm md:text-2xl font-bold text-green-400">
+                            <div className="text-sm md:text-2xl font-bold text-text">
                                 ${formatPrice(totalRealValue)}
                             </div>
                             <div className="text-[10px] text-gray-500 mt-1">Real Market Value</div>
                         </div>
                         <div className="bg-light  rounded-lg p-4 text-center">
                             <div className="text-xs text-gray-400 mb-2">Floor Value</div>
-                            <div className="text-sm md:text-2xl font-bold text-blue-400">
+                            <div className="text-sm md:text-2xl font-bold text-text">
                                 ${formatPrice(stats.total_floor_value_usd)}
                             </div>
                             <div className="text-[10px] text-gray-500 mt-1">Current Market Floor</div>
                         </div>
                         <div className="bg-light  rounded-lg p-4 text-center">
                             <div className="text-xs text-gray-400 mb-2">Listed Value</div>
-                            <div className="text-sm md:text-2xl font-bold text-purple-400">
+                            <div className="text-sm md:text-2xl font-bold text-text">
                                 ${formatPrice(stats.user_listing_stats?.total_listed_value_usd || 0)}
                             </div>
                             <div className="text-[10px] text-gray-500 mt-1">Active listings Value</div>
