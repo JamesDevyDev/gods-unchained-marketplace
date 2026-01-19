@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import type { Stack, Contract, ApiResponse } from '@/app/types'
+import type { Stack, Contract, ApiResponse, Stats } from '@/app/types'
 
 export const useCardData = (contract_address: string) => {
     const [contractData, setContractData] = useState<Contract>()
     const [cards, setCards] = useState<Stack[]>([])
+    const [stats, setStats] = useState<Stats>()
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -12,6 +13,7 @@ export const useCardData = (contract_address: string) => {
 
         setCards([])
         setContractData(undefined)
+        setStats(undefined)
         setLoading(true)
         setError(null)
 
@@ -41,8 +43,11 @@ export const useCardData = (contract_address: string) => {
             const data: ApiResponse = await response.json()
             const data2 = await response2.json()
 
+            // console.log(data) //
+
             setCards(data.stacks || [])
             setContractData(data2)
+            setStats(data.stats) //
 
             if (data.cached) {
                 console.log('Data served from cache')
@@ -66,6 +71,7 @@ export const useCardData = (contract_address: string) => {
     return {
         contractData,
         cards,
+        stats,
         loading,
         error,
         fetchCards

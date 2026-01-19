@@ -1112,9 +1112,10 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import useCommonStore from '@/utils/zustand/useCommonStore'
+import { BarChart3 } from 'lucide-react'
 
 // Hooks
 import { useCardData } from '@/components/hooks/useCardData'
@@ -1130,6 +1131,7 @@ import { SearchAndSort } from '@/components/collection/SearchAndSort'
 import { CardsGrid } from '@/components/collection/CardsGrid'
 import CardModal from '@/components/reusable/CardModal'
 import { ViewTabs } from '@/components/collection/ViewTabs'
+import { StatsModal } from '@/components/collection/StatsModal'
 
 // Types
 import type { Stack } from '@/app/types'
@@ -1143,11 +1145,13 @@ const CardsPage = () => {
   const [selectedCard, setSelectedCard] = useState<Stack | null>(null)
   const [activeView, setActiveView] = useState<'market' | 'nfts'>('market')
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
 
   // Custom hooks
   const {
     contractData,
     cards,
+    stats,
     loading,
     error,
     fetchCards
@@ -1197,6 +1201,27 @@ const CardsPage = () => {
     displayedCards,
     loadMoreRef
   } = useInfiniteScroll(sortedCards, loading)
+
+  // Calculate total real value
+  const totalRealValue = useMemo(() => {
+    return cards.reduce((sum, stack) => {
+      const realValue = stack.real_value || 0
+      const quantity = stack.quantity || 0
+
+      // console.log(stack.name)
+      // console.log(stack.real_value)
+      // console.log(stack.quantity)
+
+      return sum + (realValue * quantity)
+    }, 0)
+  }, [cards])
+
+  // Calculate total floor value
+  const totalFloorValue = useMemo(() => {
+    return cards.reduce((sum, stack) => {
+      return sum + (stack.total_floor_value || 0)
+    }, 0)
+  }, [cards])
 
   // Set active view based on URL on mount
   useEffect(() => {
@@ -1306,7 +1331,7 @@ const CardsPage = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex">
-          <div className="w-full max-w-[1920px] pb-16 ">
+          <div className="w-full max-w-[1920px] pb-16">
             <div className="z-10 bg-background border-lines border-b sticky top-14 px-2">
               <ViewTabs
                 activeView={activeView}
@@ -1343,15 +1368,29 @@ const CardsPage = () => {
               clearAllFilters={clearAllFilters}
             />
 
-            {activeView === 'nfts' &&
-              <div className='bg-background border-t border-lines w-full h-11 fixed bottom-0 flex'>
-                <div className='h-full flex items-center justify-center text-text text-sm font-bold px-2'>
-                  Collection Value :
+            {activeView === 'nfts' && stats && (
+              <div
+                className='bg-background border-t border-lines w-full h-11 fixed bottom-0 flex items-center justify-between px-2'
+              >
+                <div
+                  className='flex items-center gap-2 h-full'
+                >
+                  <div
+                    onClick={() => setIsStatsModalOpen(true)}
+                    className='bg-light p-2 rounded-lg  w-[40px] flex items-center justify-center cursor-pointer'
+                  >
+                    <BarChart3 className='w-4 h-4 text-gray-400 group-hover:text-text transition-colors' />
+                  </div>
+
+                  <span className='text-text text-sm font-bold'>
+                    Collection Value: ${formatPrice(totalRealValue)}
+                  </span>
                 </div>
+                <span className='text-xs text-gray-400 group-hover:text-text transition-colors'>
+                  View Details →
+                </span>
               </div>
-            }
-
-
+            )}
           </div>
         </div>
       </div>
@@ -1363,6 +1402,15 @@ const CardsPage = () => {
         formatPrice={formatPrice}
         onClose={() => setSelectedCard(null)}
         selectedCurrency={selectedCurrency}
+      />
+
+      <StatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        stats={stats}
+        totalRealValue={totalRealValue}
+        totalFloorValue={totalFloorValue}
+        formatPrice={formatPrice}
       />
     </div>
   )

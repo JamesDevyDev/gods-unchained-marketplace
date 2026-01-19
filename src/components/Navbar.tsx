@@ -46,7 +46,7 @@ export default function Navbar() {
     };
 
     useEffect(() => {
-        console.log("Conntedted Wallet Address : ", loggedWallet)
+        console.log("Connected Wallet Address : ", loggedWallet)
     }, [loggedWallet])
 
     useEffect(() => {
