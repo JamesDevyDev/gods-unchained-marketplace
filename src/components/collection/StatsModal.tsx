@@ -93,10 +93,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({
                             {stats.user_listing_stats && (
                                 <div className="bg-light  rounded-lg p-4 space-y-1">
                                     <h3 className="text-xs font-semibold text-gray-400 mb-2">Your Listings</h3>
-                                    <StatRow
-                                        label="Active Listings"
-                                        value={stats.user_listing_stats.total_listings}
-                                    />
+                                    
                                     <div className="h-px bg-lines" />
                                     <StatRow
                                         label="Listed Tokens"
