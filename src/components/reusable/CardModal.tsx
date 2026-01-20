@@ -1,5 +1,3 @@
-
-
 'use client'
 import { useEffect, useState } from 'react'
 import useCommonStore from '@/utils/zustand/useCommonStore'
@@ -98,6 +96,9 @@ const CardModal = ({
     contract_address,
 }: Props) => {
     const { loggedWallet } = useCommonStore()
+
+    const [newWallet, setWallet] = useState<string | null>(null)
+
     const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sell' | 'owned' | 'activity'>('details')
     const [quantity, setQuantity] = useState(1)
     const [listingsData, setListingsData] = useState<ListingsResponse | null>(null)
@@ -108,17 +109,17 @@ const CardModal = ({
 
     // Check if current user has listings for this card
     const userHasListings = () => {
-        if (!listingsData || !loggedWallet) return false
+        if (!listingsData || !newWallet) return false
         return listingsData.all_listings.some(
-            listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+            listing => listing.seller_address.toLowerCase() === newWallet.toLowerCase()
         )
     }
 
     // Get user's listings
     const getUserListings = (): Listing[] => {
-        if (!listingsData || !loggedWallet) return []
+        if (!listingsData || !newWallet) return []
         return listingsData.all_listings.filter(
-            listing => listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+            listing => listing.seller_address.toLowerCase() === newWallet.toLowerCase()
         )
     }
 
@@ -177,6 +178,10 @@ const CardModal = ({
     // Fetch listings when card changes
     useEffect(() => {
         const fetchListings = async () => {
+            const searchParams = new URLSearchParams(window.location.search)
+            const walletAddress = searchParams.get('wallet')
+            setWallet(walletAddress)
+
             if (!card?.metadata_id || !contract_address) return
 
             setIsLoading(true)
@@ -422,7 +427,7 @@ const CardModal = ({
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                                    {hasUserListings ? (
+                                    {hasUserListings && loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase() ? (
                                         <>
                                             <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
                                                 Cancel Listing ({userListings.length})
@@ -486,18 +491,23 @@ const CardModal = ({
                                             )}
                                         </button>
 
-                                        <button
-                                            onClick={() => setActiveTab('owned')}
-                                            className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'owned'
-                                                ? 'text-white'
-                                                : 'text-gray-400 hover:text-hover'
-                                                }`}
-                                        >
-                                            Owned
-                                            {activeTab === 'owned' && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
-                                            )}
-                                        </button>
+                                        {newWallet && (
+                                            <button
+                                                onClick={() => setActiveTab('owned')}
+                                                className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'owned'
+                                                    ? 'text-white'
+                                                    : 'text-gray-400 hover:text-hover'
+                                                    }`}
+                                            >
+                                                Owned
+                                                {activeTab === 'owned' && (
+                                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+                                                )}
+                                            </button>
+                                        )
+                                        }
+
+
 
                                         <button
                                             onClick={() => setActiveTab('activity')}
@@ -591,7 +601,8 @@ const CardModal = ({
                                                         </div>
                                                     ) : filteredListings.length > 0 ? (
                                                         filteredListings.map((listing) => {
-                                                            const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+                                                            const isUserListing = newWallet && listing.seller_address.toLowerCase() === newWallet.toLowerCase()
+                                                            const canCancel = loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase()
 
                                                             return (
                                                                 <div
@@ -626,7 +637,7 @@ const CardModal = ({
                                                                         {getTimeUntilExpiration(listing.end_at)}
                                                                     </div>
                                                                     <div className="flex items-center justify-end">
-                                                                        {isUserListing ? (
+                                                                        {isUserListing && canCancel ? (
                                                                             <button className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer">
                                                                                 Cancel
                                                                             </button>
@@ -655,7 +666,8 @@ const CardModal = ({
                                                     </div>
                                                 ) : filteredListings.length > 0 ? (
                                                     filteredListings.map((listing) => {
-                                                        const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+                                                        const isUserListing = newWallet && listing.seller_address.toLowerCase() === newWallet.toLowerCase()
+                                                        const canCancel = loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase()
 
                                                         return (
                                                             <div
@@ -695,7 +707,7 @@ const CardModal = ({
                                                                             {getTimeUntilExpiration(listing.end_at)}
                                                                         </div>
                                                                     </div>
-                                                                    {isUserListing ? (
+                                                                    {isUserListing && canCancel ? (
                                                                         <button className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded transition-colors cursor-pointer">
                                                                             Cancel
                                                                         </button>
@@ -716,6 +728,7 @@ const CardModal = ({
                                             </div>
                                         </div>
                                     )}
+
 
                                     {/* Owned Tab */}
                                     {activeTab === 'owned' && (
@@ -839,6 +852,8 @@ const CardModal = ({
                                             )}
                                         </div>
                                     )}
+
+
 
                                     {/* Activity Tab */}
                                     {activeTab === 'activity' && (
