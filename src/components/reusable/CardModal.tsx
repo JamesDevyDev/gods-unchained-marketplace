@@ -478,18 +478,20 @@ const CardModal = ({
                                             )}
                                         </button>
 
-                                        <button
-                                            onClick={() => setActiveTab('sell')}
-                                            className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'sell'
-                                                ? 'text-white'
-                                                : 'text-gray-400 hover:text-hover'
-                                                }`}
-                                        >
-                                            Sell
-                                            {activeTab === 'sell' && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
-                                            )}
-                                        </button>
+                                        {newWallet && (
+                                            <button
+                                                onClick={() => setActiveTab('sell')}
+                                                className={`pb-3 cursor-pointer text-sm font-semibold transition-colors relative ${activeTab === 'sell'
+                                                    ? 'text-white'
+                                                    : 'text-gray-400 hover:text-hover'
+                                                    }`}
+                                            >
+                                                Sell
+                                                {activeTab === 'sell' && (
+                                                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+                                                )}
+                                            </button>
+                                        )}
 
                                         {newWallet && (
                                             <button
