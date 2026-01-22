@@ -17,6 +17,7 @@ const orderbookSDK = new Orderbook({
 export async function POST(request: NextRequest) {
     try {
         const { orderIds, walletAddress } = await request.json();
+        console.log('Im here')
 
         // Validation
         if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
