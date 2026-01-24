@@ -47,7 +47,7 @@ export const SearchAndSort: React.FC<SearchAndSortProps> = ({
                         placeholder="Search..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className=" h-8 w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-sm"
+                        className=" h-8 w-full px-3 py-2 bg-[#36393f] text-white rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none text-base"
                     />
 
                     {/* Sort Section */}
