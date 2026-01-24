@@ -1,0 +1,6 @@
+Nasa listingCard component may fetch din jan, pero chineck ko siya lang nag checheck if yung user
+
+ang main buy fetch lang is 
+
+LitstingTableRow - makakapili ka kung anong bibilhin mo
+ActionButtons - is yung cheapest na sell dun sa order na yun

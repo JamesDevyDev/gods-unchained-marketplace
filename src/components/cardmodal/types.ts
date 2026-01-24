@@ -72,4 +72,5 @@ export interface ListingsResponse {
     contract_address: string
     metadata_id: string
     total_listings: number
+    token_id: string
 }

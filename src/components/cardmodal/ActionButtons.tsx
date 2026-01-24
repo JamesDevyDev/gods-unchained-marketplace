@@ -1,55 +1,3 @@
-// import { Stack, ListingsResponse } from './types'
-
-// type ActionButtonsProps = {
-//     card: Stack
-//     listingsData: ListingsResponse | null
-//     newWallet: string | null
-//     loggedWallet: string | null
-// }
-
-// export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: ActionButtonsProps) => {
-//     const userHasListings = () => {
-//         if (!listingsData || !newWallet) return false
-//         return listingsData.all_listings.some(
-//             listing => listing.seller_address.toLowerCase() === newWallet.toLowerCase()
-//         )
-//     }
-
-//     const getUserListings = () => {
-//         if (!listingsData || !newWallet) return []
-//         return listingsData.all_listings.filter(
-//             listing => listing.seller_address.toLowerCase() === newWallet.toLowerCase()
-//         )
-//     }
-
-//     const hasUserListings = userHasListings()
-//     const userListings = getUserListings()
-
-//     return (
-//         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-//             {hasUserListings && loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase() ? (
-//                 <>
-//                     <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-//                         Cancel Listing ({userListings.length})
-//                     </button>
-//                     <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-//                         Edit Listing
-//                     </button>
-//                 </>
-//             ) : (
-//                 <>
-//                     <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-//                         Buy Now
-//                     </button>
-//                     <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-//                         Make Offer
-//                     </button>
-//                 </>
-//             )}
-//         </div>
-//     )
-// }
-
 import { useState } from 'react'
 import { Stack, ListingsResponse } from './types'
 
@@ -90,7 +38,8 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
 
         setIsBuying(true)
         try {
-            console.log('🛒 Buying cheapest listing:', listingsData.cheapest_listing.listing_id)
+            console.log('Actions Button : 🛒 Buying cheapest listing:', listingsData.cheapest_listing.listing_id)
+            console.log(listingsData.cheapest_listing.token_id)
 
             const response = await fetch('/api/buy/prepare', {
                 method: 'POST',
@@ -107,9 +56,8 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             }
 
             const data = await response.json()
-            console.log('✅ Purchase prepared:', data)
+            console.log(data) // Ito yung ibabala sa metamask
 
-            alert(`Purchase Ready!\n\nPrice: ${data.price} wei\nFee: ${data.fee} wei\nTotal: ${data.totalWithFee} wei\n\nActions to execute: ${data.actions.length}`)
 
         } catch (error: any) {
             console.error('❌ Purchase failed:', error)

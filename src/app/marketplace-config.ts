@@ -7,7 +7,7 @@ export const MARKETPLACE_CONFIG = {
     fee: {
         enabled: true,
         percentage: 0.5, // 0.5%
-        walletAddress: "0xYourMarketplaceWalletAddress", // ⚠️ REPLACE WITH YOUR WALLET
+        walletAddress: "0xed26c1467008b0c5f6f659ea828e055dc44ddcaf", // ⚠️ REPLACE WITH YOUR WALLET
         minimumAmount: "0",
     },
 
@@ -21,7 +21,7 @@ export const MARKETPLACE_CONFIG = {
 
     // Purchase Limits
     limits: {
-        maxBulkOrders: 50,
+        maxBulkOrders: 20,
     },
 };
 
