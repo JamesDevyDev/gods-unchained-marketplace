@@ -152,8 +152,11 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
     const [errorTitle, setErrorTitle] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
 
-    const isUserListing = newWallet && listing.seller_address.toLowerCase() === newWallet.toLowerCase()
-    const canCancel = loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase()
+    // const isUserListing = newWallet && listing.seller_address.toLowerCase() === newWallet.toLowerCase()
+    // const canCancel = loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase()
+
+    const isUserListing = loggedWallet && listing.seller_address.toLowerCase() === loggedWallet.toLowerCase()
+    const canCancel = isUserListing  // If it's your listing, you can cancel it
 
     const handleBuy = async () => {
         if (!loggedWallet) {
