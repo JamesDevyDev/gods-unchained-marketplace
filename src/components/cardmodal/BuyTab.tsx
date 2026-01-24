@@ -1,5 +1,4 @@
 import { ListingsResponse } from './types'
-import { ListingCard } from './ListingCard'
 import { ListingTable } from './ListingTable'
 
 type BuyTabProps = {
@@ -48,8 +47,7 @@ export const BuyTab = ({
                 </select>
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden sm:block">
+            <div>
                 <ListingTable
                     listings={filteredListings}
                     isLoading={isLoadingListings}
@@ -57,28 +55,6 @@ export const BuyTab = ({
                     loggedWallet={loggedWallet}
                 />
             </div> 
-
-            {/* Mobile Card View */}
-            <div className="sm:hidden space-y-3">
-                {isLoadingListings ? (
-                    <div className="bg-background border border-lines rounded-lg p-8 text-center text-gray-400 text-sm">
-                        Loading listings...
-                    </div>
-                ) : filteredListings.length > 0 ? (
-                    filteredListings.map((listing) => (
-                        <ListingCard
-                            key={listing.listing_id}
-                            listing={listing}
-                            newWallet={newWallet}
-                            loggedWallet={loggedWallet}
-                        />
-                    ))
-                ) : (
-                    <div className="bg-background border border-lines rounded-lg p-8 text-center text-gray-400 text-sm">
-                        No listings available
-                    </div>
-                )}
-            </div>
         </div>
     )
 }

@@ -31,7 +31,7 @@ export const ListingTable = ({ listings, isLoading, newWallet, loggedWallet }: L
     }
 
     return (
-        <div className="bg-background border border-lines rounded-lg overflow-hidden">
+        <div className="lg:border bg-background  border-lines rounded-lg overflow-hidden">
             <div className="grid grid-cols-4 gap-4 px-4 py-3 bg-[#0f1117] border-b border-lines text-gray-400 text-xs font-semibold uppercase">
                 <div>Price</div>
                 <div>Amount</div>

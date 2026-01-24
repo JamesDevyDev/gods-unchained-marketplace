@@ -216,7 +216,7 @@ async function processBulkOrders(
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        console.log("pumapasok")
+        // console.log("pumapasok")
         const { orderIds, walletAddress } = body;
 
         // Validate request

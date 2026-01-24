@@ -375,7 +375,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                         }}
                     />
                     <div>
-                        <div className="text-white font-semibold text-sm">
+                        <div className="text-white font-semibold text-[10px] sm:text-sm">
                             {listing.prices.total_with_fees.toFixed(4)} {listing.currency}
                         </div>
                         <div className="text-gray-400 text-xs">
