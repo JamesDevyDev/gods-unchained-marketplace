@@ -12,6 +12,7 @@ type ListingTableRowProps = {
     listing: Listing
     newWallet: string | null
     loggedWallet: string | null
+    onPurchaseSuccess?: (listingId: string) => void
 }
 
 interface PrepareResponse {
@@ -143,7 +144,7 @@ const ErrorModal = ({
     )
 }
 
-export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTableRowProps) => {
+export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSuccess }: ListingTableRowProps) => {
     const [isPurchasing, setIsPurchasing] = useState(false)
 
     const [showSuccess, setShowSuccess] = useState(false)
@@ -235,6 +236,11 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
 
             setIsPurchasing(false)
             setShowSuccess(true)
+
+            // Call the callback to remove the listing from the UI
+            if (onPurchaseSuccess) {
+                onPurchaseSuccess(listing.listing_id)
+            }
 
         } catch (error: any) {
             console.log('❌ Purchase failed:', error)
@@ -333,7 +339,6 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
 
     const handleSuccessClose = () => {
         setShowSuccess(false)
-        // window.location.reload()
     }
 
     const handleErrorClose = () => {
