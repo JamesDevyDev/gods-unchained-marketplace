@@ -385,7 +385,7 @@ export default function Navbar() {
                     <button
                         onClick={connectWallet}
                         disabled={isConnecting}
-                        className="px-6 h-10 rounded-lg bg-primary text-white font-medium transition hover:opacity-90 cursor-pointer disabled:opacity-50"
+                        className="px-6 h-9 rounded-lg bg-light text-white font-medium transition hover:opacity-90 cursor-pointer disabled:opacity-50"
                     >
                         {isConnecting ? "Connecting..." : "Connect Wallet"}
                     </button>

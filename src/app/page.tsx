@@ -7,6 +7,28 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react'
 import Footer from '@/components/Footer'
 
+// ============================================================================
+// CAROUSEL CONFIGURATION
+// ============================================================================
+// Configure which collections appear in carousel and their custom backgrounds
+// If no custom background is provided, it will use the backend image
+const FEATURED_CAROUSEL_CONTRACTS = [
+    {
+        contract_address: "0x06d92b637dfcdf95a2faba04ef22b2a096029b69",
+        custom_background: "https://gam3s.gg/_next/image/?url=https%3A%2F%2Fassets.gam3s.gg%2FGods_Unchained_Game_Image_1_4e883a2ec4%2FGods_Unchained_Game_Image_1_4e883a2ec4.png&w=3840&q=75",
+    },
+    {
+        contract_address: "0x2483cd7f6bde4cc603cd9587273692791e7b0569",
+        custom_background: "https://c.tenor.com/bxVeDQ-paY8AAAAd/tenor.gif",
+    },
+    {
+        contract_address: "0xae45ba8d0806e23323ff6bcea8520683cee8d74f",
+        custom_background: "https://www.blockchaingamer.biz/wp-content/uploads/2023/03/hunters16.9.jpg",
+    },
+]
+// Leave empty [] to show all collections with backend images
+// ============================================================================
+
 type Collection = {
     name: string
     symbol: string
@@ -53,32 +75,34 @@ type VolumeData = {
 }
 
 const CarouselSkeleton = () => (
-    <div className="relative h-120 overflow-hidden bg-light sm:border-lines sm:border sm:rounded-xl">
+    <div className="relative h-160 overflow-hidden bg-light sm:border-lines sm:border sm:rounded-xl">
         <div className="absolute inset-0 bg-light animate-pulse"></div>
     </div>
 )
 
 const TopProjectSkeleton = () => (
-    <div className="bg-light border-lines rounded-xl p-6">
+    <div className="bg-light border border-lines rounded-xl h-50 p-6">
         <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
-
         </div>
-
     </div>
 )
 
 const ProjectCardSkeleton = () => (
-    <div className="bg-light border border-lines rounded-xl p-6">
+    <div className="bg-light border border-lines rounded-xl h-40 p-6">
         <div className="flex items-start justify-between mb-4">
-
         </div>
-
     </div>
 )
 
 const Page = () => {
     const router = useRouter()
-    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4000 })])
+    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+        Autoplay({
+            delay: 3000,
+            stopOnInteraction: false, // Continue autoplay after user interaction
+            stopOnMouseEnter: false,  // Don't stop when mouse hovers
+        })
+    ])
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [data, setData] = useState<LandingData>({ projects: [] })
     const [isLoading, setIsLoading] = useState(true)
@@ -136,6 +160,36 @@ const Page = () => {
     const allCollections = data.projects
         .flatMap(project => project.collections)
         .filter(collection => collection.cards_with_listings > 0)
+
+    // Get featured collections for carousel based on config
+    const getFeaturedCollections = () => {
+        if (FEATURED_CAROUSEL_CONTRACTS.length === 0) {
+            // If no config, show all collections (default behavior)
+            return allCollections
+        }
+
+        // Filter collections based on contract addresses and apply custom backgrounds
+        return FEATURED_CAROUSEL_CONTRACTS
+            .map(config => {
+                const collection = allCollections.find(
+                    c => c.contract_address.toLowerCase() === config.contract_address.toLowerCase()
+                )
+
+                if (!collection) {
+                    console.warn(`Collection ${config.contract_address} not found or has no listings`)
+                    return null
+                }
+
+                // Return collection with custom background if provided
+                return {
+                    ...collection,
+                    background_image: config.custom_background || collection.background_image,
+                }
+            })
+            .filter(Boolean) as Collection[]
+    }
+
+    const featuredCollections = getFeaturedCollections()
 
     const scrollPrev = useCallback(() => {
         if (emblaApi) emblaApi.scrollPrev()
@@ -248,24 +302,28 @@ const Page = () => {
             <div className="w-full sm:px-6 mb-16 ">
                 {isLoading ? (
                     <CarouselSkeleton />
-                ) : (
+                ) : featuredCollections.length > 0 ? (
                     <>
                         <div className="overflow-hidden rounded-none md:rounded-2xl mb-2 " ref={emblaRef}>
                             <div className="flex">
-                                {allCollections.map((collection, index) => {
+                                {featuredCollections.map((collection, index) => {
                                     const collectionVolume = volumeData[collection.contract_address]
 
                                     return (
                                         <div key={index} className="flex-[0_0_100%] min-w-0 md:border border-lines" onClick={() => {
                                             router.push(`/collection/${collection?.contract_address}`)
                                         }}>
-                                            <div className="relative h-120 overflow-hidden cursor-pointer">
+                                            <div className="relative h-160 overflow-hidden cursor-pointer">
                                                 {/* Background Image */}
                                                 <div className="absolute inset-0">
                                                     <img
                                                         src={collection.background_image}
                                                         alt={collection.name}
                                                         className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            // Fallback to a placeholder if image fails to load
+                                                            e.currentTarget.src = '/images/placeholder-bg.jpg'
+                                                        }}
                                                     />
                                                     <div className="absolute inset-0 bg-black/40"></div>
                                                 </div>
@@ -358,7 +416,7 @@ const Page = () => {
 
                         {/* Pagination Dots */}
                         <div className="flex justify-center gap-2 mb-8 md:mx-6">
-                            {allCollections.map((_, index) => (
+                            {featuredCollections.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={() => scrollTo(index)}
@@ -371,6 +429,10 @@ const Page = () => {
                             ))}
                         </div>
                     </>
+                ) : (
+                    <div className="text-center py-20 text-gray-400">
+                        No featured collections available
+                    </div>
                 )}
             </div>
 
@@ -400,7 +462,7 @@ const Page = () => {
                             <div>
                                 {isLoading ? (
                                     <div className="p-4 text-center text-gray-400">
-                                        {/* Loading..... */}
+                                        Loading...
                                     </div>
                                 ) : (
                                     getTopCollectionsByVolume().map((collection, index) => {
@@ -491,8 +553,6 @@ const Page = () => {
                         </div>
                     </>
                 )}
-
-
             </div>
 
             {/* Projects Section - Grouped by Project */}
