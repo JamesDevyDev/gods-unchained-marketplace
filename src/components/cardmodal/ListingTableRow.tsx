@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Listing } from './types'
 import { getCurrencyIcon, getTimeUntilExpiration } from './utils'
 
-// Extend Window interface for MetaMask
 declare global {
     interface Window {
         ethereum?: any
@@ -19,37 +18,164 @@ interface PrepareResponse {
     success: boolean
     mode: string
     orderId: string
-    actions: any[]  // Actions from Immutable SDK
+    actions: any[]
     price: string
     fee: string
     feePercentage: number
     totalWithFee: string
 }
 
+// Progress Modal Component
+const PurchaseProgressModal = ({
+    isOpen
+}: {
+    isOpen: boolean
+}) => {
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 bg-black/80 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-background rounded-lg p-8 max-w-md w-full mx-4 border border-lines">
+                <h2 className="text-2xl font-bold text-white mb-6 text-center">
+                    Transaction is being processed
+                </h2>
+
+                <div className="flex justify-center mb-6">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+                </div>
+
+                <p className="text-gray-400 text-center">
+                    Please wait while your transaction is being confirmed on the blockchain.
+                </p>
+            </div>
+        </div>
+    )
+}
+
+// Success Modal Component
+const SuccessModal = ({
+    isOpen,
+    tokenId,
+    onClose
+}: {
+    isOpen: boolean
+    tokenId: string
+    onClose: () => void
+}) => {
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 bg-black/80 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-background rounded-lg p-8 max-w-md w-full mx-4 border border-lines">
+                <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <h2 className="text-2xl font-bold text-white mb-4 text-center">
+                    Purchase Successful! 🎉
+                </h2>
+
+                <div className=" rounded-lg p-4 mb-6">
+                    <p className="text-gray-400 text-sm text-center mb-2">NFT Token ID</p>
+                    <p className="text-white text-lg font-semibold text-center">{tokenId}</p>
+                </div>
+
+                <p className="text-gray-400 text-center mb-6">
+                    Your NFT has been successfully transferred to your wallet!
+                </p>
+
+                <button
+                    onClick={onClose}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    )
+}
+
+// Error Modal Component
+const ErrorModal = ({
+    isOpen,
+    title,
+    message,
+    onClose
+}: {
+    isOpen: boolean
+    title: string
+    message: string
+    onClose: () => void
+}) => {
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 bg-black/80 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-background rounded-lg p-8 max-w-md w-full mx-4 border border-lines">
+                <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                </div>
+
+                <h2 className="text-2xl font-bold text-white mb-4 text-center">
+                    {title}
+                </h2>
+
+                <div className=" rounded-lg p-4 mb-6">
+                    <p className="text-white text-center">{message}</p>
+                </div>
+
+                <button
+                    onClick={onClose}
+                    className="cursor-pointer w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    )
+}
+
 export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTableRowProps) => {
     const [isPurchasing, setIsPurchasing] = useState(false)
+
+    const [showSuccess, setShowSuccess] = useState(false)
+    const [showError, setShowError] = useState(false)
+    const [errorTitle, setErrorTitle] = useState('')
+    const [errorMessage, setErrorMessage] = useState('')
+
     const isUserListing = newWallet && listing.seller_address.toLowerCase() === newWallet.toLowerCase()
     const canCancel = loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase()
 
     const handleBuy = async () => {
         if (!loggedWallet) {
-            alert('Please connect your wallet first')
+            setErrorTitle('Wallet Not Connected')
+            setErrorMessage('Please connect your wallet first to make a purchase.')
+            setShowError(true)
             return
         }
 
-        // Check if MetaMask is available
         if (!window.ethereum) {
-            alert('MetaMask is not installed. Please install MetaMask to continue.')
+            setErrorTitle('MetaMask Not Found')
+            setErrorMessage('MetaMask is not installed. Please install MetaMask to continue.')
+            setShowError(true)
             window.open('https://metamask.io/download/', '_blank')
             return
         }
 
         setIsPurchasing(true)
+
         try {
             console.log('🛒 Preparing purchase for order:', listing.listing_id)
             console.log('Token ID:', listing.token_id)
 
-            // Step 1: Call your prepare endpoint to get transaction details
             const response = await fetch('/api/buy/prepare', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -71,14 +197,15 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
                 throw new Error('Preparation failed')
             }
 
-            // Step 2: Verify network (Immutable zkEVM = chainId 13371 / 0x343B)
             const currentChainId = await window.ethereum.request({ method: 'eth_chainId' })
             if (currentChainId.toLowerCase() !== '0x343b') {
-                alert('Please switch to Immutable zkEVM network')
+                setErrorTitle('Wrong Network')
+                setErrorMessage('Please switch to Immutable zkEVM network in your wallet.')
+                setShowError(true)
+                setIsPurchasing(false)
                 return
             }
 
-            // Step 3: Execute all actions returned by the Immutable SDK
             console.log(`📋 Executing ${data.actions.length} actions...`)
 
             for (let i = 0; i < data.actions.length; i++) {
@@ -87,15 +214,14 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
 
                 switch (action.type) {
                     case 'TRANSACTION':
-                        // Execute the transaction (could be approval or fulfillment)
                         const txHash = await executeTransaction(action, loggedWallet)
                         console.log(`✅ Transaction ${i + 1} sent:`, txHash)
+
                         await waitForTransaction(txHash)
                         console.log(`✅ Transaction ${i + 1} confirmed`)
                         break
 
                     case 'SIGNABLE':
-                        // Sign a message (if required by Seaport)
                         const signature = await signMessage(action, loggedWallet)
                         console.log(`✅ Message ${i + 1} signed:`, signature)
                         break
@@ -106,30 +232,32 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
             }
 
             console.log('✅ All actions completed successfully!')
-            alert(`✅ Purchase successful!\n\nNFT Token ID: ${listing.token_id}`)
 
-            // Refresh the page or update the UI
-            window.location.reload()
+            setIsPurchasing(false)
+            setShowSuccess(true)
 
         } catch (error: any) {
-            console.error('❌ Purchase failed:', error)
-
-            // Handle specific MetaMask errors
-            if (error.code === 4001) {
-                alert('Transaction rejected by user')
-            } else if (error.code === -32603) {
-                alert('Transaction failed: Insufficient funds or gas')
-            } else if (error.code === -32602) {
-                alert('Invalid transaction parameters')
-            } else {
-                alert(`Purchase failed: ${error.message || 'Unknown error'}`)
-            }
-        } finally {
+            console.log('❌ Purchase failed:', error)
             setIsPurchasing(false)
+
+            if (error.code === 4001) {
+                setErrorTitle('Transaction Rejected')
+                setErrorMessage('You rejected the transaction in your wallet.')
+            } else if (error.code === -32603) {
+                setErrorTitle('Transaction Failed')
+                setErrorMessage('Transaction failed. You may have insufficient funds or gas.')
+            } else if (error.code === -32602) {
+                setErrorTitle('Invalid Parameters')
+                setErrorMessage('Invalid transaction parameters. Please try again.')
+            } else {
+                setErrorTitle('Purchase Failed')
+                setErrorMessage(error.message || 'An unknown error occurred. Please try again.')
+            }
+
+            setShowError(true)
         }
     }
 
-    // Execute a transaction action
     const executeTransaction = async (action: any, fromAddress: string): Promise<string> => {
         const txParams: any = {
             from: fromAddress,
@@ -137,14 +265,12 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
             data: action.data,
         }
 
-        // Only include value if it's not '0x0' or undefined
         if (action.value && action.value !== '0x0') {
-            txParams.value = action.value;
+            txParams.value = action.value
         }
 
-        // Include gas limit if provided
         if (action.gasLimit) {
-            txParams.gas = action.gasLimit;
+            txParams.gas = action.gasLimit
         }
 
         console.log('Transaction parameters:', txParams)
@@ -157,7 +283,6 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
         return txHash
     }
 
-    // Sign a message action
     const signMessage = async (action: any, fromAddress: string): Promise<string> => {
         const signature = await window.ethereum.request({
             method: 'eth_signTypedData_v4',
@@ -167,11 +292,10 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
         return signature
     }
 
-    // Helper function to wait for transaction confirmation
     const waitForTransaction = async (txHash: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             let attempts = 0
-            const maxAttempts = 60 // Wait up to 60 seconds
+            const maxAttempts = 60
 
             const checkTransaction = async () => {
                 try {
@@ -191,10 +315,10 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
                     } else {
                         attempts++
                         if (attempts < maxAttempts) {
-                            setTimeout(checkTransaction, 1000) // Check again in 1 second
+                            setTimeout(checkTransaction, 1000)
                         } else {
                             console.log('⏱️ Transaction pending (timeout reached)')
-                            resolve() // Still resolve to not block the UI
+                            resolve()
                         }
                     }
                 } catch (error) {
@@ -207,53 +331,78 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet }: ListingTab
         })
     }
 
+    const handleSuccessClose = () => {
+        setShowSuccess(false)
+        // window.location.reload()
+    }
+
+    const handleErrorClose = () => {
+        setShowError(false)
+    }
+
     return (
-        <div
-            className={`grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors ${isUserListing ? 'bg-light' : ''
-                }`}
-        >
-            <div className="flex items-center gap-2">
-                <img
-                    src={getCurrencyIcon(listing.currency)}
-                    alt={listing.currency}
-                    className="w-4 h-4 rounded-full"
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                    }}
-                />
-                <div>
-                    <div className="text-white font-semibold text-sm">
-                        {listing.prices.total_with_fees.toFixed(4)} {listing.currency}
-                    </div>
-                    <div className="text-gray-400 text-xs">
-                        ${listing.prices.total_usd.toFixed(2)}
+        <>
+            <PurchaseProgressModal
+                isOpen={isPurchasing}
+            />
+
+            <SuccessModal
+                isOpen={showSuccess}
+                tokenId={listing.token_id}
+                onClose={handleSuccessClose}
+            />
+
+            <ErrorModal
+                isOpen={showError}
+                title={errorTitle}
+                message={errorMessage}
+                onClose={handleErrorClose}
+            />
+
+            <div className={`grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800 hover:bg-gray-800/50 transition-colors ${isUserListing ? 'bg-light' : ''}`}>
+                <div className="flex items-center gap-2">
+                    <img
+                        src={getCurrencyIcon(listing.currency)}
+                        alt={listing.currency}
+                        className="w-4 h-4 rounded-full"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                        }}
+                    />
+                    <div>
+                        <div className="text-white font-semibold text-sm">
+                            {listing.prices.total_with_fees.toFixed(4)} {listing.currency}
+                        </div>
+                        <div className="text-gray-400 text-xs">
+                            ${listing.prices.total_usd.toFixed(2)}
+                        </div>
                     </div>
                 </div>
+                <div className="text-white text-sm flex items-center">
+                    1
+                    {isUserListing && (
+                        <span className="ml-2 text-xs text-blue-400">(You)</span>
+                    )}
+                </div>
+                <div className="text-gray-400 text-sm flex items-center">
+                    {getTimeUntilExpiration(listing.end_at)}
+                </div>
+                <div className="flex items-center justify-end">
+                    {isUserListing && canCancel ? (
+                        <button className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer">
+                            Cancel
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleBuy}
+                            disabled={isPurchasing}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isPurchasing ? 'Buying...' : 'Buy'}
+                        </button>
+                    )}
+                </div>
             </div>
-            <div className="text-white text-sm flex items-center">
-                1
-                {isUserListing && (
-                    <span className="ml-2 text-xs text-blue-400">(You)</span>
-                )}
-            </div>
-            <div className="text-gray-400 text-sm flex items-center">
-                {getTimeUntilExpiration(listing.end_at)}
-            </div>
-            <div className="flex items-center justify-end">
-                {isUserListing && canCancel ? (
-                    <button className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer">
-                        Cancel
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleBuy}
-                        disabled={isPurchasing}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isPurchasing ? 'Buying...' : 'Buy'}
-                    </button>
-                )}
-            </div>
-        </div>
+        </>
     )
 }

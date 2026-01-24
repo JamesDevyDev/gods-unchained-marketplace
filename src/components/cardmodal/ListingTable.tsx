@@ -7,7 +7,7 @@ type ListingTableProps = {
     newWallet: string | null
     loggedWallet: string | null
 }
-
+ 
 export const ListingTable = ({ listings, isLoading, newWallet, loggedWallet }: ListingTableProps) => {
     return (
         <div className="bg-background border border-lines rounded-lg overflow-hidden">

@@ -7,7 +7,8 @@ export const MARKETPLACE_CONFIG = {
     fee: {
         enabled: true,
         percentage: 0.5, // 0.5%
-        walletAddress: "0xed26c1467008b0c5f6f659ea828e055dc44ddcaf", // ⚠️ REPLACE WITH YOUR WALLET
+        walletAddress: "0x2a43b620e9739b102f7d87b308b7f7ab5286a2e4", // ⚠️ James Wallet 1
+        // walletAddress: "0xed26c1467008b0c5f6f659ea828e055dc44ddcaf", // ⚠️ REPLACE WITH YOUR WALLET
         minimumAmount: "0",
     },
 

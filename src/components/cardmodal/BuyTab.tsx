@@ -56,7 +56,7 @@ export const BuyTab = ({
                     newWallet={newWallet}
                     loggedWallet={loggedWallet}
                 />
-            </div>
+            </div> 
 
             {/* Mobile Card View */}
             <div className="sm:hidden space-y-3">

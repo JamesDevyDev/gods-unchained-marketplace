@@ -2,5 +2,7 @@ Nasa listingCard component may fetch din jan, pero chineck ko siya lang nag chec
 
 ang main buy fetch lang is 
 
+ListingCard = pang mobile view
+ListingTable at ListingTableRow = pang dekstop view
 LitstingTableRow - makakapili ka kung anong bibilhin mo
 ActionButtons - is yung cheapest na sell dun sa order na yun
