@@ -98,9 +98,9 @@ const Page = () => {
     const router = useRouter()
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
         Autoplay({
-            delay: 3000,
+            delay: 4000,
             stopOnInteraction: false, // Continue autoplay after user interaction
-            stopOnMouseEnter: false,  // Don't stop when mouse hovers
+            stopOnMouseEnter: true,  // Don't stop when mouse hovers
         })
     ])
     const [selectedIndex, setSelectedIndex] = useState(0)
