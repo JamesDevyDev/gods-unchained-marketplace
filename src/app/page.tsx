@@ -75,21 +75,21 @@ type VolumeData = {
 }
 
 const CarouselSkeleton = () => (
-    <div className="relative h-160 overflow-hidden bg-light sm:border-lines sm:border sm:rounded-xl">
-        <div className="absolute inset-0 bg-light animate-pulse"></div>
+    <div className="relative h-160 overflow-hidden bg-hover sm:border-lines sm:border sm:rounded-xl">
+        <div className="absolute inset-0 bg-hover animate-pulse"></div>
     </div>
 )
 
 const TopProjectSkeleton = () => (
-    <div className="bg-light border border-lines rounded-xl h-50 p-6">
+    <div className="bg-hover border border-lines rounded-xl h-50 p-6">
         <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
         </div>
     </div>
 )
 
 const ProjectCardSkeleton = () => (
-    <div className="bg-light border border-lines rounded-xl h-40 p-6">
-        <div className="flex items-start justify-between mb-4">
+    <div className="bg-hover border border-lines rounded-xl h-40 p-6">
+        <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
         </div>
     </div>
 )
@@ -331,21 +331,12 @@ const Page = () => {
                                                 {/* Content */}
                                                 <div className="absolute bottom-0 left-0 md:left-10 p-4 md:p-8 z-10">
                                                     <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">
-                                                        {collection.name}
+                                                        {collection.name.includes('-')
+                                                            ? collection.name.split('-')[0].trim()
+                                                            : collection.name}
                                                     </h2>
-                                                    <p className="text-xs md:text-sm text-gray-300 mb-4">
-                                                        Symbol: {collection.symbol}
-                                                    </p>
 
                                                     <div className="flex flex-wrap gap-4 md:gap-6 rounded-lg p-3 bg-black/20 border border-lines backdrop-blur-md">
-                                                        <div>
-                                                            <div className="text-xs text-gray-400 uppercase mb-1">Floor Price</div>
-                                                            <div className="text-sm md:text-lg font-bold">
-                                                                {collection.floor_price !== null && collection.floor_currency
-                                                                    ? `${collection.floor_price.toFixed(6)} ${collection.floor_currency}`
-                                                                    : 'N/A'}
-                                                            </div>
-                                                        </div>
 
                                                         <div>
                                                             <div className="text-xs text-gray-400 uppercase mb-1">Listings</div>
