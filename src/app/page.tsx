@@ -75,21 +75,107 @@ type VolumeData = {
 }
 
 const CarouselSkeleton = () => (
-    <div className="relative h-160 overflow-hidden bg-hover sm:border-lines sm:border sm:rounded-xl">
-        <div className="absolute inset-0 bg-hover animate-pulse"></div>
+    <div className="relative h-160 overflow-hidden bg-light sm:border-lines sm:border sm:rounded-xl animate-pulse">
+        <div className="absolute bottom-0 left-0 md:left-10 p-4 md:p-8 z-10 space-y-4 w-full md:w-2/3">
+            <div className="h-8 md:h-10 bg-background/80 rounded w-3/4"></div>
+            <div className="flex flex-wrap gap-4 md:gap-6 rounded-lg p-3 bg-background/60 backdrop-blur-md">
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-16"></div>
+                    <div className="h-5 bg-light rounded w-20"></div>
+                </div>
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-20"></div>
+                    <div className="h-5 bg-light rounded w-24"></div>
+                </div>
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-16"></div>
+                    <div className="h-5 bg-light rounded w-20"></div>
+                </div>
+            </div>
+        </div>
+        <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-10">
+            <div className="w-16 h-16 md:w-24 md:h-24 bg-background rounded-lg"></div>
+        </div>
     </div>
 )
 
 const TopProjectSkeleton = () => (
-    <div className="bg-hover border border-lines rounded-xl h-50 p-6">
-        <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
+    <div className="bg-background border border-lines rounded-xl p-4">
+        <div className="grid grid-cols-4 md:grid-cols-12 gap-4">
+            <div className="col-span-2 md:col-span-3 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-light animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-light rounded w-3/4 animate-pulse"></div>
+                    <div className="h-3 bg-light rounded w-1/2 animate-pulse"></div>
+                </div>
+            </div>
+            <div className="hidden md:block md:col-span-2">
+                <div className="h-4 bg-light rounded w-16 ml-auto animate-pulse"></div>
+            </div>
+            <div className="hidden md:block md:col-span-2">
+                <div className="h-4 bg-light rounded w-12 ml-auto animate-pulse"></div>
+            </div>
+            <div className="col-span-2">
+                <div className="h-4 bg-light rounded w-20 ml-auto animate-pulse"></div>
+            </div>
+            <div className="hidden md:block md:col-span-2">
+                <div className="h-4 bg-light rounded w-16 ml-auto animate-pulse"></div>
+            </div>
+            <div className="hidden md:block md:col-span-1">
+                <div className="h-4 bg-light rounded w-12 ml-auto animate-pulse"></div>
+            </div>
         </div>
     </div>
 )
 
 const ProjectCardSkeleton = () => (
-    <div className="bg-hover border border-lines rounded-xl h-40 p-6">
-        <div className="flex items-start justify-between mb-4 bg-light animate-pulse">
+    <div className="bg-background border border-lines rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-lines space-y-4">
+            <div className="flex items-start gap-3">
+                <div className="w-14 h-14 rounded-lg bg-light animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                    <div className="h-5 bg-light rounded w-2/3 animate-pulse"></div>
+                    <div className="h-4 bg-light rounded w-1/3 animate-pulse"></div>
+                </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-16 animate-pulse"></div>
+                    <div className="h-4 bg-light rounded w-12 animate-pulse"></div>
+                </div>
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-12 animate-pulse"></div>
+                    <div className="h-4 bg-light rounded w-16 animate-pulse"></div>
+                </div>
+                <div className="space-y-2">
+                    <div className="h-3 bg-light rounded w-14 animate-pulse"></div>
+                    <div className="h-4 bg-light rounded w-14 animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+        <div className="p-4 space-y-2">
+            <div className="flex items-center gap-3 p-3 bg-light rounded-lg">
+                <div className="w-10 h-10 rounded-lg bg-background animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-background rounded w-2/3 animate-pulse"></div>
+                    <div className="h-3 bg-background rounded w-1/2 animate-pulse"></div>
+                </div>
+                <div className="space-y-1">
+                    <div className="h-3 bg-background rounded w-16 ml-auto animate-pulse"></div>
+                    <div className="h-3 bg-background rounded w-20 ml-auto animate-pulse"></div>
+                </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-light rounded-lg">
+                <div className="w-10 h-10 rounded-lg bg-background animate-pulse"></div>
+                <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-background rounded w-2/3 animate-pulse"></div>
+                    <div className="h-3 bg-background rounded w-1/2 animate-pulse"></div>
+                </div>
+                <div className="space-y-1">
+                    <div className="h-3 bg-background rounded w-16 ml-auto animate-pulse"></div>
+                    <div className="h-3 bg-background rounded w-20 ml-auto animate-pulse"></div>
+                </div>
+            </div>
         </div>
     </div>
 )
@@ -554,7 +640,7 @@ const Page = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {isLoading ? (
                         <>
-                            {[...Array(6)].map((_, i) => (
+                            {[...Array(3)].map((_, i) => (
                                 <ProjectCardSkeleton key={i} />
                             ))}
                         </>

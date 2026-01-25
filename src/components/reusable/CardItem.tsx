@@ -296,14 +296,14 @@ const CardItem = ({
                     )
                 }
 
-                <p className="text-gray-400 text-xs mt-1">
+                <p className="text-gray-400 text-xs mt-1 ">
                     {card.quantity !== undefined && card.quantity > 0 ? (
                         <>
-                            <span className="text-text font-semibold">{card.quantity}/{card.total_listings}</span> listing{card.total_listings !== 1 ? 's' : ''}
+                            <span className="text-text font-semibold bg-background rounded-md px-1">{card.quantity}/{card.total_listings}</span> listing{card.total_listings !== 1 ? 's' : ''}
                         </>
                     ) : (
                         <>
-                            {card.total_listings} listing{card.total_listings !== 1 ? 's' : ''}
+                            <span className="text-text font-semibold bg-background rounded-md px-1">{card.total_listings} listing{card.total_listings !== 1 ? 's' : ''}</span>
                         </>
                     )}
                 </p>
