@@ -1115,7 +1115,7 @@ const CardModal = ({
                                         />
                                     )}
 
-                                    {activeTab === 'buy' && (
+                                    {activeTab === 'buy' && ( //Listing
                                         <BuyTab
                                             listingsData={listingsData}
                                             isLoadingListings={isLoadingListings}

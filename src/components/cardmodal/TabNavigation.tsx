@@ -22,7 +22,8 @@ export const TabNavigation = ({ activeTab, setActiveTab, showWalletTabs }: TabNa
         <div className="border-b border-lines mb-4">
             <div className="flex gap-6">
                 <TabButton tab="details" label="Details" />
-                <TabButton tab="buy" label="Buy" />
+                {/* <TabButton tab="buy" label="Buy" /> */}
+                <TabButton tab="buy" label="Listing" />
                 {showWalletTabs && <TabButton tab="sell" label="Sell" />}
                 {showWalletTabs && <TabButton tab="owned" label="Owned" />}
                 <TabButton tab="activity" label="Activity" />
