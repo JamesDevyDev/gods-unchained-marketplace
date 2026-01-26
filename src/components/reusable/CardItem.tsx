@@ -144,7 +144,7 @@ const CardItem = ({
                     </div>
                 )}
             </div>
-
+ 
             {/* Info */}
             <div className="p-3 bg-light h-full">
                 <h3 className="text-white font-semibold truncate mb-2">

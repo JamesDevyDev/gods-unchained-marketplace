@@ -6,3 +6,13 @@ ListingCard = pang mobile view
 ListingTable at ListingTableRow = pang dekstop view
 LitstingTableRow - makakapili ka kung anong bibilhin mo
 ActionButtons - is yung cheapest na sell dun sa order na yun
+
+// 1-26-2026
+//Current edit - nagkaroon ng 2 views grid and list
+//naka comment lahat ng old codes
+
+CardPage - edited (collection) 
+CardItem -edited
+CardsGrid - edited
+ViewTabs - edited
+CardListItem - new
