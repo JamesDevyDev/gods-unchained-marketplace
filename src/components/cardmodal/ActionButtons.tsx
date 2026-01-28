@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Stack, ListingsResponse } from './types'
+import { Stack, ListingsResponse, Listing } from './types'
 
 declare global {
     interface Window {
@@ -90,7 +90,7 @@ const SuccessModal = ({
 
                 <button
                     onClick={onClose}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer"
                 >
                     Close
                 </button>
@@ -143,13 +143,259 @@ const ErrorModal = ({
     )
 }
 
+// List Collectible Modal Component
+const ListCollectibleModal = ({
+    isOpen,
+    onClose,
+    quantity,
+    maxQuantity,
+    listingPrice,
+    setListingPrice,
+    duration,
+    setDuration,
+    currency,
+    setCurrency,
+    onListNow,
+    listingsData
+}: {
+    isOpen: boolean
+    onClose: () => void
+    quantity: number
+    maxQuantity: number
+    listingPrice: string
+    setListingPrice: (price: string) => void
+    duration: number
+    setDuration: (duration: number) => void
+    currency: string
+    setCurrency: (currency: string) => void
+    onListNow: () => void
+    listingsData: ListingsResponse | null
+}) => {
+    if (!isOpen) return null
+
+    const calculateEarnings = () => {
+        if (!listingPrice || isNaN(parseFloat(listingPrice))) return '0.00'
+        const price = parseFloat(listingPrice)
+        // Deduct fees: Royalties (0.5%) + Protocol (2%) + Maker (1%)
+        const totalFees = price * 0.035 // 3.5% total
+        return (price - totalFees).toFixed(4)
+    }
+
+    const getLowestPriceForCurrency = () => {
+        if (!listingsData?.by_currency || !currency) return null
+
+        const currencyListings = listingsData.by_currency[currency as keyof typeof listingsData.by_currency]
+        if (!currencyListings || currencyListings.length === 0) return null
+
+        // Find the lowest price for the selected currency
+        const lowestListing = currencyListings.reduce((min: Listing, listing: Listing) => {
+            const price = listing.prices.base_price
+            const minPrice = min.prices.base_price
+            return price < minPrice ? listing : min
+        })
+
+        return lowestListing.prices.base_price
+    }
+
+    const handleLowestClick = () => {
+        const lowestPrice = getLowestPriceForCurrency()
+        if (lowestPrice !== null) {
+            // Set price 0.5% below the lowest
+            const priceBelow = lowestPrice * 0.995 // 0.5% below
+            setListingPrice(priceBelow.toFixed(6))
+        }
+    }
+
+    const lowestPrice = getLowestPriceForCurrency()
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700 relative">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <h2 className="text-2xl font-bold text-white mb-6">
+                    List Collectible
+                </h2>
+
+                {/* Quantity and Currency Row */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    {/* Quantity */}
+                    <div>
+                        <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                            Quantity
+                        </label>
+                        <div className="bg-light rounded px-4 py-3 text-white">
+                            {quantity} <span className="text-gray-400">of {maxQuantity}</span>
+                        </div>
+                    </div>
+
+                    {/* Currency */}
+                    <div>
+                        <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                            Currency
+                        </label>
+                        <div className="relative">
+                            <img
+                                src={`/assets/currency/${currency}.png`}
+                                alt={currency}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+                            />
+                            <select
+                                value={currency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                                className="w-full bg-light text-white pl-11 pr-4 py-3 rounded border border-gray-700 appearance-none cursor-pointer"
+                            >
+                                <option value="ETH">
+                                    ETH
+                                </option>
+                                <option value="GODS">
+                                    GODS
+                                </option>
+                                <option value="IMX">
+                                    IMX
+                                </option>   
+                                <option value="USDC">
+                                    USDC
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* Duration */}
+                <div className="mb-6">
+                    <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                        Duration
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <input
+                            type="number"
+                            value={duration}
+                            onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
+                            className="bg-light text-white px-4 py-3 rounded border border-gray-700 cursor-pointer"
+                            min="1"
+                        />
+                        <select className="bg-light text-white px-4 py-3 rounded border border-gray-700 appearance-none cursor-pointer">
+                            <option value="months">Months</option>
+                            <option value="days">Days</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Listing Price */}
+                <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-yellow-500 text-sm font-semibold flex items-center gap-1">
+                            Listing Price
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </label>
+                        <button
+                            onClick={handleLowestClick}
+                            disabled={lowestPrice === null}
+                            className={`text-white text-xs px-3 py-1 rounded transition-colors ${lowestPrice !== null
+                                ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
+                                : 'bg-gray-600 cursor-not-allowed opacity-50'
+                                }`}
+                        >
+                            {lowestPrice !== null ? `Lowest (${lowestPrice.toFixed(6)})` : 'No Listings'}
+                        </button>
+                    </div>
+                    <input
+                        type="text"
+                        value={listingPrice}
+                        onChange={(e) => setListingPrice(e.target.value)}
+                        placeholder="0"
+                        className="w-full bg-light text-white px-4 py-3 rounded border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
+                    />
+                    <p className="text-gray-400 text-sm mt-1">${listingPrice ? (parseFloat(listingPrice) * 3000).toFixed(2) : '0.00'}</p>
+                </div>
+
+                {/* Earnings */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-1 mb-2">
+                        <label className="text-yellow-500 text-sm font-semibold">
+                            Earnings
+                        </label>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        value={calculateEarnings()}
+                        disabled
+                        className="w-full bg-light text-gray-400 px-4 py-3 rounded border border-gray-700 cursor-not-allowed"
+                    />
+                    <p className="text-gray-400 text-sm mt-1">${listingPrice ? (parseFloat(calculateEarnings()) * 3000).toFixed(2) : '0.00'}</p>
+                </div>
+
+                {/* List Now Button */}
+                <button
+                    onClick={onListNow}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors mb-4 cursor-pointer"
+                >
+                    List Now
+                </button>
+
+                {/* Fees */}
+                <div className="border-t border-gray-700 pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-400 text-sm">Fees</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                        <div className="flex justify-between text-gray-400">
+                            <span>Royalties</span>
+                            <span>0.5%</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                            <span>Protocol Fee</span>
+                            <span>2%</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                            <span>Maker Fee</span>
+                            <span>1%</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                            <span>Taker Fee (est.)</span>
+                            <span>1%</span>
+                        </div>
+                    </div>
+                    <p className="text-gray-500 text-xs mt-3">
+                        Orders are time sensitive. Manually changing the gas price/limit in your wallet may stop order processing.
+                    </p>
+                </div>
+            </div>
+        </div >
+    )
+}
+
 export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: ActionButtonsProps) => {
+    const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
+    const [quantity, setQuantity] = useState(1)
     const [isBuying, setIsBuying] = useState(false)
     const [showSuccess, setShowSuccess] = useState(false)
     const [showError, setShowError] = useState(false)
     const [errorTitle, setErrorTitle] = useState('')
     const [errorMessage, setErrorMessage] = useState('')
     const [purchasedTokenId, setPurchasedTokenId] = useState('')
+    const [showListModal, setShowListModal] = useState(false)
+    const [listingPrice, setListingPrice] = useState('')
+    const [listingDuration, setListingDuration] = useState(12)
+    const [currency, setCurrency] = useState('ETH')
 
     const userHasListings = () => {
         if (!listingsData || !newWallet) return false
@@ -163,6 +409,12 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
         return listingsData.all_listings.filter(
             listing => listing.seller_address.toLowerCase() === newWallet.toLowerCase()
         )
+    }
+
+    const getUserOwnedCount = () => {
+        // This should be fetched from your backend or blockchain
+        // For now, returning a placeholder
+        return 1
     }
 
     const executeTransaction = async (action: any, fromAddress: string): Promise<string> => {
@@ -358,8 +610,66 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
         setShowError(false)
     }
 
+    const handleListClick = () => {
+        if (!loggedWallet) {
+            setErrorTitle('Wallet Not Connected')
+            setErrorMessage('Please connect your wallet first to list an item.')
+            setShowError(true)
+            return
+        }
+        setShowListModal(true)
+    }
+
+    const handleListModalClose = () => {
+        setShowListModal(false)
+        setListingPrice('')
+    }
+
+    const handleListNow = async () => {
+        if (!listingPrice || parseFloat(listingPrice) <= 0) {
+            setErrorTitle('Invalid Price')
+            setErrorMessage('Please enter a valid listing price.')
+            setShowError(true)
+            return
+        }
+
+        // Convert price to wei (assuming ETH)
+        const priceInWei = (parseFloat(listingPrice) * Math.pow(10, 18)).toString()
+
+        const listingData = {
+            quantity,
+            currency,
+            duration: listingDuration,
+            listingPrice,
+            priceInWei,
+            tokenId: (card as any).token_id,
+            contractAddress: (card as any).contract_address
+        }
+
+        console.log('📋 Listing Details:', listingData)
+        console.log('🔄 This will call /api/listing/list endpoint')
+
+        // TODO: Implement the actual listing flow
+        // 1. Call POST /api/listing/list to prepare
+        // 2. Sign the message
+        // 3. Call PUT /api/listing/list with signature
+
+        setShowListModal(false)
+        setListingPrice('')
+    }
+
+    const decrementQuantity = () => {
+        if (quantity > 1) setQuantity(quantity - 1)
+    }
+
+    const incrementQuantity = () => {
+        const maxQuantity = getUserOwnedCount()
+        if (quantity < maxQuantity) setQuantity(quantity + 1)
+    }
+
     const hasUserListings = userHasListings()
     const userListings = getUserListings()
+    const ownedCount = getUserOwnedCount()
 
     return (
         <>
@@ -378,31 +688,102 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
                 onClose={handleErrorClose}
             />
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                {hasUserListings && loggedWallet && newWallet && loggedWallet.toLowerCase() === newWallet.toLowerCase() ? (
-                    <>
-                        <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-                            Cancel Listing ({userListings.length})
-                        </button>
-                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
-                            Edit Listing
-                        </button>
-                    </>
-                ) : (
-                    <>
+            <ListCollectibleModal
+                isOpen={showListModal}
+                onClose={handleListModalClose}
+                quantity={quantity}
+                maxQuantity={ownedCount}
+                listingPrice={listingPrice}
+                setListingPrice={setListingPrice}
+                duration={listingDuration}
+                setDuration={setListingDuration}
+                currency={currency}
+                setCurrency={setCurrency}
+                onListNow={handleListNow}
+                listingsData={listingsData}
+            />
+
+            {/* Buy/Sell Tabs */}
+            <div className="flex gap-2 mb-4">
+                <button
+                    onClick={() => setActiveTab('buy')}
+                    className={`px-6 py-2 rounded transition-colors cursor-pointer ${activeTab === 'buy'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                >
+                    Buy
+                </button>
+                <button
+                    onClick={() => setActiveTab('sell')}
+                    className={`px-6 py-2 rounded transition-colors cursor-pointer ${activeTab === 'sell'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                >
+                    Sell
+                </button>
+            </div>
+
+            {/* Buy Tab Content */}
+            {activeTab === 'buy' && (
+                <div className="flex flex-col gap-3 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             onClick={handleBuyNow}
                             disabled={isBuying || !listingsData?.cheapest_listing}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                             {isBuying ? 'Buying...' : 'Buy Now'}
                         </button>
                         <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
                             Make Offer
                         </button>
-                    </>
-                )}
-            </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Sell Tab Content */}
+            {activeTab === 'sell' && (
+                <div className="mb-6">
+                    {/* Quantity Selector and Buttons */}
+                    <div className="flex gap-3">
+                        {/* Quantity Control */}
+                        <div className="flex items-center bg-light rounded">
+                            <button
+                                onClick={decrementQuantity}
+                                className="px-4 py-3 text-white hover:bg-gray-700 rounded-l transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={quantity <= 1}
+                            >
+                                -
+                            </button>
+                            <div className="px-6 py-3 text-white font-semibold">
+                                {quantity}
+                            </div>
+                            <button
+                                onClick={incrementQuantity}
+                                className="px-4 py-3 text-white hover:bg-gray-700 rounded-r transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={quantity >= ownedCount}
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        {/* List Button */}
+                        <button
+                            onClick={handleListClick}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors cursor-pointer"
+                        >
+                            List
+                        </button>
+
+                        {/* Fill Offer Button */}
+                        <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors cursor-pointer">
+                            Fill Offer
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
     )
 }

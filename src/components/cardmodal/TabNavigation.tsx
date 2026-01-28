@@ -1,6 +1,6 @@
 type TabNavigationProps = {
-    activeTab: 'details' | 'buy' | 'sell' | 'owned' | 'activity'
-    setActiveTab: (tab: 'details' | 'buy' | 'sell' | 'owned' | 'activity') => void
+    activeTab: 'details' | 'buy' | 'owned' | 'activity'
+    setActiveTab: (tab: 'details' | 'buy' | 'owned' | 'activity') => void
     showWalletTabs: boolean
 }
 
@@ -24,7 +24,6 @@ export const TabNavigation = ({ activeTab, setActiveTab, showWalletTabs }: TabNa
                 <TabButton tab="details" label="Details" />
                 {/* <TabButton tab="buy" label="Buy" /> */}
                 <TabButton tab="buy" label="Listing" />
-                {showWalletTabs && <TabButton tab="sell" label="Sell" />}
                 {showWalletTabs && <TabButton tab="owned" label="Owned" />}
                 <TabButton tab="activity" label="Activity" />
             </div>

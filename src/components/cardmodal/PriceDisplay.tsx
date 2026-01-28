@@ -25,7 +25,7 @@ export const PriceDisplay = ({ card, selectedCurrency, formatPrice, youOwn }: Pr
             return {
                 currency: card.best_currency,
                 priceInfo: card.all_prices[card.best_currency]
-            }
+            } 
         }
 
         return null

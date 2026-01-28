@@ -7,7 +7,7 @@ type OwnedTabProps = {
     newWallet: string | null
     selectedTokens: Set<number>
     setSelectedTokens: React.Dispatch<React.SetStateAction<Set<number>>>
-    setActiveTab: (tab: 'details' | 'buy' | 'sell' | 'owned' | 'activity') => void
+    setActiveTab: (tab: 'details' | 'buy' | 'owned' | 'activity') => void
 }
 
 export const OwnedTab = ({
@@ -120,7 +120,7 @@ export const OwnedTab = ({
                             {youOwn} token{youOwn > 1 ? 's' : ''} owned • {userListings.length} listed
                         </span>
                         <button
-                            onClick={() => setActiveTab('sell')}
+                            onClick={() => setActiveTab('buy')}
                             disabled={selectedTokens.size === 0}
                             className={`text-sm font-semibold px-4 py-2 rounded transition-colors ${selectedTokens.size === 0
                                     ? 'bg-light text-gray-500 cursor-not-allowed'

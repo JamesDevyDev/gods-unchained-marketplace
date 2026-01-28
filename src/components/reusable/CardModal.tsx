@@ -960,6 +960,11 @@
 
 // export default CardModal
 
+
+
+
+//2nd code
+
 'use client'
 import { useEffect, useState } from 'react'
 import useCommonStore from '@/utils/zustand/useCommonStore'
@@ -970,7 +975,6 @@ import { ActionButtons } from '@/components/cardmodal/ActionButtons'
 import { TabNavigation } from '@/components/cardmodal/TabNavigation'
 import { DetailsTab } from '@/components/cardmodal/DetailsTab'
 import { BuyTab } from '@/components/cardmodal/BuyTab'
-import { SellTab } from '@/components/cardmodal/SellTab'
 import { OwnedTab } from '@/components/cardmodal/OwnedTab'
 import { ActivityTab } from '@/components/cardmodal/ActivityTab'
 import { SkeletonLoader } from '@/components/cardmodal/SkeletonLoader'
@@ -996,7 +1000,7 @@ const CardModal = ({
     const { loggedWallet } = useCommonStore()
 
     const [newWallet, setWallet] = useState<string | null>(null)
-    const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'sell' | 'owned' | 'activity'>('details')
+    const [activeTab, setActiveTab] = useState<'details' | 'buy' | 'owned' | 'activity'>('details')
     const [quantity, setQuantity] = useState(1)
     const [listingsData, setListingsData] = useState<ListingsResponse | null>(null)
     const [isLoadingListings, setIsLoadingListings] = useState(false)
@@ -1123,15 +1127,6 @@ const CardModal = ({
                                             setCurrencyFilter={setCurrencyFilter}
                                             newWallet={newWallet}
                                             loggedWallet={loggedWallet}
-                                        />
-                                    )}
-
-                                    {activeTab === 'sell' && (
-                                        <SellTab
-                                            youOwn={youOwn}
-                                            quantity={quantity}
-                                            setQuantity={setQuantity}
-                                            setActiveTab={setActiveTab}
                                         />
                                     )}
 
