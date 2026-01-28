@@ -383,7 +383,7 @@ const Page = () => {
     }
 
     return (
-        <div className="pt-20 bg-background overflow-hidden">
+        <div className="pt-13 bg-background overflow-hidden">
             {/* Featured Collection Carousel */}
             <div className="w-full sm:px-6 mb-16 ">
                 {isLoading ? (
