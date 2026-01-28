@@ -519,7 +519,8 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             console.log('🛒 Preparing purchase for order:', listingsData.cheapest_listing.listing_id)
             console.log('Token ID:', listingsData.cheapest_listing.token_id)
 
-            const response = await fetch('/api/listing/buy', {
+            // const response = await fetch('/api/listing/buy', {
+            const response = await fetch('/api/listing/FASDFAFKOLAMSKFNSADJKFNSDJKFNSDFNJSKDFS', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
