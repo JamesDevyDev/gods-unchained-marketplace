@@ -3,7 +3,6 @@ import { DropdownFilter } from './DropdownFilter'
 import { CheckboxOption } from './CheckboxOption'
 import { RadioOption } from './RadioOption'
 import { FilterSkeleton } from './FilterSkeleton'
-import { Search } from 'lucide-react'
 import { ALLOWED_ATTRIBUTES } from '@/app/constants'
 import type { Stack, FilterOptions, PriceRange } from '@/app/types'
 
@@ -90,17 +89,6 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('currency')}
                 >
                     <div className="space-y-1">
-                        <div className="relative mb-2">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search currencies"
-                                value={currencySearch}
-                                onChange={(e) => setCurrencySearch(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-[#202225] text-white text-sm rounded-lg border border-[#3d4147] focus:border-[#2081E2] focus:outline-none"
-                            />
-                        </div>
-
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
                             <RadioOption
                                 label="All Currencies"
@@ -134,7 +122,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('rarity')}
                 >
                     <div className="space-y-1">
-                       
+
 
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
                             {filterOptions.rarities
@@ -187,7 +175,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('type')}
                 >
                     <div className="space-y-1">
-                       
+
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
                             {filterOptions.types
                                 .filter(type => type && type.toLowerCase().includes(typeSearch.toLowerCase()))
@@ -223,7 +211,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                         onToggle={() => toggleDropdown(dropdownKey)}
                     >
                         <div className="space-y-1">
-                         
+
 
                             <div className="max-h-48 overflow-y-auto custom-scrollbar">
                                 {values

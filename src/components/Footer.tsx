@@ -67,12 +67,12 @@ const Footer = () => {
                             <ul className='space-y-2'>
                                 <li>
                                     <a href='#' className='text-gray-400 hover:text-white transition-colors text-sm'>
-                                        Smurk - zer
+                                        Smurk
                                     </a>
                                 </li>
                                 <li>
-                                    <a href='https://github.com/jamesdevydev' className='text-gray-400 hover:text-white transition-colors text-sm'>
-                                        Philanthropist - james
+                                    <a href='#' className='text-gray-400 hover:text-white transition-colors text-sm'>
+                                        Philanthropist
                                     </a>
                                 </li>
                             </ul>
