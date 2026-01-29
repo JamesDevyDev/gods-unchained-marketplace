@@ -143,7 +143,7 @@ const ErrorModal = ({
     )
 }
 
-// List Collectible Modal Component
+// List Collectible Modal Component - UPDATED: Smaller & More Responsive
 const ListCollectibleModal = ({
     isOpen,
     onClose,
@@ -200,8 +200,8 @@ const ListCollectibleModal = ({
     const handleLowestClick = () => {
         const lowestPrice = getLowestPriceForCurrency()
         if (lowestPrice !== null) {
-            // Set price 0.5% below the lowest
-            const priceBelow = lowestPrice * 0.995 // 0.5% below
+            // Set price 0.1% below the lowest
+            const priceBelow = lowestPrice * 0.99 // 0.1% below
             setListingPrice(priceBelow.toFixed(6))
         }
     }
@@ -209,82 +209,73 @@ const ListCollectibleModal = ({
     const lowestPrice = getLowestPriceForCurrency()
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-            <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700 relative">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-background rounded-lg p-4 sm:p-5 max-w-sm w-full border border-gray-700 relative max-h-[90vh] overflow-y-auto">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
 
-                <h2 className="text-2xl font-bold text-white mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
                     List Collectible
                 </h2>
 
                 {/* Quantity and Currency Row */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-3 mb-4">
                     {/* Quantity */}
                     <div>
-                        <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                        <label className="text-yellow-500 text-xs font-semibold mb-1.5 block">
                             Quantity
                         </label>
-                        <div className="bg-light rounded px-4 py-3 text-white">
-                            {quantity} <span className="text-gray-400">of {maxQuantity}</span>
+                        <div className="bg-light rounded px-3 py-2 text-white text-sm">
+                            {quantity} <span className="text-gray-400 text-xs">of {maxQuantity}</span>
                         </div>
                     </div>
 
                     {/* Currency */}
                     <div>
-                        <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                        <label className="text-yellow-500 text-xs font-semibold mb-1.5 block">
                             Currency
                         </label>
                         <div className="relative">
                             <img
                                 src={`/assets/currency/${currency}.png`}
                                 alt={currency}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
+                                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
                             />
                             <select
                                 value={currency}
                                 onChange={(e) => setCurrency(e.target.value)}
-                                className="w-full bg-light text-white pl-11 pr-4 py-3 rounded border border-gray-700 appearance-none cursor-pointer"
+                                className="w-full bg-light text-white text-sm pl-8 pr-3 py-2 rounded border border-gray-700 appearance-none cursor-pointer"
                             >
-                                <option value="ETH">
-                                    ETH
-                                </option>
-                                <option value="GODS">
-                                    GODS
-                                </option>
-                                <option value="IMX">
-                                    IMX
-                                </option>   
-                                <option value="USDC">
-                                    USDC
-                                </option>
+                                <option value="ETH">ETH</option>
+                                <option value="GODS">GODS</option>
+                                <option value="IMX">IMX</option>
+                                <option value="USDC">USDC</option>
                             </select>
                         </div>
                     </div>
-
                 </div>
 
                 {/* Duration */}
-                <div className="mb-6">
-                    <label className="text-yellow-500 text-sm font-semibold mb-2 block">
+                <div className="mb-4">
+                    <label className="text-yellow-500 text-xs font-semibold mb-1.5 block">
                         Duration
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <input
                             type="number"
                             value={duration}
                             onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                            className="bg-light text-white px-4 py-3 rounded border border-gray-700 cursor-pointer"
+                            className="bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 cursor-pointer"
                             min="1"
                         />
-                        <select className="bg-light text-white px-4 py-3 rounded border border-gray-700 appearance-none cursor-pointer">
+                        <select className="bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 appearance-none cursor-pointer">
                             <option value="months">Months</option>
                             <option value="days">Days</option>
                         </select>
@@ -292,23 +283,20 @@ const ListCollectibleModal = ({
                 </div>
 
                 {/* Listing Price */}
-                <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="text-yellow-500 text-sm font-semibold flex items-center gap-1">
+                <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-yellow-500 text-xs font-semibold">
                             Listing Price
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
                         </label>
                         <button
                             onClick={handleLowestClick}
                             disabled={lowestPrice === null}
-                            className={`text-white text-xs px-3 py-1 rounded transition-colors ${lowestPrice !== null
+                            className={`text-white text-xs px-2 py-1 rounded transition-colors ${lowestPrice !== null
                                 ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                                 }`}
                         >
-                            {lowestPrice !== null ? `Lowest (${lowestPrice.toFixed(6)})` : 'No Listings'}
+                            {lowestPrice !== null ? `Lowest` : 'No Listings'}
                         </button>
                     </div>
                     <input
@@ -316,47 +304,50 @@ const ListCollectibleModal = ({
                         value={listingPrice}
                         onChange={(e) => setListingPrice(e.target.value)}
                         placeholder="0"
-                        className="w-full bg-light text-white px-4 py-3 rounded border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
+                        className="w-full bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
                     />
-                    <p className="text-gray-400 text-sm mt-1">${listingPrice ? (parseFloat(listingPrice) * 3000).toFixed(2) : '0.00'}</p>
+                    <p className="text-gray-400 text-xs mt-1">${listingPrice ? (parseFloat(listingPrice) * 3000).toFixed(2) : '0.00'}</p>
                 </div>
 
                 {/* Earnings */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-1 mb-2">
-                        <label className="text-yellow-500 text-sm font-semibold">
-                            Earnings
-                        </label>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+                <div className="mb-4">
+                    <label className="text-yellow-500 text-xs font-semibold mb-1.5 block">
+                        Earnings
+                    </label>
                     <input
                         type="text"
                         value={calculateEarnings()}
                         disabled
-                        className="w-full bg-light text-gray-400 px-4 py-3 rounded border border-gray-700 cursor-not-allowed"
+                        className="w-full bg-light text-gray-400 text-sm px-3 py-2 rounded border border-gray-700 cursor-not-allowed"
                     />
-                    <p className="text-gray-400 text-sm mt-1">${listingPrice ? (parseFloat(calculateEarnings()) * 3000).toFixed(2) : '0.00'}</p>
+                    <p className="text-gray-400 text-xs mt-1">${listingPrice ? (parseFloat(calculateEarnings()) * 3000).toFixed(2) : '0.00'}</p>
                 </div>
 
                 {/* List Now Button */}
                 <button
                     onClick={onListNow}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors mb-4 cursor-pointer"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors mb-3 cursor-pointer text-sm"
                 >
                     List Now
                 </button>
 
-                {/* Fees */}
-                <div className="border-t border-gray-700 pt-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-400 text-sm">Fees</span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div className="space-y-1 text-sm">
+                {/* Fees - Collapsible on mobile */}
+                <details className="border-t border-gray-700 pt-3 group">
+                    <summary className="text-gray-400 text-xs font-semibold cursor-pointer flex items-center justify-between list-none">
+                        <div className="flex items-center gap-2">
+                            <span>Fee Breakdown</span>
+                            <svg
+                                className="w-4 h-4 transition-transform group-open:rotate-180"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <span className="text-xs">3.5% total</span>
+                    </summary>
+                    <div className="space-y-1 text-xs mt-2">
                         <div className="flex justify-between text-gray-400">
                             <span>Royalties</span>
                             <span>0.5%</span>
@@ -374,12 +365,12 @@ const ListCollectibleModal = ({
                             <span>1%</span>
                         </div>
                     </div>
-                    <p className="text-gray-500 text-xs mt-3">
-                        Orders are time sensitive. Manually changing the gas price/limit in your wallet may stop order processing.
+                    <p className="text-gray-500 text-xs mt-2">
+                        Orders are time sensitive. Manually changing gas price/limit may stop processing.
                     </p>
-                </div>
+                </details>
             </div>
-        </div >
+        </div>
     )
 }
 
@@ -749,26 +740,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
                 <div className="mb-6">
                     {/* Quantity Selector and Buttons */}
                     <div className="flex gap-3">
-                        {/* Quantity Control */}
-                        <div className="flex items-center bg-light rounded">
-                            <button
-                                onClick={decrementQuantity}
-                                className="px-4 py-3 text-white hover:bg-gray-700 rounded-l transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={quantity <= 1}
-                            >
-                                -
-                            </button>
-                            <div className="px-6 py-3 text-white font-semibold">
-                                {quantity}
-                            </div>
-                            <button
-                                onClick={incrementQuantity}
-                                className="px-4 py-3 text-white hover:bg-gray-700 rounded-r transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                disabled={quantity >= ownedCount}
-                            >
-                                +
-                            </button>
-                        </div>
+
 
                         {/* List Button */}
                         <button
