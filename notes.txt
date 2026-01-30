@@ -21,3 +21,6 @@ CardListItem - new
 removed sell
 owned tab yung list sa listing
 ActionButtons lahat ng button - todo add how many cards you have
+
+1/30/2026
+ActionsButtons.tsx - updates lalagyan ko ng max ililist niya lang yung mga unlisted tokenids

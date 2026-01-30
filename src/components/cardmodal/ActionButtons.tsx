@@ -145,6 +145,7 @@ const ErrorModal = ({
 
 // List Collectible Modal Component - UPDATED: Smaller & More Responsive
 const ListCollectibleModal = ({
+    card,
     isOpen,
     onClose,
     quantity,
@@ -158,6 +159,7 @@ const ListCollectibleModal = ({
     onListNow,
     listingsData
 }: {
+    card:any
     isOpen: boolean
     onClose: () => void
     quantity: number
@@ -207,7 +209,7 @@ const ListCollectibleModal = ({
     }
 
     const lowestPrice = getLowestPriceForCurrency()
-
+    
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-background rounded-lg p-4 sm:p-5 max-w-sm w-full border border-gray-700 relative max-h-[90vh] overflow-y-auto">
@@ -233,7 +235,7 @@ const ListCollectibleModal = ({
                             Quantity
                         </label>
                         <div className="bg-light rounded px-3 py-2 text-white text-sm">
-                            {quantity} <span className="text-gray-400 text-xs">of {maxQuantity}</span>
+                            {quantity} <span className="text-gray-400 text-xs">of {card?.owned_tokens.length}</span>
                         </div>
                     </div>
 
@@ -405,6 +407,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
     const getUserOwnedCount = () => {
         // This should be fetched from your backend or blockchain
         // For now, returning a placeholder
+
         return 1
     }
 
@@ -681,6 +684,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             />
 
             <ListCollectibleModal
+                card={card}
                 isOpen={showListModal}
                 onClose={handleListModalClose}
                 quantity={quantity}
