@@ -1648,6 +1648,8 @@ const CardsPage = () => {
                 loggedWallet={loggedWallet}
                 layoutMode={layoutMode}
                 onLayoutChange={setLayoutMode}
+
+                loading={loading}   // ✅ ADD THIS
               />
 
               <SearchAndSort
