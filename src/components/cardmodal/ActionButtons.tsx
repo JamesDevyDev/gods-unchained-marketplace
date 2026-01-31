@@ -284,7 +284,7 @@ const ListCollectibleModal = ({
         const lowestPrice = getLowestPriceForCurrency()
         if (lowestPrice !== null) {
             // Set price 1% below the lowest
-            const priceBelow = lowestPrice * 0.99
+            const priceBelow = lowestPrice * 0.9999
             // Format to 8 decimal places to avoid scientific notation
             setListingPrice(priceBelow.toFixed(8))
         }
