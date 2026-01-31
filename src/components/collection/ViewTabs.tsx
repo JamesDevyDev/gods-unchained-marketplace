@@ -102,7 +102,7 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
             <div className="flex items-center gap-5">
                 <div
                     onClick={() => handleViewChange('market')}
-                    className={`px-2 rounded-md cursor-pointer ${activeView === 'market' ? 'bg-light' : 'bg-background'
+                    className={`px-2 py-1 rounded-md cursor-pointer ${activeView === 'market' ? 'bg-light' : 'bg-background'
                         } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
                 >
                     Market
@@ -111,7 +111,7 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
                 {loggedWallet && (
                     <div
                         onClick={() => handleViewChange('nfts')}
-                        className={`px-2 rounded-md cursor-pointer ${activeView === 'nfts' ? 'bg-light' : 'bg-background'
+                        className={`px-2 py-1 rounded-md cursor-pointer ${activeView === 'nfts' ? 'bg-light' : 'bg-background'
                             } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
                     >
                         My NFTs
@@ -122,7 +122,7 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => onLayoutChange('grid')}
-                    className={`p-2 rounded-md ${layoutMode === 'grid'
+                    className={`p-2 cursor-pointer rounded-md ${layoutMode === 'grid'
                             ? 'bg-light text-text'
                             : 'bg-background text-gray-400'
                         }`}
@@ -131,7 +131,7 @@ export const ViewTabs: React.FC<ViewTabsProps> = ({
                 </button>
                 <button
                     onClick={() => onLayoutChange('list')}
-                    className={`p-2 rounded-md ${layoutMode === 'list'
+                    className={`p-2 cursor-pointer rounded-md ${layoutMode === 'list'
                             ? 'bg-light text-text'
                             : 'bg-background text-gray-400'
                         }`}
