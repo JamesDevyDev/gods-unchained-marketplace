@@ -1267,7 +1267,7 @@ const ListCollectibleModal = ({
                         </label>
                         <div className="relative">
                             <img
-                                src={`/assets/currency/${currency}.png`}
+                                src={`/assets/currency/${currency.toLocaleLowerCase()}.png`}
                                 alt={currency}
                                 className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
                             />
