@@ -1424,7 +1424,7 @@
 
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import useCommonStore from '@/utils/zustand/useCommonStore'
 import { BarChart3 } from 'lucide-react'
@@ -1459,6 +1459,9 @@ const CardsPage = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
   const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid')
+
+  // ✅ Track the last fetched view to prevent redundant fetches
+  const lastFetchedViewRef = useRef<'market' | 'nfts' | null>(null)
 
   // Custom hooks
   const {
@@ -1552,7 +1555,12 @@ const CardsPage = () => {
 
     window.history.pushState({}, '', url.toString())
     setActiveView(view)
-    fetchCards()
+
+    // ✅ Only fetch if we haven't fetched this view yet
+    if (lastFetchedViewRef.current !== view) {
+      lastFetchedViewRef.current = view
+      fetchCards()
+    }
   }
 
   // Utility functions
@@ -1648,8 +1656,7 @@ const CardsPage = () => {
                 loggedWallet={loggedWallet}
                 layoutMode={layoutMode}
                 onLayoutChange={setLayoutMode}
-
-                loading={loading}   // ✅ ADD THIS
+                loading={loading}
               />
 
               <SearchAndSort

@@ -335,7 +335,7 @@ const ListCollectibleModal = ({
                                     }}
                                     min="0"
                                     max={unlistedCount}
-                                    className="w-full bg-light rounded px-3 py-2 text-white text-sm border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
+                                    className="w-full bg-light rounded px-3 py-2 text-white text-base border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">
                                     of {unlistedCount}
@@ -392,7 +392,7 @@ const ListCollectibleModal = ({
                             type="number"
                             value={duration}
                             onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                            className="bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 cursor-pointer"
+                            className="bg-light text-white text-base px-3 py-2 rounded border border-gray-700 cursor-pointer"
                             min="1"
                         />
                         <select className="bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 appearance-none cursor-pointer">
@@ -427,7 +427,7 @@ const ListCollectibleModal = ({
                         value={listingPrice}
                         onChange={(e) => setListingPrice(e.target.value)}
                         placeholder="0"
-                        className="w-full bg-light text-white text-sm px-3 py-2 rounded border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
+                        className="w-full bg-light text-white text-base px-3 py-2 rounded border border-gray-700 focus:border-yellow-500 focus:outline-none cursor-pointer"
                     />
                     <p className="text-gray-400 text-xs mt-1">${formatUsd(listingPrice)}</p>
                 </div>
@@ -441,7 +441,7 @@ const ListCollectibleModal = ({
                         type="text"
                         value={calculateEarnings()}
                         disabled
-                        className="w-full bg-light text-gray-400 text-sm px-3 py-2 rounded border border-gray-700 cursor-not-allowed"
+                        className="w-full bg-light text-gray-400 text-base px-3 py-2 rounded border border-gray-700 cursor-not-allowed"
                     />
                     <p className="text-gray-400 text-xs mt-1">${formatUsd(calculateEarnings())}</p>
                 </div>
@@ -547,7 +547,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             txParams.gas = action.gasLimit
         }
 
-        console.log('Transaction parameters:', txParams)
+        // console.log('Transaction parameters:', txParams)
 
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
@@ -634,8 +634,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             console.log('🛒 Preparing purchase for order:', listingsData.cheapest_listing.listing_id)
             console.log('Token ID:', listingsData.cheapest_listing.token_id)
 
-            // const response = await fetch('/api/listing/buy', {
-            const response = await fetch('/api/listing/FASDFAFKOLAMSKFNSADJKFNSDJKFNSDFNJSKDFS', {
+            const response = await fetch('/api/listing/buy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -796,17 +795,6 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
         setQuantity(1)
     }
 
-    const decrementQuantity = () => {
-        if (quantity > 1) setQuantity(quantity - 1)
-    }
-
-    const incrementQuantity = () => {
-        const maxQuantity = getUserOwnedCount()
-        if (quantity < maxQuantity) setQuantity(quantity + 1)
-    }
-
-    const hasUserListings = userHasListings()
-    const userListings = getUserListings()
     const ownedCount = getUserOwnedCount()
 
     return (
@@ -869,11 +857,11 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
                         <button
                             onClick={handleBuyNow}
                             disabled={isBuying || !listingsData?.cheapest_listing}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                             {isBuying ? 'Buying...' : 'Buy Now'}
                         </button>
-                        <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-sm sm:text-base cursor-pointer">
+                        <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors text-base  cursor-pointer">
                             Make Offer
                         </button>
                     </div>
@@ -884,7 +872,7 @@ export const ActionButtons = ({ card, listingsData, newWallet, loggedWallet }: A
             {activeTab === 'sell' && (
                 <div className="mb-6">
                     {/* Quantity Selector and Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 flex-col sm:flex-row">
                         {/* List Button */}
                         <button
                             onClick={handleListClick}
