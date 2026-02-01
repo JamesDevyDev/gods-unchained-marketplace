@@ -1339,7 +1339,7 @@
 // }
 
 
-/////////////
+///////////// save 2
 
 import { useState } from 'react'
 import { Stack, ListingsResponse } from './types'
@@ -1372,6 +1372,9 @@ interface PrepareResponse {
     totalWithFee: string
 }
 
+// Known NFT contract address for Gods Unchained cards
+const GU_NFT_CONTRACT_ADDRESS = '0x06d92b637dfcdf95a2faba04ef22b2a096029b69'
+
 export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButtonsProps) => {
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [quantity, setQuantity] = useState(1)
@@ -1387,9 +1390,24 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
     const [currency, setCurrency] = useState('ETH')
 
     const getUserOwnedCount = () => {
-        // Get unlisted tokens count
         const unlistedCount = (card as any)?.owned_tokens?.filter((token: any) => !token.listed).length || 0
         return unlistedCount
+    }
+
+    /**
+     * Resolves the NFT contract address.
+     * Prefers the token_address from an owned token if available,
+     * falls back to the known GU contract address.
+     */
+    const getNftContractAddress = (): string => {
+        const ownedTokens = (card as any)?.owned_tokens || []
+        // Try to find a token that has a non-null token_address
+        const tokenWithAddress = ownedTokens.find((token: any) => token.token_address)
+        if (tokenWithAddress?.token_address) {
+            return tokenWithAddress.token_address
+        }
+        // Fallback to the known contract address
+        return GU_NFT_CONTRACT_ADDRESS
     }
 
     const executeTransaction = async (action: any, fromAddress: string): Promise<string> => {
@@ -1461,6 +1479,62 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             checkTransaction()
         })
+    }
+
+    /**
+     * Validates and signs an EIP-712 message
+     */
+    const signEIP712Message = async (message: any, walletAddress: string): Promise<string> => {
+        console.log('\n🔍 ===== VALIDATING MESSAGE BEFORE SIGNING =====');
+        console.log('Message type:', typeof message);
+        console.log('Message keys:', Object.keys(message || {}));
+        console.log('Full message:', JSON.stringify(message, null, 2));
+
+        // Validate EIP-712 structure
+        if (!message || typeof message !== 'object') {
+            throw new Error('Message must be an object');
+        }
+
+        if (!message.domain) {
+            console.error('❌ Message missing domain field');
+            throw new Error('Invalid EIP-712 message: missing domain');
+        }
+
+        if (!message.types) {
+            console.error('❌ Message missing types field');
+            throw new Error('Invalid EIP-712 message: missing types');
+        }
+
+        // The value field can be either 'value' or 'message'
+        if (!message.value && !message.message) {
+            console.error('❌ Message missing value/message field');
+            throw new Error('Invalid EIP-712 message: missing value or message field');
+        }
+
+        console.log('✅ Message structure validation passed');
+        console.log('Domain:', message.domain);
+        console.log('Types:', Object.keys(message.types));
+        console.log('Primary Type:', message.primaryType);
+
+        // Convert to string for MetaMask
+        const messageString = JSON.stringify(message);
+        console.log('📤 Stringified message length:', messageString.length);
+        console.log('📤 Sending to MetaMask...');
+
+        try {
+            const signature = await window.ethereum.request({
+                method: 'eth_signTypedData_v4',
+                params: [walletAddress, messageString],
+            });
+
+            console.log('✅ Signature obtained:', signature);
+            return signature;
+        } catch (error: any) {
+            console.error('❌ MetaMask signing error:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+            throw error;
+        }
     }
 
     //Pag Bibili ka ng cards
@@ -1628,13 +1702,16 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         // Get the tokens to list based on quantity
         const tokensToList = unlistedTokens.slice(0, quantity)
 
+        // Resolve the NFT contract address
+        const nftContractAddress = getNftContractAddress()
+
         // Convert price to wei (multiply by 10^decimals)
         const priceInWei = (parseFloat(listingPrice) * Math.pow(10, currencyInfo.decimals)).toString()
 
-        console.log('📋 ===== LISTING DETAILS =====')
+        console.log('\n📋 ===== LISTING DETAILS =====')
         console.log('Card Name:', (card as any)?.name)
         console.log('Metadata ID:', (card as any)?.metadata_id)
-        console.log('NFT Contract Address:', (card as any)?.owned_tokens?.[0]?.token_address)
+        console.log('NFT Contract Address:', nftContractAddress)
         console.log('Selected Currency Symbol:', currency)
         console.log('Currency API Name:', currencyInfo.name)
         console.log('Currency Contract Address:', currencyInfo.address)
@@ -1645,13 +1722,11 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         console.log('Quantity to List:', quantity)
         console.log('Total Owned Tokens:', (card as any)?.owned_tokens?.length)
         console.log('Total Unlisted Tokens:', unlistedTokens.length)
-        console.log('\n📦 Unlisted Tokens to be Listed:')
+        console.log('\n📦 Tokens to List:')
         tokensToList.forEach((token: any, index: number) => {
             console.log(`  ${index + 1}. Token ID: ${token.token_id}`)
         })
-        console.log('\n🔍 All Unlisted Token IDs:')
-        console.log(unlistedTokens.map((t: any) => t.token_id))
-        console.log('===========================')
+        console.log('================================\n')
 
         setIsBuying(true) // Reuse buying state for listing progress
 
@@ -1661,9 +1736,12 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             const listings = tokensToList.map((token: any) => ({
                 tokenId: token.token_id,
-                contractAddress: currencyInfo.address,
-                price: priceInWei
+                contractAddress: nftContractAddress,
+                price: priceInWei,
+                currencyAddress: currencyInfo.address,
             }))
+
+            console.log('📦 Listings payload:', JSON.stringify(listings, null, 2))
 
             const prepareResponse = await fetch('/api/listing/list', {
                 method: 'POST',
@@ -1676,11 +1754,16 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             if (!prepareResponse.ok) {
                 const errorData = await prepareResponse.json()
+                console.error('❌ Prepare API error:', errorData)
                 throw new Error(errorData.error || 'Failed to prepare listing')
             }
 
             const prepareData = await prepareResponse.json()
-            console.log('✅ Prepare response:', prepareData)
+            console.log('\n✅ ===== PREPARE RESPONSE RECEIVED =====')
+            console.log('Success:', prepareData.success)
+            console.log('Mode:', prepareData.mode)
+            console.log('Full response:', JSON.stringify(prepareData, null, 2))
+            console.log('================================\n')
 
             if (!prepareData.success) {
                 throw new Error('Failed to prepare listing')
@@ -1693,29 +1776,37 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             if (prepareData.mode === 'single' && prepareData.message) {
                 // Single listing
-                const signature = await window.ethereum.request({
-                    method: 'eth_signTypedData_v4',
-                    params: [loggedWallet, JSON.stringify(prepareData.message)],
-                })
-                signatures = [signature]
-                console.log('✅ Signature obtained:', signature)
+                console.log('\n📝 ===== SIGNING SINGLE MESSAGE =====');
+
+                try {
+                    const signature = await signEIP712Message(prepareData.message, loggedWallet!)
+                    signatures = [signature]
+                } catch (signError: any) {
+                    console.error('❌ Signature error:', signError)
+                    throw signError
+                }
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
                 // Bulk listings - sign each message
+                console.log(`\n📝 ===== SIGNING ${prepareData.listings.length} MESSAGES =====`);
+
                 for (let i = 0; i < prepareData.listings.length; i++) {
                     const { message } = prepareData.listings[i]
-                    console.log(`🔄 Signing message ${i + 1}/${prepareData.listings.length}...`)
+                    console.log(`\n--- Signing message ${i + 1}/${prepareData.listings.length} ---`)
 
-                    const signature = await window.ethereum.request({
-                        method: 'eth_signTypedData_v4',
-                        params: [loggedWallet, JSON.stringify(message)],
-                    })
-                    signatures.push(signature)
-                    console.log(`✅ Signature ${i + 1} obtained:`, signature)
+                    try {
+                        const signature = await signEIP712Message(message, loggedWallet!)
+                        signatures.push(signature)
+                    } catch (signError: any) {
+                        console.error(`❌ Signature ${i + 1} error:`, signError)
+                        throw signError
+                    }
                 }
+
+                console.log('\n✅ All signatures obtained');
             }
 
             // Step 3: Execute listings with signatures
-            console.log('🔄 Step 3: Creating listings...')
+            console.log('\n🔄 Step 3: Creating listings...')
 
             const executeResponse = await fetch('/api/listing/list', {
                 method: 'PUT',
@@ -1730,21 +1821,31 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             if (!executeResponse.ok) {
                 const errorData = await executeResponse.json()
+                console.error('❌ Execute API error:', errorData)
                 throw new Error(errorData.error || 'Failed to create listing')
             }
 
             const executeData = await executeResponse.json()
-            console.log('✅ Execute response:', executeData)
+            console.log('\n✅ ===== EXECUTE RESPONSE =====')
+            console.log('Full response:', JSON.stringify(executeData, null, 2))
+            console.log('================================\n')
 
             if (!executeData.success) {
                 throw new Error('Failed to create listing')
             }
 
             // Show results
-            console.log('🎉 Listing Results:')
-            console.log('✅ Successful:', executeData.result.successful_listings)
-            console.log('⏳ Pending:', executeData.result.pending_listings)
-            console.log('❌ Failed:', executeData.result.failed_listings)
+            console.log('\n🎉 ===== LISTING RESULTS =====')
+            console.log('✅ Successful:', executeData.result.successful_listings.length)
+            executeData.result.successful_listings.forEach((listing: any) => {
+                console.log(`  - Order ID: ${listing.order_id}, Token: ${listing.token_id}`)
+            })
+            console.log('⏳ Pending:', executeData.result.pending_listings.length)
+            console.log('❌ Failed:', executeData.result.failed_listings.length)
+            executeData.result.failed_listings.forEach((listing: any) => {
+                console.log(`  - Token: ${listing.token_id}, Reason: ${listing.reason_code}`)
+            })
+            console.log('================================\n')
 
             setIsBuying(false)
             setShowListModal(false)
@@ -1756,15 +1857,27 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
             setShowSuccess(true)
 
         } catch (error: any) {
-            console.error('❌ Listing failed:', error)
+            console.error('\n❌ ===== LISTING FAILED =====')
+            console.error('Error:', error)
+            console.error('Error code:', error.code)
+            console.error('Error message:', error.message)
+            console.error('Error stack:', error.stack)
+            console.error('================================\n')
+
             setIsBuying(false)
 
             if (error.code === 4001) {
                 setErrorTitle('Signature Rejected')
                 setErrorMessage('You rejected the signature request in your wallet.')
+            } else if (error.code === -32000) {
+                setErrorTitle('Invalid Request')
+                setErrorMessage('The signature request was invalid. Please check the browser console for detailed logs and report this issue.')
+            } else if (error.code === -32603) {
+                setErrorTitle('Internal Error')
+                setErrorMessage('An internal error occurred. Please check the browser console for details.')
             } else {
                 setErrorTitle('Listing Failed')
-                setErrorMessage(error.message || 'An unknown error occurred. Please try again.')
+                setErrorMessage(error.message || 'An unknown error occurred. Please check the console for details.')
             }
             setShowError(true)
         }
@@ -1795,7 +1908,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         setShowListModal(false)
         setListingPrice('')
         setQuantity(1)
-        setCurrency('ETH') // Reset currency to default
+        setCurrency('ETH')
     }
 
     const ownedCount = getUserOwnedCount()
@@ -1874,16 +1987,13 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
             {/* Sell Tab Content */}
             {activeTab === 'sell' && (
                 <div className="mb-6">
-                    {/* Quantity Selector and Buttons */}
                     <div className="flex gap-3 flex-col sm:flex-row">
-                        {/* List Button */}
                         <button
                             onClick={handleListClick}
                             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors cursor-pointer"
                         >
                             List
                         </button>
-                        {/* Fill Offer Button */}
                         <button className="flex-1 bg-light hover:bg-gray-600 text-white font-semibold py-3 rounded transition-colors cursor-pointer">
                             Fill Offer
                         </button>
