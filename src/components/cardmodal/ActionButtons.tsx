@@ -1,8 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Stack, ListingsResponse } from './types'
 import { PurchaseProgressModal } from './ActionButtonSubComponents/PurchaseProgressModal'
-import { SuccessModal } from './ActionButtonSubComponents/SuccessModal'
-import { ErrorModal } from './ActionButtonSubComponents/ErrorModal'
 import { ListCollectibleModal } from './ActionButtonSubComponents/ListCollectibleModal'
 
 declare global {
@@ -29,6 +27,76 @@ interface PrepareResponse {
     totalWithFee: string
 }
 
+type ToastType = 'success' | 'error' | 'info'
+
+interface ToastState {
+    show: boolean
+    message: string
+    type: ToastType
+}
+
+// Toast Component
+const Toast = ({
+    message,
+    type,
+    onClose
+}: {
+    message: string
+    type: ToastType
+    onClose: () => void
+}) => {
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onClose()
+        }, 3000) // Auto-hide after 3 seconds
+
+        return () => clearTimeout(timer)
+    }, [onClose])
+
+    const bgColor = type === 'success'
+        ? 'bg-green-600'
+        : type === 'error'
+            ? 'bg-red-600'
+            : 'bg-blue-600'
+
+    const icon = type === 'success' ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+    ) : type === 'error' ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    )
+
+    return (
+        <div className="fixed top-4 left-4 z-[100] animate-slide-in">
+            <div className="relative bg-light border border-lines text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-[300px] max-w-md overflow-hidden backdrop-blur-sm">
+                <div className="flex-shrink-0">
+                    {icon}
+                </div>
+                <p className="cursor-pointer flex-1 text-sm font-medium">{message}</p>
+                <button
+                    onClick={onClose}
+                    className="flex-shrink-0 hover:bg-white/10 rounded-full p-1.5 transition-all duration-200 hover:scale-110 active:scale-95"
+                    aria-label="Close notification"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {/* Color indicator bar on the right */}
+                <div className={`${bgColor} absolute h-full w-3 right-0 top-0 rounded-r-lg`} />
+            </div>
+        </div>
+    )
+}
+
 // Known NFT contract address for Gods Unchained cards
 const GU_NFT_CONTRACT_ADDRESS = '0x06d92b637dfcdf95a2faba04ef22b2a096029b69'
 
@@ -36,15 +104,23 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
     const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
     const [quantity, setQuantity] = useState(1)
     const [isBuying, setIsBuying] = useState(false)
-    const [showSuccess, setShowSuccess] = useState(false)
-    const [showError, setShowError] = useState(false)
-    const [errorTitle, setErrorTitle] = useState('')
-    const [errorMessage, setErrorMessage] = useState('')
     const [purchasedTokenId, setPurchasedTokenId] = useState('')
     const [showListModal, setShowListModal] = useState(false)
     const [listingPrice, setListingPrice] = useState('')
     const [listingDuration, setListingDuration] = useState(12)
     const [currency, setCurrency] = useState('ETH')
+
+    // Toast state
+    const [toast, setToast] = useState<ToastState>({
+        show: false,
+        message: '',
+        type: 'success'
+    })
+
+    // Show toast helper
+    const showToast = (message: string, type: ToastType = 'success') => {
+        setToast({ show: true, message, type })
+    }
 
     const getUserOwnedCount = () => {
         const unlistedCount = (card as any)?.owned_tokens?.filter((token: any) => !token.listed).length || 0
@@ -116,7 +192,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                             console.log('✅ Transaction confirmed!')
                             resolve()
                         } else {
-                            console.error('❌ Transaction failed')
+                            console.log('❌ Transaction failed')
                             reject(new Error('Transaction failed'))
                         }
                     } else {
@@ -129,7 +205,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                         }
                     }
                 } catch (error) {
-                    console.error('Error checking transaction:', error)
+                    console.log('Error checking transaction:', error)
                     reject(error)
                 }
             }
@@ -153,18 +229,18 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         }
 
         if (!message.domain) {
-            console.error('❌ Message missing domain field');
+            console.log('❌ Message missing domain field');
             throw new Error('Invalid EIP-712 message: missing domain');
         }
 
         if (!message.types) {
-            console.error('❌ Message missing types field');
+            console.log('❌ Message missing types field');
             throw new Error('Invalid EIP-712 message: missing types');
         }
 
         // The value field can be either 'value' or 'message'
         if (!message.value && !message.message) {
-            console.error('❌ Message missing value/message field');
+            console.log('❌ Message missing value/message field');
             throw new Error('Invalid EIP-712 message: missing value or message field');
         }
 
@@ -187,9 +263,9 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
             console.log('✅ Signature obtained:', signature);
             return signature;
         } catch (error: any) {
-            console.error('❌ MetaMask signing error:', error);
-            console.error('Error code:', error.code);
-            console.error('Error message:', error.message);
+            console.log('❌ MetaMask signing error:', error);
+            console.log('Error code:', error.code);
+            console.log('Error message:', error.message);
             throw error;
         }
     }
@@ -197,24 +273,18 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
     //Pag Bibili ka ng cards
     const handleBuyNow = async () => {
         if (!loggedWallet) {
-            setErrorTitle('Wallet Not Connected')
-            setErrorMessage('Please connect your wallet first to make a purchase.')
-            setShowError(true)
+            showToast('Please connect your wallet first to make a purchase.', 'error')
             return
         }
 
         if (!window.ethereum) {
-            setErrorTitle('MetaMask Not Found')
-            setErrorMessage('MetaMask is not installed. Please install MetaMask to continue.')
-            setShowError(true)
+            showToast('MetaMask is not installed. Please install MetaMask to continue.', 'error')
             window.open('https://metamask.io/download/', '_blank')
             return
         }
 
         if (!listingsData?.cheapest_listing) {
-            setErrorTitle('No Listings Available')
-            setErrorMessage('There are currently no listings available for this item.')
-            setShowError(true)
+            showToast('There are currently no listings available for this item.', 'error')
             return
         }
 
@@ -247,9 +317,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             const currentChainId = await window.ethereum.request({ method: 'eth_chainId' })
             if (currentChainId.toLowerCase() !== '0x343b') {
-                setErrorTitle('Wrong Network')
-                setErrorMessage('Please switch to Immutable zkEVM network in your wallet.')
-                setShowError(true)
+                showToast('Please switch to Immutable zkEVM network in your wallet.', 'error')
                 setIsBuying(false)
                 return
             }
@@ -281,56 +349,46 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
             console.log('✅ All actions completed successfully!')
             setPurchasedTokenId(listingsData.cheapest_listing.token_id)
             setIsBuying(false)
-            setShowSuccess(true)
+            showToast('NFT purchased successfully!', 'success')
 
         } catch (error: any) {
             console.log('❌ Purchase failed:', error)
             setIsBuying(false)
 
             if (error.code === 4001) {
-                setErrorTitle('Transaction Rejected')
-                setErrorMessage('You rejected the transaction in your wallet.')
+                showToast('You rejected the transaction in your wallet.', 'error')
             } else if (error.code === -32603) {
-                setErrorTitle('Transaction Failed')
-                setErrorMessage('Transaction failed. You may have insufficient funds or gas.')
+                showToast('Transaction failed. You may have insufficient funds or gas.', 'error')
             } else if (error.code === -32602) {
-                setErrorTitle('Invalid Parameters')
-                setErrorMessage('Invalid transaction parameters. Please try again.')
+                showToast('Invalid transaction parameters. Please try again.', 'error')
             } else {
-                setErrorTitle('Purchase Failed')
-                setErrorMessage(error.message || 'An unknown error occurred. Please try again.')
+                showToast(error.message || 'An unknown error occurred. Please try again.', 'error')
             }
-            setShowError(true)
         }
     }
 
     //Pag Bebenta ka ng cards
     const handleListNow = async () => {
         if (!listingPrice || parseFloat(listingPrice) <= 0) {
-            setErrorTitle('Invalid Price')
-            setErrorMessage('Please enter a valid listing price.')
-            setShowError(true)
+            showToast('Please enter a valid listing price.', 'error')
             return
         }
 
-        // Get unlisted tokens
         const unlistedTokens = (card as any)?.owned_tokens?.filter((token: any) => !token.listed) || []
 
         if (unlistedTokens.length === 0) {
-            setErrorTitle('No Unlisted Tokens')
-            setErrorMessage('You have no unlisted tokens to list.')
-            setShowError(true)
+            showToast('You have no unlisted tokens to list.', 'error')
             return
         }
 
         if (quantity > unlistedTokens.length) {
-            setErrorTitle('Invalid Quantity')
-            setErrorMessage(`You only have ${unlistedTokens.length} unlisted token(s).`)
-            setShowError(true)
+            showToast(`You only have ${unlistedTokens.length} unlisted token(s).`, 'error')
             return
         }
 
-        // Currency symbol to API name and contract mapping
+        // Close the modal immediately
+        setShowListModal(false)
+
         const SYMBOL_MAP: Record<string, { name: string; address: string; decimals: number }> = {
             'ETH': {
                 name: 'ethereum',
@@ -355,40 +413,19 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         }
 
         const currencyInfo = SYMBOL_MAP[currency]
-
-        // Get the tokens to list based on quantity
         const tokensToList = unlistedTokens.slice(0, quantity)
-
-        // Resolve the NFT contract address
         const nftContractAddress = getNftContractAddress()
-
-        // Convert price to wei (multiply by 10^decimals)
         const priceInWei = (parseFloat(listingPrice) * Math.pow(10, currencyInfo.decimals)).toString()
 
         console.log('\n📋 ===== LISTING DETAILS =====')
-        console.log('Card Name:', (card as any)?.name)
-        console.log('Metadata ID:', (card as any)?.metadata_id)
-        console.log('NFT Contract Address:', nftContractAddress)
-        console.log('Selected Currency Symbol:', currency)
-        console.log('Currency API Name:', currencyInfo.name)
-        console.log('Currency Contract Address:', currencyInfo.address)
-        console.log('Currency Decimals:', currencyInfo.decimals)
-        console.log('Duration:', listingDuration, 'months')
-        console.log('Listing Price:', listingPrice, currency)
+        console.log('Tokens to list:', tokensToList.length)
         console.log('Price in Wei:', priceInWei)
-        console.log('Quantity to List:', quantity)
-        console.log('Total Owned Tokens:', (card as any)?.owned_tokens?.length)
-        console.log('Total Unlisted Tokens:', unlistedTokens.length)
-        console.log('\n📦 Tokens to List:')
-        tokensToList.forEach((token: any, index: number) => {
-            console.log(`  ${index + 1}. Token ID: ${token.token_id}`)
-        })
         console.log('================================\n')
 
-        setIsBuying(true) // Reuse buying state for listing progress
+        setIsBuying(true)
 
         try {
-            // Step 1: Prepare listings (get messages to sign)
+            // Step 1: Prepare listings
             console.log('🔄 Step 1: Preparing listings...')
 
             const listings = tokensToList.map((token: any) => ({
@@ -397,8 +434,6 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                 price: priceInWei,
                 currencyAddress: currencyInfo.address,
             }))
-
-            console.log('📦 Listings payload:', JSON.stringify(listings, null, 2))
 
             const prepareResponse = await fetch('/api/listing/list', {
                 method: 'POST',
@@ -411,55 +446,60 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             if (!prepareResponse.ok) {
                 const errorData = await prepareResponse.json()
-                console.error('❌ Prepare API error:', errorData)
                 throw new Error(errorData.error || 'Failed to prepare listing')
             }
 
             const prepareData = await prepareResponse.json()
-            console.log('\n✅ ===== PREPARE RESPONSE RECEIVED =====')
-            console.log('Success:', prepareData.success)
-            console.log('Mode:', prepareData.mode)
-            console.log('Full response:', JSON.stringify(prepareData, null, 2))
-            console.log('================================\n')
 
             if (!prepareData.success) {
                 throw new Error('Failed to prepare listing')
             }
 
+            // ⭐ CRITICAL: Handle approval transactions BEFORE signing
+            if (prepareData.mode === 'single' && prepareData.requiresApproval && prepareData.approvalAction) {
+                console.log('\n🔐 ===== APPROVAL REQUIRED =====')
+                console.log('⚠️ You need to approve the marketplace contract to transfer your NFT')
+                console.log('This is a one-time transaction per collection')
+                console.log('================================\n')
+
+                const approvalTx = await executeTransaction(prepareData.approvalAction, loggedWallet!)
+                console.log('✅ Approval transaction sent:', approvalTx)
+
+                await waitForTransaction(approvalTx)
+                console.log('✅ Approval transaction confirmed')
+            } else if (prepareData.mode === 'bulk' && prepareData.listings) {
+                // Handle approvals for bulk listings
+                for (let i = 0; i < prepareData.listings.length; i++) {
+                    const listing = prepareData.listings[i]
+                    if (listing.requiresApproval && listing.approvalAction) {
+                        console.log(`\n🔐 Approval required for token ${i + 1}/${prepareData.listings.length}`)
+
+                        const approvalTx = await executeTransaction(listing.approvalAction, loggedWallet!)
+                        console.log('✅ Approval transaction sent:', approvalTx)
+
+                        await waitForTransaction(approvalTx)
+                        console.log('✅ Approval transaction confirmed')
+
+                        // Only need to approve once per collection
+                        break
+                    }
+                }
+            }
+
             // Step 2: Sign the message(s)
-            console.log('🔄 Step 2: Signing message(s)...')
+            console.log('\n🔄 Step 2: Signing message(s)...')
 
             let signatures: string[] = []
 
             if (prepareData.mode === 'single' && prepareData.message) {
-                // Single listing
-                console.log('\n📝 ===== SIGNING SINGLE MESSAGE =====');
-
-                try {
-                    const signature = await signEIP712Message(prepareData.message, loggedWallet!)
-                    signatures = [signature]
-                } catch (signError: any) {
-                    console.error('❌ Signature error:', signError)
-                    throw signError
-                }
+                const signature = await signEIP712Message(prepareData.message, loggedWallet!)
+                signatures = [signature]
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
-                // Bulk listings - sign each message
-                console.log(`\n📝 ===== SIGNING ${prepareData.listings.length} MESSAGES =====`);
-
                 for (let i = 0; i < prepareData.listings.length; i++) {
                     const { message } = prepareData.listings[i]
-                    console.log(`\n--- Signing message ${i + 1}/${prepareData.listings.length} ---`)
-
-                    try {
-                        const signature = await signEIP712Message(message, loggedWallet!)
-                        signatures.push(signature)
-                    } catch (signError: any) {
-                        console.error(`❌ Signature ${i + 1} error:`, signError)
-                        throw signError
-                    }
+                    const signature = await signEIP712Message(message, loggedWallet!)
+                    signatures.push(signature)
                 }
-
-                console.log('\n✅ All signatures obtained');
             }
 
             // Step 3: Execute listings with signatures
@@ -473,7 +513,6 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                     walletAddress: loggedWallet,
                     signature: prepareData.mode === 'single' ? signatures[0] : undefined,
                     signatures: prepareData.mode === 'bulk' ? signatures : undefined,
-                    // ⭐ Send cache keys instead of raw responses
                     cacheKey: prepareData.mode === 'single' ? prepareData.cacheKey : undefined,
                     cacheKeys: prepareData.mode === 'bulk' ? prepareData.listings?.map((l: any) => l.cacheKey) : undefined,
                 }),
@@ -481,83 +520,47 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
             if (!executeResponse.ok) {
                 const errorData = await executeResponse.json()
-                console.error('❌ Execute API error:', errorData)
                 throw new Error(errorData.error || 'Failed to create listing')
             }
 
             const executeData = await executeResponse.json()
-            console.log('\n✅ ===== EXECUTE RESPONSE =====')
-            console.log('Full response:', JSON.stringify(executeData, null, 2))
-            console.log('================================\n')
 
             if (!executeData.success) {
                 throw new Error('Failed to create listing')
             }
 
-            // Show results
-            console.log('\n🎉 ===== LISTING RESULTS =====')
+            console.log('\n🎉 ===== LISTING SUCCESS =====')
             console.log('✅ Successful:', executeData.result.successful_listings.length)
-            executeData.result.successful_listings.forEach((listing: any) => {
-                console.log(`  - Order ID: ${listing.order_id}, Token: ${listing.token_id}`)
-            })
-            console.log('⏳ Pending:', executeData.result.pending_listings.length)
             console.log('❌ Failed:', executeData.result.failed_listings.length)
-            executeData.result.failed_listings.forEach((listing: any) => {
-                console.log(`  - Token: ${listing.token_id}, Reason: ${listing.reason_code}`)
-            })
             console.log('================================\n')
 
             setIsBuying(false)
-            setShowListModal(false)
+            // Reset form fields
             setListingPrice('')
             setQuantity(1)
             setCurrency('ETH')
-
-            // Show success message
-            setShowSuccess(true)
+            showToast('Listing created successfully!', 'success')
 
         } catch (error: any) {
-            console.error('\n❌ ===== LISTING FAILED =====')
-            console.error('Error:', error)
-            console.error('Error code:', error.code)
-            console.error('Error message:', error.message)
-            console.error('Error stack:', error.stack)
-            console.error('================================\n')
+            console.log('\n❌ ===== LISTING FAILED =====')
+            console.log('Error:', error)
+            console.log('================================\n')
 
             setIsBuying(false)
 
             if (error.code === 4001) {
-                setErrorTitle('Signature Rejected')
-                setErrorMessage('You rejected the signature request in your wallet.')
-            } else if (error.code === -32000) {
-                setErrorTitle('Invalid Request')
-                setErrorMessage('The signature request was invalid. Please check the browser console for detailed logs and report this issue.')
-            } else if (error.code === -32603) {
-                setErrorTitle('Internal Error')
-                setErrorMessage('An internal error occurred. Please check the browser console for details.')
+                showToast('You rejected the transaction in your wallet.', 'error')
             } else {
-                setErrorTitle('Listing Failed')
-                setErrorMessage(error.message || 'An unknown error occurred. Please check the console for details.')
+                showToast(error.message || 'An unknown error occurred.', 'error')
             }
-            setShowError(true)
         }
     }
 
     ////////////
 
-    const handleSuccessClose = () => {
-        setShowSuccess(false)
-    }
-
-    const handleErrorClose = () => {
-        setShowError(false)
-    }
-
     const handleListClick = () => {
         if (!loggedWallet) {
-            setErrorTitle('Wallet Not Connected')
-            setErrorMessage('Please connect your wallet first to list an item.')
-            setShowError(true)
+            showToast('Please connect your wallet first to list an item.', 'error')
             return
         }
 
@@ -575,18 +578,16 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
 
     return (
         <>
+            {/* Toast Notification */}
+            {toast.show && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
+            )}
+
             <PurchaseProgressModal isOpen={isBuying} />
-            <SuccessModal
-                isOpen={showSuccess}
-                tokenId={purchasedTokenId}
-                onClose={handleSuccessClose}
-            />
-            <ErrorModal
-                isOpen={showError}
-                title={errorTitle}
-                message={errorMessage}
-                onClose={handleErrorClose}
-            />
             <ListCollectibleModal
                 card={card}
                 isOpen={showListModal}
@@ -617,9 +618,9 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                 </button>
                 <button
                     onClick={() => setActiveTab('sell')}
-                    className={`px-6 py-2 rounded transition-colors cursor-pointer ${activeTab === 'sell'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    className={`px-6 py-2 rounded transition-colors cursor-pointer ${activeTab === 'buy'
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-blue-600 text-white'
                         }`}
                 >
                     Sell

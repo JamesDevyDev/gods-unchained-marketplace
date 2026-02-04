@@ -49,10 +49,14 @@ interface PrepareListingResponse {
         listing: ListingItem;
         message: any;
         cacheKey?: string;
+        requiresApproval?: boolean;
+        approvalAction?: any;
     }>;
     requiresSignature: true;
     message?: any;
     cacheKey?: string;
+    requiresApproval?: boolean;
+    approvalAction?: any;
 }
 
 interface ExecuteListingResponse {
@@ -85,38 +89,25 @@ const orderbookSDK = new Orderbook({
 });
 
 // ============================================================================
-// CURRENCY HELPERS
+// CURRENCY HELPERS - FIXED TO MATCH WORKING CODE
 // ============================================================================
 
-function getCurrencyType(currencyAddress?: string): 'NATIVE' | 'ERC20' {
-    if (!currencyAddress) {
-        return 'NATIVE';
-    }
-
-    const NATIVE_ETH_ADDRESS = '0x52a6c53869ce09a731cd772f245b97a4401d3348';
-
-    if (currencyAddress.toLowerCase() === NATIVE_ETH_ADDRESS.toLowerCase()) {
-        return 'NATIVE';
-    }
-
-    return 'ERC20';
-}
-
 function createBuyObject(price: string, currencyAddress?: string) {
-    const currencyType = getCurrencyType(currencyAddress);
-
-    if (currencyType === 'NATIVE') {
+    // ⭐ KEY FIX: ALL currencies including ETH are ERC20 on zkEVM
+    // Only use NATIVE if no currency address is provided
+    if (!currencyAddress) {
         return {
             amount: price,
             type: 'NATIVE' as const,
         };
-    } else {
-        return {
-            amount: price,
-            type: 'ERC20' as const,
-            contractAddress: currencyAddress!,
-        };
     }
+
+    // All specified currencies (including ETH) are ERC20
+    return {
+        amount: price,
+        type: 'ERC20' as const,
+        contractAddress: currencyAddress,
+    };
 }
 
 // ============================================================================
@@ -259,7 +250,8 @@ function validateRequest(body: any): ValidationResult {
 // ============================================================================
 
 function buildListingParams(item: ListingItem, walletAddress: string) {
-    return {
+    // ⭐ Log the exact parameters being sent to SDK
+    const params = {
         makerAddress: walletAddress,
         sell: {
             contractAddress: item.contractAddress,
@@ -268,6 +260,16 @@ function buildListingParams(item: ListingItem, walletAddress: string) {
         },
         buy: createBuyObject(item.price, item.currencyAddress),
     };
+
+    console.log('📋 Listing params:', JSON.stringify({
+        ...params,
+        buy: {
+            ...params.buy,
+            amount: item.price // Show raw amount
+        }
+    }, null, 2));
+
+    return params;
 }
 
 // ============================================================================
@@ -283,14 +285,29 @@ async function prepareListing(
         const listingParams = buildListingParams(item, walletAddress);
 
         console.log('🔄 Calling SDK prepareListing for token:', item.tokenId);
+        console.log('💰 Price (wei):', item.price);
+        console.log('💱 Currency:', item.currencyAddress || 'NATIVE');
 
         const prepareResponse = await orderbookSDK.prepareListing(listingParams) as any;
 
         console.log('✅ SDK prepareListing returned');
+        console.log('📋 Actions:', prepareResponse.actions.map((a: any) => a.type));
 
         const cacheKey = generateCacheKey(walletAddress, item.tokenId);
         prepareResponseCache.set(cacheKey, prepareResponse);
         console.log('💾 Cached prepare response:', cacheKey);
+
+        // ⭐ CRITICAL: Check for TRANSACTION actions (approvals)
+        const transactionAction = prepareResponse.actions.find((a: any) => a.type === 'TRANSACTION');
+        const requiresApproval = !!transactionAction;
+
+        if (requiresApproval) {
+            console.log('⚠️ APPROVAL REQUIRED for token:', item.tokenId);
+            console.log('📋 Approval action:', {
+                to: transactionAction.buildTransaction?.to,
+                hasData: !!transactionAction.buildTransaction?.data
+            });
+        }
 
         const message = extractMessageFromPrepareResponse(prepareResponse);
 
@@ -301,6 +318,8 @@ async function prepareListing(
             requiresSignature: true,
             message,
             cacheKey,
+            requiresApproval,
+            approvalAction: requiresApproval ? sanitizeBigInts(transactionAction.buildTransaction) : undefined,
         };
     } else {
         const preparedListings = await Promise.all(
@@ -308,11 +327,21 @@ async function prepareListing(
                 const listingParams = buildListingParams(item, walletAddress);
 
                 console.log('🔄 Calling SDK prepareListing for token:', item.tokenId);
+                console.log('💰 Price (wei):', item.price);
+                console.log('💱 Currency:', item.currencyAddress || 'NATIVE');
 
                 const prepareResponse = await orderbookSDK.prepareListing(listingParams) as any;
 
                 const cacheKey = generateCacheKey(walletAddress, item.tokenId);
                 prepareResponseCache.set(cacheKey, prepareResponse);
+
+                // Check for approval
+                const transactionAction = prepareResponse.actions.find((a: any) => a.type === 'TRANSACTION');
+                const requiresApproval = !!transactionAction;
+
+                if (requiresApproval) {
+                    console.log('⚠️ APPROVAL REQUIRED for token:', item.tokenId);
+                }
 
                 const message = extractMessageFromPrepareResponse(prepareResponse);
 
@@ -320,6 +349,8 @@ async function prepareListing(
                     listing: item,
                     message,
                     cacheKey,
+                    requiresApproval,
+                    approvalAction: requiresApproval ? sanitizeBigInts(transactionAction.buildTransaction) : undefined,
                 };
             })
         );
@@ -356,9 +387,7 @@ async function executeOneListingWithSignature(
 
     console.log('✅ [execute] Retrieved cached prepareResponse');
 
-    // ⭐ KEY FIX: Use the same pattern as your working code
-    // Instead of passing the whole prepareResponse object,
-    // extract orderComponents and orderHash and pass them with signature
+    // ⭐ Use the same pattern as your working code
     const createResponse = await orderbookSDK.createListing({
         makerFees: [],
         orderComponents: (prepareResponse as any).orderComponents,
