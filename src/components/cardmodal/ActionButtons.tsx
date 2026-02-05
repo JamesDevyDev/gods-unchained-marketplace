@@ -418,8 +418,13 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         const priceInWei = (parseFloat(listingPrice) * Math.pow(10, currencyInfo.decimals)).toString()
 
         console.log('\n📋 ===== LISTING DETAILS =====')
+        console.log('Currency:', currency)
+        console.log('Price (human readable):', listingPrice)
+        console.log('Decimals:', currencyInfo.decimals)
+        console.log('Price (wei/smallest unit):', priceInWei)
+        console.log('Currency address:', currencyInfo.address)
         console.log('Tokens to list:', tokensToList.length)
-        console.log('Price in Wei:', priceInWei)
+        console.log('NFT contract:', nftContractAddress)
         console.log('================================\n')
 
         setIsBuying(true)
@@ -433,7 +438,10 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                 contractAddress: nftContractAddress,
                 price: priceInWei,
                 currencyAddress: currencyInfo.address,
+                decimals: currencyInfo.decimals, // ⭐ Pass decimals to backend
             }))
+
+            console.log('📤 Sending to backend:', JSON.stringify(listings, null, 2))
 
             const prepareResponse = await fetch('/api/listing/list', {
                 method: 'POST',

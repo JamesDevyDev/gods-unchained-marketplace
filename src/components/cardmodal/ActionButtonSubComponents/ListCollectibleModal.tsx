@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react'
 import { ListingsResponse, Listing } from '../types'
 
+/**
+ * Helper function to calculate the actual listing price to send to blockchain
+ * based on the desired seller earnings (what YOU want to receive)
+ * 
+ * @param desiredEarnings - The amount you want to receive after fees
+ * @param sellerFeePercentage - The total seller fees (default 0.01 = 1%)
+ * @returns The price to list on blockchain
+ */
+export const calculateActualListingPrice = (
+    desiredEarnings: number,
+    sellerFeePercentage: number = 0.01
+): number => {
+    return desiredEarnings / (1 - sellerFeePercentage)
+}
+
 export const ListCollectibleModal = ({
     card,
     isOpen,
@@ -38,6 +53,22 @@ export const ListCollectibleModal = ({
         'USDC': 1
     })
 
+    // ⭐ ACTUAL FEE STRUCTURE (based on observed behavior: 200 input → 213 on blockchain)
+    const FEES = {
+        // Fees deducted from seller (YOU)
+        royalties: 0.05,       // 5% - Collection royalties (Gods Unchained)
+        makerFee: 0.02,        // 2% - Marketplace maker fee
+
+        // Fees paid by buyer (NOT deducted from your listing)
+        takerFee: 0.065,       // 6.5% - Total buyer fees (observed: 200 → 213)
+    }
+
+    // Total fees deducted from YOUR listing price
+    const TOTAL_SELLER_FEES = FEES.royalties + FEES.makerFee // 7% total
+
+    // Total fees paid by BUYER on top of your listing
+    const TOTAL_BUYER_FEES = FEES.takerFee // 6.5% total
+
     // Fetch real-time exchange rates from Immutable API
     const fetchExchangeRates = async () => {
         try {
@@ -61,11 +92,9 @@ export const ListCollectibleModal = ({
             setExchangeRates(rates)
         } catch (error) {
             console.error('Error fetching exchange rates:', error)
-            // Keep using default rates if API fails
         }
     }
 
-    // Fetch exchange rates when modal opens or currency changes
     useEffect(() => {
         if (isOpen) {
             fetchExchangeRates()
@@ -83,12 +112,41 @@ export const ListCollectibleModal = ({
         return usdValue.toFixed(2)
     }
 
-    const calculateEarnings = () => {
-        if (!listingPrice || isNaN(parseFloat(listingPrice))) return '0.00'
-        const price = parseFloat(listingPrice)
-        // Deduct fees: Royalties (0.5%) + Protocol (2%) + Maker (1%)
-        const totalFees = price * 0.035 // 3.5% total
-        return (price - totalFees).toFixed(4)
+    /**
+     * ⭐ User input IS the blockchain listing price
+     * No calculation needed - just parse the input
+     */
+    const getActualListingPrice = (): number => {
+        if (!listingPrice || isNaN(parseFloat(listingPrice))) return 0
+        return parseFloat(listingPrice)
+    }
+
+    /**
+     * Calculate what the buyer will pay (listing + buyer fees)
+     */
+    const calculateBuyerPrice = (): string => {
+        const actualListing = getActualListingPrice()
+        if (actualListing === 0) return '0.00'
+
+        // Add buyer fees on top of the listing price
+        const buyerFees = actualListing * TOTAL_BUYER_FEES
+        const buyerTotal = actualListing + buyerFees
+
+        return buyerTotal.toFixed(8)
+    }
+
+    /**
+     * Calculate what YOU will receive after seller fees are deducted
+     */
+    const calculateEarnings = (): string => {
+        const actualListing = getActualListingPrice()
+        if (actualListing === 0) return '0.00'
+
+        // Deduct seller fees from the listing price
+        const sellerFees = actualListing * TOTAL_SELLER_FEES
+        const earnings = actualListing - sellerFees
+
+        return earnings.toFixed(8)
     }
 
     if (!isOpen) return null
@@ -96,7 +154,6 @@ export const ListCollectibleModal = ({
     const getLowestPriceForCurrency = () => {
         if (!listingsData?.by_currency) return null
 
-        // Find the absolute lowest price across ALL currencies by comparing USD values
         let absoluteLowestUsd = Infinity
         let lowestListingCurrency = ''
         let lowestListingPrice = 0
@@ -107,7 +164,6 @@ export const ListCollectibleModal = ({
             const currencyListings = listingsData.by_currency[curr]
             if (!currencyListings || currencyListings.length === 0) continue
 
-            // Find the lowest price in this currency
             const lowestInCurrency = currencyListings.reduce((min: Listing, listing: Listing) => {
                 const price = listing.prices.base_price
                 const minPrice = min.prices.base_price
@@ -115,7 +171,6 @@ export const ListCollectibleModal = ({
             })
 
             const priceInCurrency = lowestInCurrency.prices.base_price
-            // Convert to USD for comparison
             const priceInUsd = priceInCurrency * getUsdRate(curr)
 
             if (priceInUsd < absoluteLowestUsd) {
@@ -127,16 +182,11 @@ export const ListCollectibleModal = ({
 
         if (absoluteLowestUsd === Infinity) return null
 
-        // If the lowest is already in the selected currency, return it directly
         if (lowestListingCurrency === currency) {
             return lowestListingPrice
         }
 
-        // Convert from the lowest currency to the selected currency
-        // Step 1: Lowest price in its original currency → USD
         const lowestInUsd = lowestListingPrice * getUsdRate(lowestListingCurrency)
-
-        // Step 2: USD → Selected currency
         const selectedCurrencyRate = getUsdRate(currency)
         if (selectedCurrencyRate === 0) return null
 
@@ -149,9 +199,11 @@ export const ListCollectibleModal = ({
         const lowestPrice = getLowestPriceForCurrency()
         if (lowestPrice !== null) {
             // Set price 1% below the lowest
+            // Note: This should probably be the earnings you'd get from undercutting
             const priceBelow = lowestPrice * 0.99
-            // Format to 8 decimal places to avoid scientific notation
-            setListingPrice(priceBelow.toFixed(8))
+            // Convert listing price to earnings
+            const earningsFromUndercut = priceBelow * (1 - TOTAL_SELLER_FEES)
+            setListingPrice(earningsFromUndercut.toFixed(8))
         }
     }
 
@@ -162,6 +214,8 @@ export const ListCollectibleModal = ({
 
     const lowestPrice = getLowestPriceForCurrency()
     const unlistedCount = card?.owned_tokens?.filter((token: any) => !token.listed).length || 0
+    const actualListingPrice = getActualListingPrice()
+    const buyerPrice = calculateBuyerPrice()
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -209,11 +263,10 @@ export const ListCollectibleModal = ({
                             <button
                                 onClick={handleMaxClick}
                                 disabled={unlistedCount === 0}
-                                className={`text-white text-xs px-3 py-2 rounded transition-colors font-semibold ${
-                                    unlistedCount > 0
-                                        ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
-                                        : 'bg-gray-600 cursor-not-allowed opacity-50'
-                                }`}
+                                className={`text-white text-xs px-3 py-2 rounded transition-colors font-semibold ${unlistedCount > 0
+                                    ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+                                    : 'bg-gray-600 cursor-not-allowed opacity-50'
+                                    }`}
                             >
                                 Max
                             </button>
@@ -235,7 +288,7 @@ export const ListCollectibleModal = ({
                                 value={currency}
                                 onChange={(e) => {
                                     setCurrency(e.target.value)
-                                    setListingPrice('') // Clear price when currency changes
+                                    setListingPrice('')
                                 }}
                                 className="w-full bg-light text-white text-sm pl-8 pr-3 py-2 rounded border border-gray-700 appearance-none cursor-pointer"
                             >
@@ -272,16 +325,15 @@ export const ListCollectibleModal = ({
                 <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
                         <label className="text-yellow-500 text-xs font-semibold">
-                            Listing Price
+                            Listing Price (How much you get)
                         </label>
                         <button
                             onClick={handleLowestClick}
                             disabled={lowestPrice === null}
-                            className={`text-white text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${
-                                lowestPrice !== null
-                                    ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
-                                    : 'bg-gray-600 cursor-not-allowed opacity-50'
-                            }`}
+                            className={`text-white text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${lowestPrice !== null
+                                ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
+                                : 'bg-gray-600 cursor-not-allowed opacity-50'
+                                }`}
                         >
                             <span>Lowest</span>
                             {lowestPrice !== null && (
@@ -299,18 +351,19 @@ export const ListCollectibleModal = ({
                     <p className="text-gray-400 text-xs mt-1">${formatUsd(listingPrice)}</p>
                 </div>
 
-                {/* Earnings */}
-                <div className="mb-4">
-                    <label className="text-yellow-500 text-xs font-semibold mb-1.5 block">
-                        Earnings
-                    </label>
-                    <input
-                        type="text"
-                        value={calculateEarnings()}
-                        disabled
-                        className="w-full bg-light text-gray-400 text-base px-3 py-2 rounded border border-gray-700 cursor-not-allowed"
-                    />
-                    <p className="text-gray-400 text-xs mt-1">${formatUsd(calculateEarnings())}</p>
+                {/* Buyer Will Pay */}
+                <div className="mb-4 bg-light border border-lines rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                        <label className="text-green-400 text-xs font-semibold flex items-center gap-1">
+                            Buyer Will Pay
+                        </label>
+                    </div>
+                    <div className="text-green-400 font-mono text-lg">
+                        ${formatUsd(buyerPrice)}
+                    </div>
+                    <p className="text-green-400 text-xs mt-1">
+                        {buyerPrice} {currency}
+                    </p>
                 </div>
 
                 {/* List Now Button */}
@@ -322,7 +375,7 @@ export const ListCollectibleModal = ({
                     List Now
                 </button>
 
-                {/* Fees - Collapsible on mobile */}
+                {/* Fees - Collapsible */}
                 <details className="border-t border-gray-700 pt-3 group">
                     <summary className="text-gray-400 text-xs font-semibold cursor-pointer flex items-center justify-between list-none">
                         <div className="flex items-center gap-2">
@@ -336,26 +389,77 @@ export const ListCollectibleModal = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
-                        <span className="text-xs">3.5% total</span>
                     </summary>
-                    <div className="space-y-1 text-xs mt-2">
-                        <div className="flex justify-between text-gray-400">
-                            <span>Royalties</span>
-                            <span>0.5%</span>
+                    <div className="space-y-2 mt-3">
+
+                        {/* Seller Fees (deducted from your listing) */}
+                        <div className="bg-red-900/10 border border-red-700/30 rounded p-2">
+                            <div className="text-red-400 text-xs font-semibold mb-1.5">
+                                Deducted from Blockchain Listing:
+                            </div>
+                            <div className="space-y-1 text-xs">
+                                <div className="flex justify-between text-gray-300">
+                                    <span>• Royalties (Gods Unchained)</span>
+                                    <span>{(FEES.royalties * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between text-gray-300">
+                                    <span>• Marketplace Maker Fee</span>
+                                    <span>{(FEES.makerFee * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between text-red-400 font-semibold pt-1 border-t border-red-700/30">
+                                    <span>Total Seller Fees</span>
+                                    <span>{(TOTAL_SELLER_FEES * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-gray-400">
-                            <span>Protocol Fee</span>
-                            <span>2%</span>
+
+                        {/* Buyer Fees (added on top) */}
+                        <div className="bg-blue-900/10 border border-blue-700/30 rounded p-2">
+                            <div className="text-blue-400 text-xs font-semibold mb-1.5">
+                                Added for Buyer (on top of listing):
+                            </div>
+                            <div className="space-y-1 text-xs">
+                                <div className="flex justify-between text-blue-400 font-semibold">
+                                    <span>• Total Buyer Fees</span>
+                                    <span>{(TOTAL_BUYER_FEES * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-gray-400">
-                            <span>Maker Fee</span>
-                            <span>1%</span>
-                        </div>
-                        <div className="flex justify-between text-gray-400">
-                            <span>Taker Fee (est.)</span>
-                            <span>1%</span>
-                        </div>
+
+                        {/* Example */}
+                        {listingPrice && parseFloat(listingPrice) > 0 && (
+                            <div className="bg-background border border-lines rounded p-2 mt-2">
+                                <div className="text-text text-xs font-semibold mb-1.5">
+                                    Example Flow:
+                                </div>
+                                <div className="space-y-1 text-xs text-gray-300">
+                                    <div className="flex justify-between text-text font-semibold">
+                                        <span>1. Blockchain listing (your input)</span>
+                                        <span className="font-mono">{parseFloat(listingPrice).toFixed(4)} {currency}</span>
+                                    </div>
+                                    <div className="flex justify-between text-text">
+                                        <span>2. - Seller fees ({(TOTAL_SELLER_FEES * 100).toFixed(1)}%)</span>
+                                        <span className="font-mono">-{(actualListingPrice * TOTAL_SELLER_FEES).toFixed(4)} {currency}</span>
+                                    </div>
+                                    <div className="flex justify-between text-text font-semibold border-t border-yellow-700/30 pt-1">
+                                        <span>= You receive</span>
+                                        <span className="font-mono">{calculateEarnings()} {currency}</span>
+                                    </div>
+                                    <div className="flex justify-between text-text mt-2 pt-1 border-t border-yellow-700/30">
+                                        <span>3. + Buyer fees ({(TOTAL_BUYER_FEES * 100).toFixed(1)}%)</span>
+                                        <span className="font-mono">+{(actualListingPrice * TOTAL_BUYER_FEES).toFixed(4)} {currency}</span>
+                                    </div>
+                                    <div className="flex justify-between text-text font-semibold">
+                                        <span>= Buyer pays</span>
+                                        <span className="font-mono">{buyerPrice} {currency}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
+                    <p className="text-gray-500 text-xs mt-3">
+                        Your input is the marketplace listing price. Seller fees are deducted from this, and buyer fees are added on top.
+                    </p>
                     <p className="text-gray-500 text-xs mt-2">
                         Orders are time sensitive. Manually changing gas price/limit may stop processing.
                     </p>

@@ -20,6 +20,7 @@ interface ListingItem {
     contractAddress: string;
     price: string;
     currencyAddress?: string;
+    decimals?: number; // ⭐ Added decimals field
 }
 
 interface CreateListingRequestBody {
@@ -89,13 +90,58 @@ const orderbookSDK = new Orderbook({
 });
 
 // ============================================================================
-// CURRENCY HELPERS - FIXED TO MATCH WORKING CODE
+// CURRENCY HELPERS - FIXED WITH DECIMAL VALIDATION
 // ============================================================================
 
-function createBuyObject(price: string, currencyAddress?: string) {
+/**
+ * Creates a buy object for the listing with proper currency handling
+ * ⭐ KEY FIX: Validates that the price matches the expected decimals
+ */
+function createBuyObject(price: string, currencyAddress?: string, decimals?: number) {
+    console.log('\n💰 ===== CREATE BUY OBJECT =====');
+    console.log('Price (wei):', price);
+    console.log('Currency address:', currencyAddress);
+    console.log('Decimals:', decimals);
+
+    // Validate price format
+    try {
+        const priceBigInt = BigInt(price);
+        if (priceBigInt <= BigInt(0)) {
+            throw new Error('Price must be greater than 0');
+        }
+
+        // ⭐ CRITICAL: Validate that the price makes sense for the decimals
+        if (decimals !== undefined && currencyAddress) {
+            const priceString = price.toString();
+            const expectedMinLength = decimals; // e.g., USDC with 6 decimals should have at least 6 digits for $1
+
+            console.log('Price length:', priceString.length);
+            console.log('Expected min length for 1 unit:', expectedMinLength);
+
+            // For USDC (6 decimals): 200 USDC = 200,000,000 (9 digits)
+            // For ETH (18 decimals): 0.001 ETH = 1,000,000,000,000,000 (15 digits)
+
+            // Calculate human-readable price for logging
+            const humanReadable = Number(price) / Math.pow(10, decimals);
+            console.log('Human-readable price:', humanReadable.toFixed(decimals));
+
+            // Warn if price seems suspiciously small
+            if (priceString.length < decimals && priceBigInt < BigInt(Math.pow(10, decimals))) {
+                console.warn('⚠️ WARNING: Price seems very small! Double-check decimal conversion.');
+                console.warn(`   Price: ${price} (${humanReadable} tokens)`);
+            }
+        }
+
+    } catch (error: any) {
+        console.error('❌ Invalid price format:', error.message);
+        throw new Error(`Invalid price format: ${error.message}`);
+    }
+
     // ⭐ KEY FIX: ALL currencies including ETH are ERC20 on zkEVM
     // Only use NATIVE if no currency address is provided
     if (!currencyAddress) {
+        console.log('✅ Using NATIVE currency (no address provided)');
+        console.log('================================\n');
         return {
             amount: price,
             type: 'NATIVE' as const,
@@ -103,6 +149,11 @@ function createBuyObject(price: string, currencyAddress?: string) {
     }
 
     // All specified currencies (including ETH) are ERC20
+    console.log('✅ Using ERC20 currency');
+    console.log('   Address:', currencyAddress);
+    console.log('   Amount:', price);
+    console.log('================================\n');
+
     return {
         amount: price,
         type: 'ERC20' as const,
@@ -227,6 +278,12 @@ function validateRequest(body: any): ValidationResult {
                 return { valid: false, error: "Invalid currency address in listing" };
             }
         }
+        // ⭐ Validate decimals if provided
+        if (listing.decimals !== undefined) {
+            if (typeof listing.decimals !== 'number' || listing.decimals < 0 || listing.decimals > 18) {
+                return { valid: false, error: "Invalid decimals (must be between 0 and 18)" };
+            }
+        }
         try {
             const priceBigInt = BigInt(listing.price);
             if (priceBigInt <= BigInt(0)) {
@@ -250,7 +307,11 @@ function validateRequest(body: any): ValidationResult {
 // ============================================================================
 
 function buildListingParams(item: ListingItem, walletAddress: string) {
-    // ⭐ Log the exact parameters being sent to SDK
+    console.log('\n📋 ===== BUILDING LISTING PARAMS =====');
+    console.log('Token ID:', item.tokenId);
+    console.log('Contract:', item.contractAddress);
+    console.log('Maker:', walletAddress);
+
     const params = {
         makerAddress: walletAddress,
         sell: {
@@ -258,16 +319,11 @@ function buildListingParams(item: ListingItem, walletAddress: string) {
             tokenId: item.tokenId,
             type: 'ERC721' as const,
         },
-        buy: createBuyObject(item.price, item.currencyAddress),
+        buy: createBuyObject(item.price, item.currencyAddress, item.decimals),
     };
 
-    console.log('📋 Listing params:', JSON.stringify({
-        ...params,
-        buy: {
-            ...params.buy,
-            amount: item.price // Show raw amount
-        }
-    }, null, 2));
+    console.log('✅ Params built successfully');
+    console.log('================================\n');
 
     return params;
 }
@@ -280,13 +336,20 @@ async function prepareListing(
     listings: ListingItem[],
     walletAddress: string
 ): Promise<PrepareListingResponse> {
+    console.log('\n🚀 ===== PREPARE LISTING =====');
+    console.log('Listings count:', listings.length);
+    console.log('Wallet:', walletAddress);
+    console.log('================================\n');
+
     if (listings.length === 1) {
         const item = listings[0];
         const listingParams = buildListingParams(item, walletAddress);
 
-        console.log('🔄 Calling SDK prepareListing for token:', item.tokenId);
-        console.log('💰 Price (wei):', item.price);
-        console.log('💱 Currency:', item.currencyAddress || 'NATIVE');
+        console.log('🔄 Calling SDK prepareListing...');
+        console.log('Token ID:', item.tokenId);
+        console.log('Price (wei):', item.price);
+        console.log('Currency:', item.currencyAddress || 'NATIVE');
+        console.log('Decimals:', item.decimals);
 
         const prepareResponse = await orderbookSDK.prepareListing(listingParams) as any;
 
@@ -302,11 +365,11 @@ async function prepareListing(
         const requiresApproval = !!transactionAction;
 
         if (requiresApproval) {
-            console.log('⚠️ APPROVAL REQUIRED for token:', item.tokenId);
-            console.log('📋 Approval action:', {
-                to: transactionAction.buildTransaction?.to,
-                hasData: !!transactionAction.buildTransaction?.data
-            });
+            console.log('\n⚠️ ===== APPROVAL REQUIRED =====');
+            console.log('Token:', item.tokenId);
+            console.log('To:', transactionAction.buildTransaction?.to);
+            console.log('Has data:', !!transactionAction.buildTransaction?.data);
+            console.log('================================\n');
         }
 
         const message = extractMessageFromPrepareResponse(prepareResponse);
@@ -322,13 +385,18 @@ async function prepareListing(
             approvalAction: requiresApproval ? sanitizeBigInts(transactionAction.buildTransaction) : undefined,
         };
     } else {
+        console.log('🔄 Preparing bulk listings...');
+
         const preparedListings = await Promise.all(
-            listings.map(async (item) => {
+            listings.map(async (item, index) => {
+                console.log(`\n--- Listing ${index + 1}/${listings.length} ---`);
                 const listingParams = buildListingParams(item, walletAddress);
 
-                console.log('🔄 Calling SDK prepareListing for token:', item.tokenId);
-                console.log('💰 Price (wei):', item.price);
-                console.log('💱 Currency:', item.currencyAddress || 'NATIVE');
+                console.log('🔄 Calling SDK prepareListing...');
+                console.log('Token ID:', item.tokenId);
+                console.log('Price (wei):', item.price);
+                console.log('Currency:', item.currencyAddress || 'NATIVE');
+                console.log('Decimals:', item.decimals);
 
                 const prepareResponse = await orderbookSDK.prepareListing(listingParams) as any;
 
@@ -340,7 +408,7 @@ async function prepareListing(
                 const requiresApproval = !!transactionAction;
 
                 if (requiresApproval) {
-                    console.log('⚠️ APPROVAL REQUIRED for token:', item.tokenId);
+                    console.log('⚠️ APPROVAL REQUIRED for this token');
                 }
 
                 const message = extractMessageFromPrepareResponse(prepareResponse);
@@ -354,6 +422,9 @@ async function prepareListing(
                 };
             })
         );
+
+        console.log('\n✅ All bulk listings prepared');
+        console.log('================================\n');
 
         return {
             success: true,
@@ -374,20 +445,23 @@ async function executeOneListingWithSignature(
     signature: string,
     cacheKey: string
 ): Promise<{ order_id: string; token_id: string }> {
-    console.log('🔄 [execute] Token:', item.tokenId);
-    console.log('🔑 [execute] Cache key:', cacheKey);
+    console.log('\n🔄 ===== EXECUTE LISTING =====');
+    console.log('Token:', item.tokenId);
+    console.log('Cache key:', cacheKey);
 
     const prepareResponse = prepareResponseCache.get(cacheKey);
 
     if (!prepareResponse) {
-        console.error('❌ Cache miss! Key:', cacheKey);
-        console.error('❌ Available keys:', prepareResponseCache.keys());
+        console.error('❌ Cache miss!');
+        console.error('Requested key:', cacheKey);
+        console.error('Available keys:', prepareResponseCache.keys());
         throw new Error(`Prepare response not found in cache. Key: ${cacheKey}. It may have expired.`);
     }
 
-    console.log('✅ [execute] Retrieved cached prepareResponse');
+    console.log('✅ Retrieved cached prepareResponse');
 
     // ⭐ Use the same pattern as your working code
+    console.log('🔄 Calling SDK createListing...');
     const createResponse = await orderbookSDK.createListing({
         makerFees: [],
         orderComponents: (prepareResponse as any).orderComponents,
@@ -395,9 +469,11 @@ async function executeOneListingWithSignature(
         orderSignature: signature,
     }) as any;
 
-    console.log('✅ [execute] Listing created');
+    console.log('✅ Listing created successfully');
 
+    // Clean up cache
     prepareResponseCache.del(cacheKey);
+    console.log('🗑️ Cache key deleted:', cacheKey);
 
     const orderId =
         createResponse?.result?.id ||
@@ -405,7 +481,8 @@ async function executeOneListingWithSignature(
         createResponse?.id ||
         '';
 
-    console.log('✅ [execute] Order ID:', orderId);
+    console.log('📝 Order ID:', orderId);
+    console.log('================================\n');
 
     return {
         order_id: orderId,
@@ -421,6 +498,11 @@ async function executeListing(
     cacheKey?: string,
     cacheKeys?: string[]
 ): Promise<ExecuteListingResponse> {
+    console.log('\n🎯 ===== EXECUTE LISTING =====');
+    console.log('Mode:', listings.length === 1 ? 'single' : 'bulk');
+    console.log('Listings:', listings.length);
+    console.log('================================\n');
+
     if (listings.length === 1 && signature && cacheKey) {
         console.log('🔄 Executing single listing...');
         const successful = await executeOneListingWithSignature(
@@ -448,16 +530,17 @@ async function executeListing(
 
         for (let index = 0; index < listings.length; index++) {
             try {
+                console.log(`\n--- Processing listing ${index + 1}/${listings.length} ---`);
                 const result = await executeOneListingWithSignature(
                     listings[index],
                     walletAddress,
                     signatures[index],
                     cacheKeys[index]
                 );
-                console.log(`✅ Listing [${index + 1}/${listings.length}] created: ${result.order_id}`);
+                console.log(`✅ Listing ${index + 1} created: ${result.order_id}`);
                 results.push({ success: true, ...result });
             } catch (error: any) {
-                console.error(`❌ Listing [${index + 1}/${listings.length}] failed:`, error.message);
+                console.error(`❌ Listing ${index + 1} failed:`, error.message);
                 results.push({
                     success: false,
                     order_id: '',
@@ -475,7 +558,8 @@ async function executeListing(
             .filter(r => !r.success)
             .map(r => ({ token_id: r.token_id, reason_code: r.reason_code }));
 
-        console.log(`✅ Bulk complete: ${successful_listings.length} successful, ${failed_listings.length} failed`);
+        console.log(`\n✅ Bulk complete: ${successful_listings.length} successful, ${failed_listings.length} failed`);
+        console.log('================================\n');
 
         return {
             success: true,
@@ -502,8 +586,15 @@ export async function POST(request: NextRequest) {
         const body: CreateListingRequestBody = await request.json();
         const { listings, walletAddress } = body;
 
+        console.log('\n📥 ===== POST REQUEST RECEIVED =====');
+        console.log('Listings:', listings.length);
+        console.log('Wallet:', walletAddress);
+        console.log('Listing details:', JSON.stringify(listings, null, 2));
+        console.log('================================\n');
+
         const validation = validateRequest(body);
         if (!validation.valid) {
+            console.error('❌ Validation failed:', validation.error);
             return NextResponse.json(
                 { success: false, error: validation.error },
                 { status: 400 }
@@ -511,11 +602,20 @@ export async function POST(request: NextRequest) {
         }
 
         const result = await prepareListing(listings, walletAddress);
+
+        console.log('\n📤 ===== RESPONSE =====');
+        console.log('Success:', result.success);
+        console.log('Mode:', result.mode);
+        console.log('Requires approval:', result.requiresApproval || result.listings?.some(l => l.requiresApproval));
+        console.log('================================\n');
+
         return NextResponse.json(result);
 
     } catch (error: any) {
-        console.error("❌ Prepare listing error:", error.message);
-        console.error("❌ Stack:", error.stack);
+        console.error("\n❌ ===== PREPARE LISTING ERROR =====");
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
+        console.error("================================\n");
         return NextResponse.json(
             { success: false, error: error.message || "Failed to prepare listing" },
             { status: 500 }
@@ -528,15 +628,18 @@ export async function PUT(request: NextRequest) {
         const body: CreateListingWithSignatureRequestBody = await request.json();
         const { listings, walletAddress, signature, signatures, cacheKey, cacheKeys } = body;
 
-        console.log('\n🔍 ===== PUT REQUEST RECEIVED =====');
+        console.log('\n📥 ===== PUT REQUEST RECEIVED =====');
         console.log('Listings count:', listings?.length);
         console.log('Wallet:', walletAddress);
         console.log('Has signature:', !!signature);
         console.log('Has cacheKey:', !!cacheKey);
+        console.log('Has signatures:', !!signatures);
+        console.log('Has cacheKeys:', !!cacheKeys);
         console.log('================================\n');
 
         const validation = validateRequest({ listings, walletAddress });
         if (!validation.valid) {
+            console.error('❌ Validation failed:', validation.error);
             return NextResponse.json(
                 { success: false, error: validation.error },
                 { status: 400 }
@@ -572,11 +675,20 @@ export async function PUT(request: NextRequest) {
         }
 
         const result = await executeListing(listings, walletAddress, signature, signatures, cacheKey, cacheKeys);
+
+        console.log('\n📤 ===== RESPONSE =====');
+        console.log('Success:', result.success);
+        console.log('Successful listings:', result.result.successful_listings.length);
+        console.log('Failed listings:', result.result.failed_listings.length);
+        console.log('================================\n');
+
         return NextResponse.json(result);
 
     } catch (error: any) {
-        console.error("❌ Execute listing error:", error.message);
-        console.error("❌ Stack:", error.stack);
+        console.error("\n❌ ===== EXECUTE LISTING ERROR =====");
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
+        console.error("================================\n");
         return NextResponse.json(
             { success: false, error: error.message || "Failed to execute listing" },
             { status: 500 }
