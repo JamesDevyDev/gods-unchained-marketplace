@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { ListingsResponse, Listing } from '../types'
 
+// ============================================================================
+// CURRENCY CONFIGURATION
+// ============================================================================
+
 /**
  * Helper function to calculate the actual listing price to send to blockchain
  * based on the desired seller earnings (what YOU want to receive)
@@ -199,11 +203,8 @@ export const ListCollectibleModal = ({
         const lowestPrice = getLowestPriceForCurrency()
         if (lowestPrice !== null) {
             // Set price 1% below the lowest
-            // Note: This should probably be the earnings you'd get from undercutting
             const priceBelow = lowestPrice * 0.99
-            // Convert listing price to earnings
-            const earningsFromUndercut = priceBelow * (1 - TOTAL_SELLER_FEES)
-            setListingPrice(earningsFromUndercut.toFixed(8))
+            setListingPrice(priceBelow.toFixed(8))
         }
     }
 
@@ -325,7 +326,7 @@ export const ListCollectibleModal = ({
                 <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
                         <label className="text-yellow-500 text-xs font-semibold">
-                            Listing Price (How much you get)
+                            Listing Price
                         </label>
                         <button
                             onClick={handleLowestClick}

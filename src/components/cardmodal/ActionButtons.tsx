@@ -35,6 +35,55 @@ interface ToastState {
     type: ToastType
 }
 
+// ============================================================================
+// CURRENCY CONFIGURATION
+// ============================================================================
+
+// Currency contract addresses and decimals on Immutable zkEVM
+const CURRENCY_CONFIG: Record<string, { name: string; address: string; decimals: number }> = {
+    'ETH': {
+        name: 'ethereum',
+        address: '0x52a6c53869ce09a731cd772f245b97a4401d3348',  // Wrapped ETH
+        decimals: 18
+    },
+    'GODS': {
+        name: 'gods-unchained',
+        address: '0xe0e0981d19ef2e0a57cc48ca60d9454ed2d53feb',  // GODS token
+        decimals: 18
+    },
+    'IMX': {
+        name: 'immutable-x',
+        address: '0xf57e7e7c23978c3caec3c3548e3d615c346e79ff',   // IMX token
+        decimals: 18
+    },
+    'USDC': {
+        name: 'usd-coin',
+        address: '0x6de8acc0d406837030ce4dd28e7c08c5a96a30d2',   // USDC token
+        decimals: 6
+    }
+}
+
+/**
+ * Convert human-readable price to wei (smallest unit)
+ */
+const convertToWei = (price: string, currency: string): string => {
+    if (!price || isNaN(parseFloat(price))) return '0';
+
+    const currencyInfo = CURRENCY_CONFIG[currency];
+    if (!currencyInfo) {
+        throw new Error(`Unknown currency: ${currency}`);
+    }
+
+    const priceFloat = parseFloat(price);
+    const decimals = currencyInfo.decimals;
+
+    // Convert to wei (multiply by 10^decimals)
+    // Use BigInt to handle large numbers accurately
+    const priceInWei = BigInt(Math.floor(priceFloat * Math.pow(10, decimals)));
+
+    return priceInWei.toString();
+};
+
 // Toast Component
 const Toast = ({
     message,
@@ -270,7 +319,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         }
     }
 
-    //Pag Bibili ka ng cards
+    // Pag Bibili ka ng cards
     const handleBuyNow = async () => {
         if (!loggedWallet) {
             showToast('Please connect your wallet first to make a purchase.', 'error')
@@ -367,8 +416,13 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         }
     }
 
-    //Pag Bebenta ka ng cards
+    // Pag Bebenta ka ng cards
     const handleListNow = async () => {
+        if (!loggedWallet) {
+            showToast('Please connect your wallet first to list an item.', 'error')
+            return
+        }
+
         if (!listingPrice || parseFloat(listingPrice) <= 0) {
             showToast('Please enter a valid listing price.', 'error')
             return
@@ -389,33 +443,18 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         // Close the modal immediately
         setShowListModal(false)
 
-        const SYMBOL_MAP: Record<string, { name: string; address: string; decimals: number }> = {
-            'ETH': {
-                name: 'ethereum',
-                address: '0x52a6c53869ce09a731cd772f245b97a4401d3348',
-                decimals: 18
-            },
-            'GODS': {
-                name: 'gods-unchained',
-                address: '0xe0e0981d19ef2e0a57cc48ca60d9454ed2d53feb',
-                decimals: 18
-            },
-            'IMX': {
-                name: 'immutable-x',
-                address: '0xf57e7e7c23978c3caec3c3548e3d615c346e79ff',
-                decimals: 18
-            },
-            'USDC': {
-                name: 'usd-coin',
-                address: '0x6de8acc0d406837030ce4dd28e7c08c5a96a30d2',
-                decimals: 6
-            }
+        // Get currency info
+        const currencyInfo = CURRENCY_CONFIG[currency]
+        if (!currencyInfo) {
+            showToast(`Unknown currency: ${currency}`, 'error')
+            return
         }
 
-        const currencyInfo = SYMBOL_MAP[currency]
         const tokensToList = unlistedTokens.slice(0, quantity)
         const nftContractAddress = getNftContractAddress()
-        const priceInWei = (parseFloat(listingPrice) * Math.pow(10, currencyInfo.decimals)).toString()
+
+        // ⭐ Convert price to wei using the helper function
+        const priceInWei = convertToWei(listingPrice, currency)
 
         console.log('\n📋 ===== LISTING DETAILS =====')
         console.log('Currency:', currency)
@@ -463,55 +502,70 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
                 throw new Error('Failed to prepare listing')
             }
 
-            // ⭐ CRITICAL: Handle approval transactions BEFORE signing
+            console.log('✅ Prepare response received:', prepareData)
+
+            // Step 2: Handle approval transactions BEFORE signing
             if (prepareData.mode === 'single' && prepareData.requiresApproval && prepareData.approvalAction) {
                 console.log('\n🔐 ===== APPROVAL REQUIRED =====')
                 console.log('⚠️ You need to approve the marketplace contract to transfer your NFT')
                 console.log('This is a one-time transaction per collection')
+                console.log('Approval details:', prepareData.approvalAction)
                 console.log('================================\n')
 
-                const approvalTx = await executeTransaction(prepareData.approvalAction, loggedWallet!)
+
+                const approvalTx = await executeTransaction(prepareData.approvalAction, loggedWallet)
                 console.log('✅ Approval transaction sent:', approvalTx)
 
                 await waitForTransaction(approvalTx)
                 console.log('✅ Approval transaction confirmed')
+
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
                 // Handle approvals for bulk listings
+                let approvalNeeded = false
+
                 for (let i = 0; i < prepareData.listings.length; i++) {
                     const listing = prepareData.listings[i]
                     if (listing.requiresApproval && listing.approvalAction) {
-                        console.log(`\n🔐 Approval required for token ${i + 1}/${prepareData.listings.length}`)
+                        if (!approvalNeeded) {
+                            console.log(`\n🔐 Approval required for collection`)
 
-                        const approvalTx = await executeTransaction(listing.approvalAction, loggedWallet!)
-                        console.log('✅ Approval transaction sent:', approvalTx)
+                            const approvalTx = await executeTransaction(listing.approvalAction, loggedWallet)
+                            console.log('✅ Approval transaction sent:', approvalTx)
 
-                        await waitForTransaction(approvalTx)
-                        console.log('✅ Approval transaction confirmed')
+                            await waitForTransaction(approvalTx)
+                            console.log('✅ Approval transaction confirmed')
+                            showToast('Approval confirmed!', 'success')
 
-                        // Only need to approve once per collection
-                        break
+                            approvalNeeded = true
+                            // Only need to approve once per collection
+                            break
+                        }
                     }
                 }
             }
 
-            // Step 2: Sign the message(s)
+            // Step 3: Sign the message(s)
             console.log('\n🔄 Step 2: Signing message(s)...')
 
             let signatures: string[] = []
 
             if (prepareData.mode === 'single' && prepareData.message) {
-                const signature = await signEIP712Message(prepareData.message, loggedWallet!)
+                const signature = await signEIP712Message(prepareData.message, loggedWallet)
                 signatures = [signature]
+                console.log('✅ Single signature obtained')
+
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
                 for (let i = 0; i < prepareData.listings.length; i++) {
+                    console.log(`Signing message ${i + 1}/${prepareData.listings.length}...`)
                     const { message } = prepareData.listings[i]
-                    const signature = await signEIP712Message(message, loggedWallet!)
+                    const signature = await signEIP712Message(message, loggedWallet)
                     signatures.push(signature)
                 }
+                console.log(`✅ All ${signatures.length} signatures obtained`)
             }
 
-            // Step 3: Execute listings with signatures
-            console.log('\n🔄 Step 3: Creating listings...')
+            // Step 4: Execute listings with signatures
+            console.log('\n🔄 Step 3: Creating listings on blockchain...')
 
             const executeResponse = await fetch('/api/listing/list', {
                 method: 'PUT',
@@ -540,31 +594,50 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
             console.log('\n🎉 ===== LISTING SUCCESS =====')
             console.log('✅ Successful:', executeData.result.successful_listings.length)
             console.log('❌ Failed:', executeData.result.failed_listings.length)
+            console.log('Order IDs:', executeData.result.successful_listings.map((l: any) => l.order_id))
             console.log('================================\n')
 
             setIsBuying(false)
+
             // Reset form fields
             setListingPrice('')
             setQuantity(1)
-            setCurrency('ETH')
-            showToast('Listing created successfully!', 'success')
+
+            // Show success message
+            const successCount = executeData.result.successful_listings.length
+            const failedCount = executeData.result.failed_listings.length
+
+            if (successCount > 0) {
+                showToast(
+                    `Successfully listed ${successCount} item(s)!${failedCount > 0 ? ` ${failedCount} failed.` : ''}`,
+                    'success'
+                )
+            } else {
+                showToast('All listings failed. Please try again.', 'error')
+            }
 
         } catch (error: any) {
             console.log('\n❌ ===== LISTING FAILED =====')
             console.log('Error:', error)
+            console.log('Error message:', error.message)
+            console.log('Error code:', error.code)
             console.log('================================\n')
 
             setIsBuying(false)
 
             if (error.code === 4001) {
                 showToast('You rejected the transaction in your wallet.', 'error')
+            } else if (error.message?.includes('Invalid price format')) {
+                showToast('Invalid price format. Please check your input.', 'error')
+            } else if (error.message?.includes('decimals')) {
+                showToast('Invalid currency decimals. Please try again.', 'error')
+            } else if (error.message?.includes('cache')) {
+                showToast('Session expired. Please try listing again.', 'error')
             } else {
                 showToast(error.message || 'An unknown error occurred.', 'error')
             }
         }
     }
-
-    ////////////
 
     const handleListClick = () => {
         if (!loggedWallet) {
@@ -579,7 +652,6 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         setShowListModal(false)
         setListingPrice('')
         setQuantity(1)
-        setCurrency('ETH')
     }
 
     const ownedCount = getUserOwnedCount()
@@ -672,3 +744,4 @@ export const ActionButtons = ({ card, listingsData, loggedWallet }: ActionButton
         </>
     )
 }
+
