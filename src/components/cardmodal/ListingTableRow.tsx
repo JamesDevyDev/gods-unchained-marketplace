@@ -36,21 +36,6 @@ interface PrepareCancelResponse {
     message: any
 }
 
-interface ExecuteCancelResponse {
-    success: boolean
-    mode: "single" | "bulk"
-    orderId?: string
-    orderIds?: string[]
-    result: {
-        successful_cancellations: string[]
-        pending_cancellations: string[]
-        failed_cancellations: Array<{
-            order_id?: string
-            reason_code?: string
-        }>
-    }
-}
-
 // Progress Modal Component
 const PurchaseProgressModal = ({
     isOpen
