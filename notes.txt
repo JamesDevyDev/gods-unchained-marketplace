@@ -29,3 +29,8 @@ ActionsButtons.tsx - updates lalagyan ko ng max ililist niya lang yung mga unlis
 ActionsButtons - fix na yung listcollectibleModal. Pag nag list ka, yung mga makikita lang is yung unlisted.
 - May actionsButton Folder din ako ginawa, nasa loob nun yung mga sub components sa loob ng actionsButton
 
+2/6/2026
+tinatry ko na i implement yung real time changes sa frontend. No need to refresh
+Affected files : 
+ActionsButtons
+CardModal 
