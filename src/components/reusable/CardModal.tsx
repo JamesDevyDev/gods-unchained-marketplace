@@ -107,7 +107,7 @@ const CardModal = ({
 
     // ⭐ NEW: Handler for when listings are successfully created
     const handleListingSuccess = () => {
-        // console.log('🔄 Listing successful, refreshing data...')
+        console.log('🔄 Listing successful, refreshing data...')
         fetchListings() // This will update listingsData state, which will automatically update PriceDisplay
 
         // If we're not already on the "buy" tab, switch to it to show the new listing
