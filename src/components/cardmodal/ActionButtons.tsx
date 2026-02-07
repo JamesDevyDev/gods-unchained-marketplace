@@ -1367,7 +1367,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                     // Small delay to allow blockchain to process
                     setTimeout(() => {
                         onListingSuccess()
-                    }, 1000) // Dito pag control gano kabilis yung makukuha bagong data
+                    }, 700) // Dito pag control gano kabilis yung makukuha bagong data
                 }
             } else {
                 showToast('All listings failed. Please try again.', 'error')
