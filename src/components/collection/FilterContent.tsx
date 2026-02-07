@@ -17,6 +17,8 @@ interface FilterContentProps {
     setSelectedTypes: (types: Set<string>) => void
     selectedAttributes: Record<string, Set<string>>
     setSelectedAttributes: (attributes: Record<string, Set<string>>) => void
+    selectedListingStatus: Set<string>
+    setSelectedListingStatus: (status: Set<string>) => void
     priceRange: PriceRange
     setPriceRange: (range: PriceRange) => void
     cards: Stack[]
@@ -28,6 +30,7 @@ interface FilterContentProps {
     setTypeSearch: (search: string) => void
     attributeSearches: Record<string, string>
     setAttributeSearches: (searches: Record<string, string>) => void
+    activeView: 'market' | 'nfts'
 }
 
 export const FilterContent: React.FC<FilterContentProps> = ({
@@ -41,23 +44,23 @@ export const FilterContent: React.FC<FilterContentProps> = ({
     setSelectedTypes,
     selectedAttributes,
     setSelectedAttributes,
+    selectedListingStatus,
+    setSelectedListingStatus,
     priceRange,
     setPriceRange,
     cards,
     currencySearch,
-    setCurrencySearch,
     raritySearch,
-    setRaritySearch,
     typeSearch,
-    setTypeSearch,
     attributeSearches,
-    setAttributeSearches
+    activeView,
 }) => {
     const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({
         currency: true,
         rarity: false,
         price: false,
         type: false,
+        listingStatus: false,
     })
 
     const toggleDropdown = (key: string) => {
@@ -73,6 +76,15 @@ export const FilterContent: React.FC<FilterContentProps> = ({
         }
         return newSet
     }
+
+    // Calculate listing status counts
+    const listedCount = cards.filter(card =>
+        card.owned_tokens?.some(token => token.listed === true)
+    ).length
+
+    const unlistedCount = cards.filter(card =>
+        card.owned_tokens?.some(token => token.listed === false)
+    ).length
 
     if (loading) {
         return <FilterSkeleton />
@@ -113,6 +125,39 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                 </DropdownFilter>
             )}
 
+            {/* Listing Status Filter - Only show when viewing NFTs */}
+            {activeView === 'nfts' && (
+                <DropdownFilter
+                    label="Listing Status"
+                    count={selectedListingStatus.size > 0 ? 1 : 0}
+                    isOpen={openDropdowns.listingStatus}
+                    onToggle={() => toggleDropdown('listingStatus')}
+                >
+                    <div className="space-y-1">
+                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                            <RadioOption
+                                label="All"
+                                count={cards.length}
+                                checked={selectedListingStatus.size === 0}
+                                onChange={() => setSelectedListingStatus(new Set())}
+                            />
+                            <RadioOption
+                                label="Listed"
+                                count={listedCount}
+                                checked={selectedListingStatus.has('listed') && selectedListingStatus.size === 1}
+                                onChange={() => setSelectedListingStatus(new Set(['listed']))}
+                            />
+                            <RadioOption
+                                label="Unlisted"
+                                count={unlistedCount}
+                                checked={selectedListingStatus.has('unlisted') && selectedListingStatus.size === 1}
+                                onChange={() => setSelectedListingStatus(new Set(['unlisted']))}
+                            />
+                        </div>
+                    </div>
+                </DropdownFilter>
+            )}
+
             {/* Rarity Filter */}
             {filterOptions.rarities && filterOptions.rarities.length > 0 && (
                 <DropdownFilter
@@ -122,8 +167,6 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('rarity')}
                 >
                     <div className="space-y-1">
-
-
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
                             {filterOptions.rarities
                                 .filter(rarity => rarity && rarity.toLowerCase().includes(raritySearch.toLowerCase()))
@@ -175,7 +218,6 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('type')}
                 >
                     <div className="space-y-1">
-
                         <div className="max-h-48 overflow-y-auto custom-scrollbar">
                             {filterOptions.types
                                 .filter(type => type && type.toLowerCase().includes(typeSearch.toLowerCase()))
@@ -211,8 +253,6 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                         onToggle={() => toggleDropdown(dropdownKey)}
                     >
                         <div className="space-y-1">
-
-
                             <div className="max-h-48 overflow-y-auto custom-scrollbar">
                                 {values
                                     .filter(value => value && value.toLowerCase().includes(searchValue.toLowerCase()))

@@ -12,6 +12,20 @@ export interface AllPrices {
     [currency: string]: PriceInfo
 }
 
+export interface OwnedToken {
+    token_id: string
+    listed: boolean
+    listing_id: string | null
+    price: number | null
+    price_usd: number | null
+    currency: string | null
+    status: string | null
+    order_hash: string | null
+    expires_at: string | null
+    created_at: string | null
+    token_address: string | null
+}
+
 export interface Listing {
     created_at: string
     currency: string
@@ -49,10 +63,10 @@ export interface Stack {
     quantity: number
     real_value: number
     total_floor_value: number
+    owned_tokens?: OwnedToken[]
     active_listings?: Listing[]
     listing_summary?: ListingSummary
     unlisted_token_ids?: string[]
-    
 }
 
 export interface UserListingStats {

@@ -9,6 +9,7 @@ export const useCardFilters = (cards: Stack[]) => {
     const [selectedCurrency, setSelectedCurrency] = useState<string>('')
     const [priceRange, setPriceRange] = useState<PriceRange>({ min: '', max: '' })
     const [selectedAttributes, setSelectedAttributes] = useState<Record<string, Set<string>>>({})
+    const [selectedListingStatus, setSelectedListingStatus] = useState<Set<string>>(new Set())
 
     // Search states for filters
     const [raritySearch, setRaritySearch] = useState('')
@@ -113,6 +114,18 @@ export const useCardFilters = (cards: Stack[]) => {
             })
         }
 
+        // Listing status filter
+        if (selectedListingStatus.size > 0) {
+            filtered = filtered.filter(card => {
+                if (selectedListingStatus.has('listed')) {
+                    return card.owned_tokens?.some(token => token.listed === true)
+                } else if (selectedListingStatus.has('unlisted')) {
+                    return card.owned_tokens?.some(token => token.listed === false)
+                }
+                return true // Should not reach here with radio buttons
+            })
+        }
+
         // Attribute filters
         Object.entries(selectedAttributes).forEach(([key, valueSet]) => {
             if (valueSet.size > 0) {
@@ -123,13 +136,14 @@ export const useCardFilters = (cards: Stack[]) => {
         })
 
         return filtered
-    }, [cards, searchQuery, selectedRarities, selectedTypes, selectedCurrency, priceRange, selectedAttributes])
+    }, [cards, searchQuery, selectedRarities, selectedTypes, selectedCurrency, priceRange, selectedListingStatus, selectedAttributes])
 
     // Calculate active filters count
     const activeFiltersCount =
         selectedRarities.size +
         selectedTypes.size +
         (selectedCurrency ? 1 : 0) +
+        (selectedListingStatus.size > 0 ? 1 : 0) + // Count as 1 if not "All"
         Object.values(selectedAttributes).reduce((sum, set) => sum + set.size, 0) +
         (priceRange.min || priceRange.max ? 1 : 0)
 
@@ -141,6 +155,7 @@ export const useCardFilters = (cards: Stack[]) => {
         setSelectedAttributes({})
         setSearchQuery('')
         setSelectedCurrency('')
+        setSelectedListingStatus(new Set())
         setRaritySearch('')
         setTypeSearch('')
         setCurrencySearch('')
@@ -160,6 +175,8 @@ export const useCardFilters = (cards: Stack[]) => {
         setPriceRange,
         selectedAttributes,
         setSelectedAttributes,
+        selectedListingStatus,
+        setSelectedListingStatus,
         filterOptions,
         filteredCards,
         activeFiltersCount,

@@ -62,6 +62,8 @@ const CardsPage = () => {
     setPriceRange,
     selectedAttributes,
     setSelectedAttributes,
+    selectedListingStatus,
+    setSelectedListingStatus,
     filterOptions,
     filteredCards,
     activeFiltersCount,
@@ -179,6 +181,8 @@ const CardsPage = () => {
           setSelectedTypes={setSelectedTypes}
           selectedAttributes={selectedAttributes}
           setSelectedAttributes={setSelectedAttributes}
+          selectedListingStatus={selectedListingStatus}
+          setSelectedListingStatus={setSelectedListingStatus}
           priceRange={priceRange}
           setPriceRange={setPriceRange}
           activeFiltersCount={activeFiltersCount}
@@ -192,6 +196,7 @@ const CardsPage = () => {
           setTypeSearch={setTypeSearch}
           attributeSearches={attributeSearches}
           setAttributeSearches={setAttributeSearches}
+          activeView={activeView}
         />
 
         {/* Mobile Filter Drawer */}
@@ -208,6 +213,8 @@ const CardsPage = () => {
           setSelectedTypes={setSelectedTypes}
           selectedAttributes={selectedAttributes}
           setSelectedAttributes={setSelectedAttributes}
+          selectedListingStatus={selectedListingStatus}
+          setSelectedListingStatus={setSelectedListingStatus}
           priceRange={priceRange}
           setPriceRange={setPriceRange}
           activeFiltersCount={activeFiltersCount}
@@ -221,6 +228,7 @@ const CardsPage = () => {
           setTypeSearch={setTypeSearch}
           attributeSearches={attributeSearches}
           setAttributeSearches={setAttributeSearches}
+          activeView={activeView}
         />
 
         {/* Main Content */}

@@ -39,13 +39,6 @@ export const useCardSort = (cards: Stack[]) => {
                 })
                 break
             case 'quantity':
-            case 'listing-time':
-                sorted.sort((a, b) => {
-                    const qtyA = a.total_listings || 0
-                    const qtyB = b.total_listings || 0
-                    return sortDirection === 'asc' ? qtyA - qtyB : qtyB - qtyA
-                })
-                break
             case 'quality':
                 sorted.sort((a, b) => {
                     const rarityA = RARITY_ORDER[a.rarity?.toLowerCase()] || 0

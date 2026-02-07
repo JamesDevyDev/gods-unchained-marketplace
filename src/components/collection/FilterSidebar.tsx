@@ -14,6 +14,8 @@ interface FilterSidebarProps {
     setSelectedTypes: (types: Set<string>) => void
     selectedAttributes: Record<string, Set<string>>
     setSelectedAttributes: (attributes: Record<string, Set<string>>) => void
+    selectedListingStatus: Set<string>
+    setSelectedListingStatus: (status: Set<string>) => void
     priceRange: PriceRange
     setPriceRange: (range: PriceRange) => void
     activeFiltersCount: number
@@ -27,6 +29,7 @@ interface FilterSidebarProps {
     setTypeSearch: (search: string) => void
     attributeSearches: Record<string, string>
     setAttributeSearches: (searches: Record<string, string>) => void
+    activeView: 'market' | 'nfts'
 }
 
 export const FilterSidebar: React.FC<FilterSidebarProps> = (props) => {

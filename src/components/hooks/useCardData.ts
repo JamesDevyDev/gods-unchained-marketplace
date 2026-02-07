@@ -43,7 +43,7 @@ export const useCardData = (contract_address: string) => {
             const data: ApiResponse = await response.json()
             const data2 = await response2.json()
 
-            // console.log(data) //
+            console.log(data) //
 
             setCards(data.stacks || [])
             setContractData(data2)
