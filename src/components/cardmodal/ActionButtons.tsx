@@ -987,10 +987,10 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
 
                     if (receipt !== null) {
                         if (receipt.status === '0x1') {
-                            console.log('✅ Transaction confirmed!')
+                            // console.log('✅ Transaction confirmed!')
                             resolve()
                         } else {
-                            console.log('❌ Transaction failed')
+                            // console.log('❌ Transaction failed')
                             reject(new Error('Transaction failed'))
                         }
                     } else {
@@ -998,7 +998,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                         if (attempts < maxAttempts) {
                             setTimeout(checkTransaction, 1000)
                         } else {
-                            console.log('⏱️ Transaction pending (timeout reached)')
+                            // console.log('⏱️ Transaction pending (timeout reached)')
                             resolve()
                         }
                     }
@@ -1016,10 +1016,10 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
      * Validates and signs an EIP-712 message
      */
     const signEIP712Message = async (message: any, walletAddress: string): Promise<string> => {
-        console.log('\n🔍 ===== VALIDATING MESSAGE BEFORE SIGNING =====');
-        console.log('Message type:', typeof message);
-        console.log('Message keys:', Object.keys(message || {}));
-        console.log('Full message:', JSON.stringify(message, null, 2));
+        // console.log('\n🔍 ===== VALIDATING MESSAGE BEFORE SIGNING =====');
+        // console.log('Message type:', typeof message);
+        // console.log('Message keys:', Object.keys(message || {}));
+        // console.log('Full message:', JSON.stringify(message, null, 2));
 
         // Validate EIP-712 structure
         if (!message || typeof message !== 'object') {
@@ -1027,30 +1027,30 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
         }
 
         if (!message.domain) {
-            console.log('❌ Message missing domain field');
+            // console.log('❌ Message missing domain field');
             throw new Error('Invalid EIP-712 message: missing domain');
         }
 
         if (!message.types) {
-            console.log('❌ Message missing types field');
+            // console.log('❌ Message missing types field');
             throw new Error('Invalid EIP-712 message: missing types');
         }
 
         // The value field can be either 'value' or 'message'
         if (!message.value && !message.message) {
-            console.log('❌ Message missing value/message field');
+            // console.log('❌ Message missing value/message field');
             throw new Error('Invalid EIP-712 message: missing value or message field');
         }
 
-        console.log('✅ Message structure validation passed');
-        console.log('Domain:', message.domain);
-        console.log('Types:', Object.keys(message.types));
-        console.log('Primary Type:', message.primaryType);
+        // console.log('✅ Message structure validation passed');
+        // console.log('Domain:', message.domain);
+        // console.log('Types:', Object.keys(message.types));
+        // console.log('Primary Type:', message.primaryType);
 
         // Convert to string for MetaMask
         const messageString = JSON.stringify(message);
-        console.log('📤 Stringified message length:', messageString.length);
-        console.log('📤 Sending to MetaMask...');
+        // console.log('📤 Stringified message length:', messageString.length);
+        // console.log('📤 Sending to MetaMask...');
 
         try {
             const signature = await window.ethereum.request({
@@ -1058,12 +1058,12 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 params: [walletAddress, messageString],
             });
 
-            console.log('✅ Signature obtained:', signature);
+            // console.log('✅ Signature obtained:', signature);
             return signature;
         } catch (error: any) {
-            console.log('❌ MetaMask signing error:', error);
-            console.log('Error code:', error.code);
-            console.log('Error message:', error.message);
+            // console.log('❌ MetaMask signing error:', error);
+            // console.log('Error code:', error.code);
+            // console.log('Error message:', error.message);
             throw error;
         }
     }
@@ -1089,8 +1089,8 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
         setIsBuying(true)
 
         try {
-            console.log('🛒 Preparing purchase for order:', listingsData.cheapest_listing.listing_id)
-            console.log('Token ID:', listingsData.cheapest_listing.token_id)
+            // console.log('🛒 Preparing purchase for order:', listingsData.cheapest_listing.listing_id)
+            // console.log('Token ID:', listingsData.cheapest_listing.token_id)
 
             const response = await fetch('/api/listing/buy', {
                 method: 'POST',
@@ -1107,7 +1107,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
             }
 
             const data: PrepareResponse = await response.json()
-            console.log('Prepared data:', data)
+            // console.log('Prepared data:', data)
 
             if (!data.success) {
                 throw new Error('Preparation failed')
@@ -1120,23 +1120,23 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 return
             }
 
-            console.log(`📋 Executing ${data.actions.length} actions...`)
+            // console.log(`📋 Executing ${data.actions.length} actions...`)
 
             for (let i = 0; i < data.actions.length; i++) {
                 const action = data.actions[i]
-                console.log(`🔄 Action ${i + 1}/${data.actions.length}:`, action.type)
+                // console.log(`🔄 Action ${i + 1}/${data.actions.length}:`, action.type)
 
                 switch (action.type) {
                     case 'TRANSACTION':
                         const txHash = await executeTransaction(action, loggedWallet)
-                        console.log(`✅ Transaction ${i + 1} sent:`, txHash)
+                        // console.log(`✅ Transaction ${i + 1} sent:`, txHash)
                         await waitForTransaction(txHash)
-                        console.log(`✅ Transaction ${i + 1} confirmed`)
+                        // console.log(`✅ Transaction ${i + 1} confirmed`)
                         break
 
                     case 'SIGNABLE':
                         const signature = await signMessage(action, loggedWallet)
-                        console.log(`✅ Message ${i + 1} signed:`, signature)
+                        // console.log(`✅ Message ${i + 1} signed:`, signature)
                         break
 
                     default:
@@ -1144,13 +1144,13 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 }
             }
 
-            console.log('✅ All actions completed successfully!')
+            // console.log('✅ All actions completed successfully!')
             setPurchasedTokenId(listingsData.cheapest_listing.token_id)
             setIsBuying(false)
             showToast('NFT purchased successfully!', 'success')
 
         } catch (error: any) {
-            console.log('❌ Purchase failed:', error)
+            // console.log('❌ Purchase failed:', error)
             setIsBuying(false)
 
             if (error.code === 4001) {
@@ -1205,21 +1205,21 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
         // ⭐ Convert price to wei using the helper function
         const priceInWei = convertToWei(listingPrice, currency)
 
-        console.log('\n📋 ===== LISTING DETAILS =====')
-        console.log('Currency:', currency)
-        console.log('Price (human readable):', listingPrice)
-        console.log('Decimals:', currencyInfo.decimals)
-        console.log('Price (wei/smallest unit):', priceInWei)
-        console.log('Currency address:', currencyInfo.address)
-        console.log('Tokens to list:', tokensToList.length)
-        console.log('NFT contract:', nftContractAddress)
-        console.log('================================\n')
+        // console.log('\n📋 ===== LISTING DETAILS =====')
+        // console.log('Currency:', currency)
+        // console.log('Price (human readable):', listingPrice)
+        // console.log('Decimals:', currencyInfo.decimals)
+        // console.log('Price (wei/smallest unit):', priceInWei)
+        // console.log('Currency address:', currencyInfo.address)
+        // console.log('Tokens to list:', tokensToList.length)
+        // console.log('NFT contract:', nftContractAddress)
+        // console.log('================================\n')
 
         setIsBuying(true)
 
         try {
             // Step 1: Prepare listings
-            console.log('🔄 Step 1: Preparing listings...')
+            // console.log('🔄 Step 1: Preparing listings...')
 
             const listings = tokensToList.map((token: any) => ({
                 tokenId: token.token_id,
@@ -1229,7 +1229,7 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 decimals: currencyInfo.decimals, // ⭐ Pass decimals to backend
             }))
 
-            console.log('📤 Sending to backend:', JSON.stringify(listings, null, 2))
+            // console.log('📤 Sending to backend:', JSON.stringify(listings, null, 2))
 
             const prepareResponse = await fetch('/api/listing/list', {
                 method: 'POST',
@@ -1251,22 +1251,22 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 throw new Error('Failed to prepare listing')
             }
 
-            console.log('✅ Prepare response received:', prepareData)
+            // console.log('✅ Prepare response received:', prepareData)
 
             // Step 2: Handle approval transactions BEFORE signing
             if (prepareData.mode === 'single' && prepareData.requiresApproval && prepareData.approvalAction) {
-                console.log('\n🔐 ===== APPROVAL REQUIRED =====')
-                console.log('⚠️ You need to approve the marketplace contract to transfer your NFT')
-                console.log('This is a one-time transaction per collection')
-                console.log('Approval details:', prepareData.approvalAction)
-                console.log('================================\n')
+                // console.log('\n🔐 ===== APPROVAL REQUIRED =====')
+                // console.log('⚠️ You need to approve the marketplace contract to transfer your NFT')
+                // console.log('This is a one-time transaction per collection')
+                // console.log('Approval details:', prepareData.approvalAction)
+                // console.log('================================\n')
 
 
                 const approvalTx = await executeTransaction(prepareData.approvalAction, loggedWallet)
-                console.log('✅ Approval transaction sent:', approvalTx)
+                // console.log('✅ Approval transaction sent:', approvalTx)
 
                 await waitForTransaction(approvalTx)
-                console.log('✅ Approval transaction confirmed')
+                // console.log('✅ Approval transaction confirmed')
 
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
                 // Handle approvals for bulk listings
@@ -1276,13 +1276,13 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                     const listing = prepareData.listings[i]
                     if (listing.requiresApproval && listing.approvalAction) {
                         if (!approvalNeeded) {
-                            console.log(`\n🔐 Approval required for collection`)
+                            // console.log(`\n🔐 Approval required for collection`)
 
                             const approvalTx = await executeTransaction(listing.approvalAction, loggedWallet)
-                            console.log('✅ Approval transaction sent:', approvalTx)
+                            // console.log('✅ Approval transaction sent:', approvalTx)
 
                             await waitForTransaction(approvalTx)
-                            console.log('✅ Approval transaction confirmed')
+                            // console.log('✅ Approval transaction confirmed')
                             showToast('Approval confirmed!', 'success')
 
                             approvalNeeded = true
@@ -1294,27 +1294,27 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
             }
 
             // Step 3: Sign the message(s)
-            console.log('\n🔄 Step 2: Signing message(s)...')
+            // console.log('\n🔄 Step 2: Signing message(s)...')
 
             let signatures: string[] = []
 
             if (prepareData.mode === 'single' && prepareData.message) {
                 const signature = await signEIP712Message(prepareData.message, loggedWallet)
                 signatures = [signature]
-                console.log('✅ Single signature obtained')
+                // console.log('✅ Single signature obtained')
 
             } else if (prepareData.mode === 'bulk' && prepareData.listings) {
                 for (let i = 0; i < prepareData.listings.length; i++) {
-                    console.log(`Signing message ${i + 1}/${prepareData.listings.length}...`)
+                    // console.log(`Signing message ${i + 1}/${prepareData.listings.length}...`)
                     const { message } = prepareData.listings[i]
                     const signature = await signEIP712Message(message, loggedWallet)
                     signatures.push(signature)
                 }
-                console.log(`✅ All ${signatures.length} signatures obtained`)
+                // console.log(`✅ All ${signatures.length} signatures obtained`)
             }
 
             // Step 4: Execute listings with signatures
-            console.log('\n🔄 Step 3: Creating listings on blockchain...')
+            // console.log('\n🔄 Step 3: Creating listings on blockchain...')
 
             const executeResponse = await fetch('/api/listing/list', {
                 method: 'PUT',
@@ -1340,11 +1340,11 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                 throw new Error('Failed to create listing')
             }
 
-            console.log('\n🎉 ===== LISTING SUCCESS =====')
-            console.log('✅ Successful:', executeData.result.successful_listings.length)
-            console.log('❌ Failed:', executeData.result.failed_listings.length)
-            console.log('Order IDs:', executeData.result.successful_listings.map((l: any) => l.order_id))
-            console.log('================================\n')
+            // console.log('\n🎉 ===== LISTING SUCCESS =====')
+            // console.log('✅ Successful:', executeData.result.successful_listings.length)
+            // console.log('❌ Failed:', executeData.result.failed_listings.length)
+            // console.log('Order IDs:', executeData.result.successful_listings.map((l: any) => l.order_id))
+            // console.log('================================\n')
 
             setIsBuying(false)
 
@@ -1367,18 +1367,18 @@ export const ActionButtons = ({ card, listingsData, loggedWallet, onListingSucce
                     // Small delay to allow blockchain to process
                     setTimeout(() => {
                         onListingSuccess()
-                    }, 2000)
+                    }, 500) // Dito pag control gano kabilis yung makukuha bagong data
                 }
             } else {
                 showToast('All listings failed. Please try again.', 'error')
             }
 
         } catch (error: any) {
-            console.log('\n❌ ===== LISTING FAILED =====')
-            console.log('Error:', error)
-            console.log('Error message:', error.message)
-            console.log('Error code:', error.code)
-            console.log('================================\n')
+            // console.log('\n❌ ===== LISTING FAILED =====')
+            // console.log('Error:', error)
+            // console.log('Error message:', error.message)
+            // console.log('Error code:', error.code)
+            // console.log('================================\n')
 
             setIsBuying(false)
 

@@ -52,7 +52,7 @@ const CardModal = ({
             if (response.ok) {
                 const data = await response.json()
                 setListingsData(data)
-                console.log('✅ Listings refreshed:', data)
+                // console.log('✅ Listings refreshed:', data)
             }
         } catch (err) {
             console.error('Failed to fetch listings:', err)
@@ -107,8 +107,8 @@ const CardModal = ({
 
     // ⭐ NEW: Handler for when listings are successfully created
     const handleListingSuccess = () => {
-        console.log('🔄 Listing successful, refreshing data...')
-        fetchListings()
+        // console.log('🔄 Listing successful, refreshing data...')
+        fetchListings() // This will update listingsData state, which will automatically update PriceDisplay
 
         // If we're not already on the "buy" tab, switch to it to show the new listing
         if (activeTab !== 'buy') {
@@ -139,11 +139,14 @@ const CardModal = ({
                             <CardImage image={card.image} name={card.name} />
 
                             <div className="flex-1 bg-background p-4 sm:p-6">
+                                {/* ⭐ UPDATED: Pass listingsData to PriceDisplay */}
                                 <PriceDisplay
                                     card={card}
                                     selectedCurrency={selectedCurrency}
                                     formatPrice={formatPrice}
                                     youOwn={youOwn}
+                                    listingsData={listingsData}
+                                    isLoadingListings={isLoadingListings}
                                 />
 
                                 <ActionButtons
@@ -168,7 +171,7 @@ const CardModal = ({
                                         />
                                     )}
 
-                                    {activeTab === 'buy' && ( //Listing
+                                    {activeTab === 'buy' && (
                                         <BuyTab
                                             listingsData={listingsData}
                                             isLoadingListings={isLoadingListings}

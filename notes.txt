@@ -34,3 +34,6 @@ tinatry ko na i implement yung real time changes sa frontend. No need to refresh
 Affected files : 
 ActionsButtons
 CardModal 
+
+2/7/2026
+Added real time price change CardModal/ PriceDisplay

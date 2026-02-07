@@ -260,8 +260,8 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
         setIsPurchasing(true)
 
         try {
-            console.log('🛒 Preparing purchase for order:', listing.listing_id)
-            console.log('Token ID:', listing.token_id)
+            // console.log('🛒 Preparing purchase for order:', listing.listing_id)
+            // console.log('Token ID:', listing.token_id)
 
             const response = await fetch('/api/listing/buy', {
                 method: 'POST',
@@ -278,7 +278,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             }
 
             const data: PrepareResponse = await response.json()
-            console.log('Prepared data:', data)
+            // console.log('Prepared data:', data)
 
             if (!data.success) {
                 throw new Error('Preparation failed')
@@ -293,24 +293,24 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                 return
             }
 
-            console.log(`📋 Executing ${data.actions.length} actions...`)
+            // console.log(`📋 Executing ${data.actions.length} actions...`)
 
             for (let i = 0; i < data.actions.length; i++) {
                 const action = data.actions[i]
-                console.log(`🔄 Action ${i + 1}/${data.actions.length}:`, action.type)
+                // console.log(`🔄 Action ${i + 1}/${data.actions.length}:`, action.type)
 
                 switch (action.type) {
                     case 'TRANSACTION':
                         const txHash = await executeTransaction(action, loggedWallet)
-                        console.log(`✅ Transaction ${i + 1} sent:`, txHash)
+                        // console.log(`✅ Transaction ${i + 1} sent:`, txHash)
 
                         await waitForTransaction(txHash)
-                        console.log(`✅ Transaction ${i + 1} confirmed`)
+                        // console.log(`✅ Transaction ${i + 1} confirmed`)
                         break
 
                     case 'SIGNABLE':
                         const signature = await signMessage(action, loggedWallet)
-                        console.log(`✅ Message ${i + 1} signed:`, signature)
+                        // console.log(`✅ Message ${i + 1} signed:`, signature)
                         break
 
                     default:
@@ -318,7 +318,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                 }
             }
 
-            console.log('✅ All actions completed successfully!')
+            // console.log('✅ All actions completed successfully!')
 
             setIsPurchasing(false)
             setShowSuccess(true)
@@ -329,7 +329,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             }
 
         } catch (error: any) {
-            console.log('❌ Purchase failed:', error)
+            // console.log('❌ Purchase failed:', error)
             setIsPurchasing(false)
 
             if (error.code === 4001) {
@@ -368,12 +368,12 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
         setIsCancelling(true)
 
         try {
-            console.log('🚫 Starting cancellation process...')
-            console.log('Order ID:', listing.listing_id)
-            console.log('Wallet Address:', loggedWallet)
+            // console.log('🚫 Starting cancellation process...')
+            // console.log('Order ID:', listing.listing_id)
+            // console.log('Wallet Address:', loggedWallet)
 
             // Step 1: Prepare cancellation (POST) - get message to sign
-            console.log('📤 Step 1: Preparing cancellation (POST)...')
+            // console.log('📤 Step 1: Preparing cancellation (POST)...')
             const prepareResponse = await fetch('/api/listing/cancel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -383,10 +383,10 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                 }),
             })
 
-            console.log('Response status:', prepareResponse.status)
+            // console.log('Response status:', prepareResponse.status)
 
             const prepareData = await prepareResponse.json()
-            console.log('Response data:', prepareData)
+            // console.log('Response data:', prepareData)
 
             if (!prepareResponse.ok) {
                 throw new Error(prepareData.error || `HTTP ${prepareResponse.status}: Failed to prepare cancellation`)
@@ -396,12 +396,12 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                 throw new Error('Invalid preparation response: ' + JSON.stringify(prepareData))
             }
 
-            console.log('✅ Preparation successful')
-            console.log('Message to sign:', prepareData.message)
+            // console.log('✅ Preparation successful')
+            // console.log('Message to sign:', prepareData.message)
 
             // Check network
             const currentChainId = await window.ethereum.request({ method: 'eth_chainId' })
-            console.log('Current chain ID:', currentChainId)
+            // console.log('Current chain ID:', currentChainId)
 
             if (currentChainId.toLowerCase() !== '0x343b') {
                 setErrorTitle('Wrong Network')
@@ -412,8 +412,8 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             }
 
             // Step 2: Sign the message
-            console.log('✍️ Step 2: Requesting signature from wallet...')
-            console.log('Raw message from API:', JSON.stringify(prepareData.message, null, 2))
+            // console.log('✍️ Step 2: Requesting signature from wallet...')
+            // console.log('Raw message from API:', JSON.stringify(prepareData.message, null, 2))
             let signature: string
 
             try {
@@ -446,14 +446,14 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                     message: rawMessage.value
                 }
 
-                console.log('Restructured message for signing:', JSON.stringify(messageToSign, null, 2))
-                console.log('Wallet address:', loggedWallet)
+                // console.log('Restructured message for signing:', JSON.stringify(messageToSign, null, 2))
+                // console.log('Wallet address:', loggedWallet)
 
                 signature = await window.ethereum.request({
                     method: 'eth_signTypedData_v4',
                     params: [loggedWallet, JSON.stringify(messageToSign)],
                 })
-                console.log('✅ Signature received:', signature.substring(0, 20) + '...')
+                // console.log('✅ Signature received:', signature.substring(0, 20) + '...')
             } catch (signError: any) {
                 console.error('Signature error caught:', signError)
                 console.error('Signature error stringified:', JSON.stringify(signError))
@@ -467,7 +467,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             }
 
             // Step 3: Execute cancellation (PUT) - submit signature
-            console.log('🔄 Step 3: Executing cancellation (PUT)...')
+            // console.log('🔄 Step 3: Executing cancellation (PUT)...')
             const executeResponse = await fetch('/api/listing/cancel', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -478,10 +478,10 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                 }),
             })
 
-            console.log('Execute response status:', executeResponse.status)
+            // console.log('Execute response status:', executeResponse.status)
 
             const executeData = await executeResponse.json()
-            console.log('Execute response data:', executeData)
+            // console.log('Execute response data:', executeData)
 
             if (!executeResponse.ok) {
                 throw new Error(executeData.error || `HTTP ${executeResponse.status}: Failed to execute cancellation`)
@@ -494,9 +494,9 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             // Check results
             const { successful_cancellations, failed_cancellations, pending_cancellations } = executeData.result
 
-            console.log('Successful:', successful_cancellations)
-            console.log('Failed:', failed_cancellations)
-            console.log('Pending:', pending_cancellations)
+            // console.log('Successful:', successful_cancellations)
+            // console.log('Failed:', failed_cancellations)
+            // console.log('Pending:', pending_cancellations)
 
             if (failed_cancellations && failed_cancellations.length > 0) {
                 const failedOrder = failed_cancellations[0]
@@ -506,14 +506,14 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
 
             if (!successful_cancellations || successful_cancellations.length === 0) {
                 if (pending_cancellations && pending_cancellations.length > 0) {
-                    console.log('⏳ Cancellation is pending...')
+                    // console.log('⏳ Cancellation is pending...')
                     // You might want to handle pending state differently
                 } else {
                     throw new Error('No orders were cancelled')
                 }
             }
 
-            console.log('✅ Cancellation completed successfully!')
+            // console.log('✅ Cancellation completed successfully!')
 
             setIsCancelling(false)
             setShowCancelSuccess(true)
@@ -571,7 +571,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
             txParams.gas = action.gasLimit
         }
 
-        console.log('Transaction parameters:', txParams)
+        // console.log('Transaction parameters:', txParams)
 
         const txHash = await window.ethereum.request({
             method: 'eth_sendTransaction',
@@ -604,7 +604,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
 
                     if (receipt !== null) {
                         if (receipt.status === '0x1') {
-                            console.log('✅ Transaction confirmed!')
+                            // console.log('✅ Transaction confirmed!')
                             resolve()
                         } else {
                             console.error('❌ Transaction failed')
@@ -615,7 +615,7 @@ export const ListingTableRow = ({ listing, newWallet, loggedWallet, onPurchaseSu
                         if (attempts < maxAttempts) {
                             setTimeout(checkTransaction, 1000)
                         } else {
-                            console.log('⏱️ Transaction pending (timeout reached)')
+                            // console.log('⏱️ Transaction pending (timeout reached)')
                             resolve()
                         }
                     }
