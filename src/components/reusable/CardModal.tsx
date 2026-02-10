@@ -10,7 +10,6 @@ import { DetailsTab } from '@/components/cardmodal/DetailsTab'
 import { BuyTab } from '@/components/cardmodal/BuyTab'
 import { OwnedTab } from '@/components/cardmodal/OwnedTab'
 import { ActivityTab } from '@/components/cardmodal/ActivityTab'
-import { SkeletonLoader } from '@/components/cardmodal/SkeletonLoader'
 import { Stack, ListingsResponse } from '@/components/cardmodal/types'
 
 type Props = {
@@ -132,72 +131,68 @@ const CardModal = ({
                 <CardModalHeader name={card.name} onClose={onClose} />
 
                 <div className="flex-1 overflow-y-auto">
-                    {isLoading ? (
-                        <SkeletonLoader />
-                    ) : (
-                        <div className="flex flex-col lg:flex-row w-full">
-                            <CardImage image={card.image} name={card.name} />
 
-                            <div className="flex-1 bg-background p-4 sm:p-6">
-                                {/* ⭐ UPDATED: Pass listingsData to PriceDisplay */}
-                                <PriceDisplay
-                                    card={card}
-                                    selectedCurrency={selectedCurrency}
-                                    formatPrice={formatPrice}
-                                    youOwn={youOwn}
-                                    listingsData={listingsData}
-                                    isLoadingListings={isLoadingListings}
-                                />
+                    <div className="flex flex-col lg:flex-row w-full">
+                        <CardImage image={card.image} name={card.name} />
 
-                                <ActionButtons
-                                    card={card}
-                                    listingsData={listingsData}
-                                    newWallet={newWallet}
-                                    loggedWallet={loggedWallet}
-                                    onListingSuccess={handleListingSuccess}
-                                />
+                        <div className="flex-1 bg-background p-4 sm:p-6">
+                            <PriceDisplay
+                                card={card}
+                                selectedCurrency={selectedCurrency}
+                                formatPrice={formatPrice}
+                                youOwn={youOwn}
+                                listingsData={listingsData}
+                                isLoadingListings={isLoadingListings}
+                            />
 
-                                <TabNavigation
-                                    activeTab={activeTab}
-                                    setActiveTab={setActiveTab}
-                                    showWalletTabs={!!newWallet}
-                                />
+                            <ActionButtons
+                                card={card}
+                                listingsData={listingsData}
+                                newWallet={newWallet}
+                                loggedWallet={loggedWallet}
+                                onListingSuccess={handleListingSuccess}
+                            />
 
-                                <div className="overflow-y-auto">
-                                    {activeTab === 'details' && (
-                                        <DetailsTab
-                                            card={card}
-                                            getRarityColor={getRarityColor}
-                                        />
-                                    )}
+                            <TabNavigation
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                                showWalletTabs={!!newWallet}
+                            />
 
-                                    {activeTab === 'buy' && (
-                                        <BuyTab
-                                            listingsData={listingsData}
-                                            isLoadingListings={isLoadingListings}
-                                            currencyFilter={currencyFilter}
-                                            setCurrencyFilter={setCurrencyFilter}
-                                            newWallet={newWallet}
-                                            loggedWallet={loggedWallet}
-                                        />
-                                    )}
+                            <div className="overflow-y-auto">
+                                {activeTab === 'details' && (
+                                    <DetailsTab
+                                        card={card}
+                                        getRarityColor={getRarityColor}
+                                    />
+                                )}
 
-                                    {activeTab === 'owned' && (
-                                        <OwnedTab
-                                            youOwn={youOwn}
-                                            listingsData={listingsData}
-                                            newWallet={newWallet}
-                                            selectedTokens={selectedTokens}
-                                            setSelectedTokens={setSelectedTokens}
-                                            setActiveTab={setActiveTab}
-                                        />
-                                    )}
+                                {activeTab === 'buy' && (
+                                    <BuyTab
+                                        listingsData={listingsData}
+                                        isLoadingListings={isLoadingListings}
+                                        currencyFilter={currencyFilter}
+                                        setCurrencyFilter={setCurrencyFilter}
+                                        newWallet={newWallet}
+                                        loggedWallet={loggedWallet}
+                                    />
+                                )}
 
-                                    {activeTab === 'activity' && <ActivityTab />}
-                                </div>
+                                {activeTab === 'owned' && (
+                                    <OwnedTab
+                                        youOwn={youOwn}
+                                        listingsData={listingsData}
+                                        newWallet={newWallet}
+                                        selectedTokens={selectedTokens}
+                                        setSelectedTokens={setSelectedTokens}
+                                        setActiveTab={setActiveTab}
+                                    />
+                                )}
+
+                                {activeTab === 'activity' && <ActivityTab />}
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
