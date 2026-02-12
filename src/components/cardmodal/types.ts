@@ -14,6 +14,7 @@ export interface AllPrices {
 }
 
 export interface Stack {
+    
     metadata_id: string
     name: string
     description: string | null

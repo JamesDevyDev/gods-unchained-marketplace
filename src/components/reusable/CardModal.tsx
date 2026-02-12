@@ -19,6 +19,7 @@ type Props = {
     onClose: () => void
     selectedCurrency: string
     contract_address: string
+    base_price:number
 }
 
 const CardModal = ({

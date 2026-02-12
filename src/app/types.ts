@@ -6,6 +6,7 @@ export interface PriceInfo {
     listing_id: string
     price: number
     usd: number
+    base_price: number
 }
 
 export interface AllPrices {
