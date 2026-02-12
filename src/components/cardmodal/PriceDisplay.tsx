@@ -8,6 +8,7 @@ type PriceDisplayProps = {
     formatPrice: (price: number | null) => string
     youOwn: number
     listingsData?: ListingsResponse | null
+    isLoadingListings?: boolean
 }
 
 export const PriceDisplay = ({
@@ -16,6 +17,7 @@ export const PriceDisplay = ({
     formatPrice,
     youOwn,
     listingsData,
+    isLoadingListings
 
 }: PriceDisplayProps) => {
     const [isInitialLoading, setIsInitialLoading] = useState(true)

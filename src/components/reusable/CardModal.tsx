@@ -142,6 +142,7 @@ const CardModal = ({
                                 formatPrice={formatPrice}
                                 youOwn={youOwn}
                                 listingsData={listingsData}
+                                isLoadingListings={isLoadingListings}
                             />
 
                             <ActionButtons

@@ -74,5 +74,5 @@ export interface ListingsResponse {
     metadata_id: string
     total_listings: number
     token_id: string
-
+    
 }
