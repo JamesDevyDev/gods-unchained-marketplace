@@ -43,3 +43,10 @@ Added listed/unlisted sa filters
 
 2/10/2026
 CardModal improvements, hindi na need hintayin yung full data, Also removed the whole skeleton.
+
+
+
+TODO 
+Inconsistent unlisted = CardModal 
+Loading skeleton for cardModal price = loadin skeleton  = FIXED
+

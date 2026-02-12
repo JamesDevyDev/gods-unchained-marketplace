@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Stack, ListingsResponse } from './types'
 import { getCurrencyIcon } from './utils'
 
@@ -7,7 +8,6 @@ type PriceDisplayProps = {
     formatPrice: (price: number | null) => string
     youOwn: number
     listingsData?: ListingsResponse | null
-    isLoadingListings?: boolean
 }
 
 export const PriceDisplay = ({
@@ -16,8 +16,20 @@ export const PriceDisplay = ({
     formatPrice,
     youOwn,
     listingsData,
-    isLoadingListings
+
 }: PriceDisplayProps) => {
+    const [isInitialLoading, setIsInitialLoading] = useState(true)
+
+    useEffect(() => {
+        setIsInitialLoading(true)
+
+        const timer = setTimeout(() => {
+            setIsInitialLoading(false)
+        }, 2000)
+
+        return () => clearTimeout(timer)
+    }, [card.metadata_id])
+
     const getPriceToDisplay = () => {
         // ⭐ PRIORITY 1: Use cheapest_listing from refetched data if available
         if (listingsData?.cheapest_listing) {
@@ -26,8 +38,8 @@ export const PriceDisplay = ({
                 currency: cheapest.currency,
                 priceInfo: {
                     usd: cheapest.prices.total_usd || cheapest.prices.base_price_usd,
-                    base_price: cheapest.prices.base_price,  // Keep for reference
-                    fees: cheapest.prices.fees  // Keep for reference
+                    base_price: cheapest.prices.base_price,
+                    fees: cheapest.prices.fees
                 },
                 isFromListing: true
             }
@@ -64,7 +76,16 @@ export const PriceDisplay = ({
             <span className="text-gray-400 text-xs sm:text-sm block mb-2">
                 Buy for:
             </span>
-            {displayPrice ? (
+            {isInitialLoading ? (
+                // Skeleton loader
+                <div className="flex items-center gap-2 animate-pulse">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-700"></div>
+                    <div className="flex flex-col gap-1">
+                        <div className="h-8 sm:h-9 w-32 bg-gray-700 rounded"></div>
+                        <div className="h-4 w-24 bg-gray-700 rounded"></div>
+                    </div>
+                </div>
+            ) : displayPrice ? (
                 <div className="flex items-center gap-2">
                     <img
                         src={getCurrencyIcon(displayPrice.currency)}
@@ -78,10 +99,9 @@ export const PriceDisplay = ({
                         <span className="text-white text-2xl sm:text-3xl font-bold">
                             ${formatPrice(displayPrice.priceInfo.usd)}
                         </span>
-                        {/* <span className="text-gray-500 text-xs">
-                            {formatPrice(displayPrice.priceInfo.price)} {displayPrice.currency}
-                        </span> */}
-                      
+                        <span className="text-gray-400 text-sm">
+                            {formatPrice(displayPrice.priceInfo.base_price)} {displayPrice.currency}
+                        </span>
                     </div>
                 </div>
             ) : (
@@ -90,11 +110,14 @@ export const PriceDisplay = ({
                 </span>
             )}
 
-            {youOwn > 0 && (
+            {isInitialLoading ? (
+                // Skeleton for "You Own"
+                <div className="h-4 w-28 bg-gray-700 rounded mt-2 animate-pulse"></div>
+            ) : youOwn > 0 ? (
                 <span className="text-gray-400 text-xs sm:text-sm block mt-2">
                     You Own: <span className="text-white font-semibold">{youOwn}</span>
                 </span>
-            )}
+            ) : null}
         </div>
     )
 }

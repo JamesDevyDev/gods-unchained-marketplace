@@ -51,7 +51,7 @@ const CardModal = ({
             if (response.ok) {
                 const data = await response.json()
                 setListingsData(data)
-                // console.log('✅ Listings refreshed:', data)
+                console.log('✅ Listings refreshed:', data) //Find the listed here
             }
         } catch (err) {
             console.error('Failed to fetch listings:', err)
@@ -142,7 +142,6 @@ const CardModal = ({
                                 formatPrice={formatPrice}
                                 youOwn={youOwn}
                                 listingsData={listingsData}
-                                isLoadingListings={isLoadingListings}
                             />
 
                             <ActionButtons
