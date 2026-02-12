@@ -305,6 +305,7 @@ const CardsPage = () => {
         formatPrice={formatPrice}
         onClose={() => setSelectedCard(null)}
         selectedCurrency={selectedCurrency}
+        base_price={0}  // Add this temporary prop
       />
 
       <StatsModal
