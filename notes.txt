@@ -50,3 +50,6 @@ TODO
 Inconsistent unlisted = CardModal 
 Loading skeleton for cardModal price = loadin skeleton  = FIXED
 
+2/24/2026
+-Edit in CardListItem removed small badges
+-Edit in landing page - removed border of carousel

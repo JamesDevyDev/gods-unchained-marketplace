@@ -396,7 +396,7 @@ const Page = () => {
                                     const collectionVolume = volumeData[collection.contract_address]
 
                                     return (
-                                        <div key={index} className="flex-[0_0_100%] min-w-0 md:border border-lines" onClick={() => {
+                                        <div key={index} className="flex-[0_0_100%] min-w-0 " onClick={() => {
                                             router.push(`/collection/${collection?.contract_address}`)
                                         }}>
                                             <div className="relative h-160 overflow-hidden cursor-pointer">

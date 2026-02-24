@@ -100,28 +100,23 @@ const CardListItem = ({
         >
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2">
                 {/* Mobile: Full Width Header with Image and Title */}
-                <div className="flex sm:hidden items-center gap-2 w-full">
-                    <div className="w-12 h-16 flex-shrink-0 relative overflow-hidden rounded bg-background flex items-center justify-center">
+                <div className="flex sm:hidden items-center justify-center gap-10  w-full">
+
+                    <div className="h-55 flex-shrink-0 relative overflow-hidden rounded flex  items-center justify-center">
                         <img
                             src={card.image}
                             alt={card.name}
-                            className="w-[90%] h-[90%] object-contain"
+                            className="w-[100%] h-[100%] object-contain"
                             loading="lazy"
                         />
-                        <div
-                            className={`absolute top-0 right-0 px-1 rounded-bl text-[8px] font-bold ${getRarityColor(
-                                card.rarity
-                            )} bg-gray-900/90`}
-                        >
-                            {card.rarity.slice(0, 1)}
-                        </div>
+                      
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-semibold text-xs truncate leading-tight">
+                    <div className="flex-1 min-w-0 relative">
+                        <h3 className="text-white font-semibold text-xl truncate leading-tight">
                             {card.name}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-[10px] mt-0.5">
+                        <div className="flex items-center gap-1.5 text-sm mt-0.5">
                             <span className="text-gray-400 truncate">{card.item_type || 'Card'}</span>
                             <span className="text-gray-600">•</span>
                             <span className={`font-medium ${getRarityColor(card.rarity)}`}>
@@ -147,20 +142,13 @@ const CardListItem = ({
                 </div>
 
                 {/* Desktop: Larger Image for better visibility */}
-                <div className="hidden sm:block w-16 h-24 lg:w-20 lg:h-28 flex-shrink-0 relative overflow-hidden rounded bg-background flex items-center justify-center">
+                <div className="hidden sm:block h-50 flex-shrink-0 relative overflow-hidden rounded  flex items-center justify-center">
                     <img
                         src={card.image}
                         alt={card.name}
-                        className="w-[90%] h-[90%] object-contain"
+                        className="w-[100%] h-[100%] object-cover"
                         loading="lazy"
                     />
-                    <div
-                        className={`absolute top-0 right-0 px-1.5 py-0.5 rounded-bl text-[9px] lg:text-[10px] font-bold ${getRarityColor(
-                            card.rarity
-                        )} bg-gray-900/90`}
-                    >
-                        {card.rarity.slice(0, 1)}
-                    </div>
                 </div>
 
                 {/* Main Content - Maximized Data */}
@@ -293,10 +281,10 @@ const CardListItem = ({
                             <div className="col-span-1 hidden xl:block">
                                 <p className="text-gray-500 leading-none mb-1">Change</p>
                                 <p className={`font-semibold text-xs lg:text-sm leading-none truncate ${displayPrice.priceInfo.usd > card.last_sold_price
-                                        ? 'text-green-400'
-                                        : displayPrice.priceInfo.usd < card.last_sold_price
-                                            ? 'text-red-400'
-                                            : 'text-gray-400'
+                                    ? 'text-green-400'
+                                    : displayPrice.priceInfo.usd < card.last_sold_price
+                                        ? 'text-red-400'
+                                        : 'text-gray-400'
                                     }`}>
                                     {displayPrice.priceInfo.usd > card.last_sold_price
                                         ? '+'
