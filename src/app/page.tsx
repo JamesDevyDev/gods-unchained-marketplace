@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react'
 import Footer from '@/components/Footer'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
 // ============================================================================
 // CAROUSEL CONFIGURATION
 // ============================================================================
@@ -198,7 +200,7 @@ const Page = () => {
     useEffect(() => {
         const fetchLanding = async () => {
             try {
-                const response = await fetch("https://immutable-marketplace.onrender.com/api/projects");
+                const response = await fetch(`${API_BASE_URL}/api/projects`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -213,7 +215,7 @@ const Page = () => {
                 const volumePromises = allCollections.map(async (collection: Collection) => {
                     try {
                         const volumeResponse = await fetch(
-                            `https://immutable-marketplace.onrender.com/api/collections/${collection.contract_address}/volume`
+                            `${API_BASE_URL}/api/collections/${collection.contract_address}/volume`
                         );
                         if (volumeResponse.ok) {
                             const volumeInfo = await volumeResponse.json();

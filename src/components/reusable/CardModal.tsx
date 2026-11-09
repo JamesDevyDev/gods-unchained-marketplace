@@ -40,6 +40,8 @@ const CardModal = ({
     const [isLoading, setIsLoading] = useState(true)
     const [selectedTokens, setSelectedTokens] = useState<Set<number>>(new Set())
 
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+
     // ⭐ NEW: Function to fetch listings (extracted so it can be called on demand)
     const fetchListings = async () => {
         if (!card?.metadata_id || !contract_address) return
@@ -47,7 +49,7 @@ const CardModal = ({
         setIsLoadingListings(true)
         try {
             const response = await fetch(
-                `https://immutable-marketplace.onrender.com/api/collections/${contract_address}/listings/${card.metadata_id}`
+                `${API_BASE_URL}/api/collections/${contract_address}/listings/${card.metadata_id}`
             )
             if (response.ok) {
                 const data = await response.json()
