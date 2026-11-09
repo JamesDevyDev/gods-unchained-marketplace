@@ -53,24 +53,27 @@ export default function Navbar() {
         checkIfWalletIsConnected();
 
         const { ethereum } = window as any;
-        if (ethereum) {
-            ethereum.on('accountsChanged', (accounts: string[]) => {
-                if (accounts.length > 0) {
-                    const newAccount = accounts[0];
-                    setAccount(newAccount);
-                    setWallet(newAccount); // Update Zustand store
-                    fetchAllBalances(newAccount);
-                } else {
-                    setAccount("");
-                    setWallet(""); // Clear Zustand store
-                    setTokens([]);
-                }
-            });
 
-            ethereum.on('chainChanged', () => {
-                window.location.reload();
-            });
-        }
+        // Named handlers so removeListener actually removes them
+        const handleAccountsChanged = (accounts: string[]) => {
+            if (accounts.length > 0) {
+                const newAccount = accounts[0];
+                setAccount(newAccount);
+                setWallet(newAccount); // Update Zustand store
+                fetchAllBalances(newAccount);
+            } else {
+                setAccount("");
+                setWallet(""); // Clear Zustand store
+                setTokens([]);
+            }
+        };
+
+        const handleChainChanged = () => {
+            window.location.reload();
+        };
+
+        ethereum?.on('accountsChanged', handleAccountsChanged);
+        ethereum?.on('chainChanged', handleChainChanged);
 
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -81,13 +84,11 @@ export default function Navbar() {
         document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
-            if (ethereum) {
-                ethereum.removeListener('accountsChanged', () => { });
-                ethereum.removeListener('chainChanged', () => { });
-            }
+            ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+            ethereum?.removeListener('chainChanged', handleChainChanged);
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [setWallet]); // Add setWallet to dependencies
+    }, [setWallet]);
 
     const checkIfWalletIsConnected = async () => {
         try {
@@ -97,7 +98,6 @@ export default function Navbar() {
             const accounts = await ethereum.request({ method: 'eth_accounts' });
             if (accounts.length > 0) {
                 const connectedAccount = accounts[0];
-
 
                 setAccount(connectedAccount);
                 setWallet(connectedAccount);
@@ -117,7 +117,7 @@ export default function Navbar() {
 
             const chainId = await ethereum.request({ method: 'eth_chainId' });
 
-            if (chainId.toLocaleLowerCase() === IMMUTABLE_ZKEVM_MAINNET.chainId.toLocaleLowerCase()) {
+            if (chainId.toLowerCase() === IMMUTABLE_ZKEVM_MAINNET.chainId.toLowerCase()) {
                 setNetwork('Immutable zkEVM');
             } else {
                 setNetwork('Wrong Network');
@@ -310,6 +310,13 @@ export default function Navbar() {
 
             setIsConnecting(true);
 
+            // Forces MetaMask to show the account selection popup,
+            // so the user can pick a different wallet than the previously approved one
+            await ethereum.request({
+                method: 'wallet_requestPermissions',
+                params: [{ eth_accounts: {} }],
+            });
+
             const accounts = await ethereum.request({
                 method: 'eth_requestAccounts'
             });
@@ -321,12 +328,11 @@ export default function Navbar() {
             await checkNetwork();
             const chainId = await ethereum.request({ method: 'eth_chainId' });
 
-            if (chainId !== IMMUTABLE_ZKEVM_MAINNET.chainId) {
+            if (chainId.toLowerCase() !== IMMUTABLE_ZKEVM_MAINNET.chainId.toLowerCase()) {
                 await switchToImmutableZkEVM();
             }
 
             fetchAllBalances(connectedAccount);
-            setIsConnecting(false);
         } catch (error: any) {
             console.error('Error connecting wallet:', error);
             if (error.code === 4001) {
@@ -334,11 +340,24 @@ export default function Navbar() {
             } else {
                 alert('Failed to connect wallet. Please try again.');
             }
+        } finally {
             setIsConnecting(false);
         }
     };
 
-    const disconnectWallet = () => {
+    const disconnectWallet = async () => {
+        // Revoke the permission in MetaMask so a refresh doesn't auto-reconnect the old wallet
+        try {
+            const { ethereum } = window as any;
+            await ethereum?.request({
+                method: 'wallet_revokePermissions',
+                params: [{ eth_accounts: {} }],
+            });
+        } catch (error) {
+            // Not supported by every wallet; local state is still cleared below
+            console.error('Failed to revoke permissions:', error);
+        }
+
         setAccount("");
         setWallet(""); // Clear Zustand store
         setTokens([]);
@@ -365,7 +384,7 @@ export default function Navbar() {
 
     // Get token icon - works in production
     const getTokenIcon = (symbol: string) => {
-        return `/assets/currency/${symbol.toLocaleLowerCase()}.png`;
+        return `/assets/currency/${symbol.toLowerCase()}.png`;
     };
 
     return (
