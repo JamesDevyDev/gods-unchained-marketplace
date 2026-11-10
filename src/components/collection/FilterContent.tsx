@@ -101,7 +101,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('currency')}
                 >
                     <div className="space-y-1">
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                        <div>
                             <RadioOption
                                 label="All Currencies"
                                 count={cards.length}
@@ -134,7 +134,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('listingStatus')}
                 >
                     <div className="space-y-1">
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                        <div>
                             <RadioOption
                                 label="All"
                                 count={cards.length}
@@ -167,7 +167,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('rarity')}
                 >
                     <div className="space-y-1">
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                        <div>
                             {filterOptions.rarities
                                 .filter(rarity => rarity && rarity.toLowerCase().includes(raritySearch.toLowerCase()))
                                 .map(rarity => (
@@ -218,7 +218,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                     onToggle={() => toggleDropdown('type')}
                 >
                     <div className="space-y-1">
-                        <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                        <div>
                             {filterOptions.types
                                 .filter(type => type && type.toLowerCase().includes(typeSearch.toLowerCase()))
                                 .map(type => (
@@ -253,7 +253,7 @@ export const FilterContent: React.FC<FilterContentProps> = ({
                         onToggle={() => toggleDropdown(dropdownKey)}
                     >
                         <div className="space-y-1">
-                            <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                            <div>
                                 {values
                                     .filter(value => value && value.toLowerCase().includes(searchValue.toLowerCase()))
                                     .map(value => (
